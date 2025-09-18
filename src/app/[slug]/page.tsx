@@ -2,7 +2,9 @@ import { getGameBySlug, listCodesForGame, listGamesWithActiveCounts } from "@/li
 import { notFound } from "next/navigation";
 import { monthYear } from "@/lib/date";
 import { marked } from "marked";
+import { AuthorCard } from "@/components/AuthorCard";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
+import { ExpiredCodes } from "@/components/ExpiredCodes";
 import { GameCard } from "@/components/GameCard";
 
 export const revalidate = 0;
@@ -26,10 +28,12 @@ export async function generateMetadata({ params }: Params) {
   const title = `${game.name} Codes (${when}) — Active & Working`;
   const description = game.seo_description || `All active ${game.name} codes with rewards and how to redeem.`;
   const url = `${process.env.SITE_URL}/${game.slug}`;
+  const authors = game.author ? [{ name: game.author.name, url: game.author.website || undefined }] : undefined;
   return {
     title,
     description,
     alternates: { canonical: url },
+    authors,
     openGraph: {
       title, description, url, images: [{ url: game.cover_image || "/og-image.png" }]
     },
@@ -44,6 +48,7 @@ export default async function GamePage({ params }: Params) {
   if (!game || !game.is_published) return notFound();
   const codes = await listCodesForGame(game.id);
   const allGames = await listGamesWithActiveCounts();
+  const author = game.author;
 
   const active = codes.filter(c => c.status === "active");
   const needsCheck = codes.filter(c => c.status === "check");
@@ -57,22 +62,44 @@ export default async function GamePage({ params }: Params) {
     })
     .slice(0, 6);
 
-  const html = game.description_md ? await marked.parse(game.description_md) : "";
+  const lastUpdatedFormatted = new Date(lastUpdated).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const [introHtml, redeemHtml, descriptionHtml, authorBioHtml] = await Promise.all([
+    game.intro_md ? marked.parse(game.intro_md) : "",
+    game.redeem_md ? marked.parse(game.redeem_md) : "",
+    game.description_md ? marked.parse(game.description_md) : "",
+    author?.bio_md ? marked.parse(author.bio_md) : "",
+  ]);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1.25fr)]">
       <article>
         <header className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">{game.name} Codes ({monthYear()})</h1>
-          <p className="text-muted">Active, expired, and how to redeem.</p>
           <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
-            <span>Updated</span>
-            <time dateTime={lastUpdated}>{new Date(lastUpdated).toLocaleDateString()}</time>
+            <time dateTime={lastUpdated}>
+              Last check and updated {game.name} codes on {lastUpdatedFormatted}
+            </time>
           </div>
         </header>
 
-        <section className="panel mb-8 space-y-4 p-6" id="active-codes">
-          <h2 className="text-xl font-semibold mb-3 text-foreground">Active {game.name} Codes</h2>
+        {introHtml ? (
+          <section className="mb-8" id="intro">
+            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: introHtml }} />
+          </section>
+        ) : null}
+
+        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-3" id="active-codes">
+          <div className="prose prose-headings:mt-0 prose-headings:mb-2 prose-p:mt-2 dark:prose-invert max-w-none">
+            <h2>Active {game.name} Codes</h2>
+            <p className="text-muted">
+              Right now, there are {active.length} active {active.length === 1 ? "code" : "codes"} you can use in {game.name}. Remember, these codes are case-sensitive, so copy/paste or enter them exactly as shown.
+            </p>
+          </div>
           {active.length === 0 ? (
             <p className="text-muted">
               We haven't confirmed any working codes right now{needsCheck.length ? ", but try the unverified ones below." : ". Check back soon."}
@@ -118,11 +145,14 @@ export default async function GamePage({ params }: Params) {
           )}
         </section>
 
-        <section className="panel mb-8 space-y-4 p-6" id="needs-check">
-          <h2 className="text-xl font-semibold mb-3 text-foreground">Codes To Double-Check</h2>
-          {needsCheck.length === 0 ? (
-            <p className="text-muted">We haven't seen any uncertain codes reported today.</p>
-          ) : (
+        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-3" id="needs-check">
+          <div className="prose prose-headings:mt-0 prose-headings:mb-2 prose-p:mt-2 dark:prose-invert max-w-none">
+            <h2>Codes To Double-Check</h2>
+            {needsCheck.length === 0 ? (
+              <p className="text-muted">We haven't seen any uncertain codes reported today.</p>
+            ) : null}
+          </div>
+          {needsCheck.length === 0 ? null : (
             <div className="overflow-hidden rounded-[var(--radius-sm)] border border-border/60">
               <table className="w-full border-collapse text-sm text-foreground">
                 <thead className="bg-surface-muted/60 text-left text-xs uppercase tracking-wide text-muted">
@@ -157,28 +187,31 @@ export default async function GamePage({ params }: Params) {
           )}
         </section>
 
-        <section className="panel mb-8 space-y-3 p-6" id="expired-codes">
-          <h2 className="text-xl font-semibold mb-3 text-foreground">Expired {game.name} Codes</h2>
-          {expired.length === 0 ? (
-            <p className="text-muted">We haven't tracked any expired codes yet.</p>
-          ) : (
-            <ul className="mt-3 grid grid-cols-2 gap-2 text-xs text-foreground/80 sm:grid-cols-3 md:grid-cols-4">
-              {[...expired].reverse().map(c => (
-                <li key={c.id} className="rounded-full border border-border/40 bg-surface-muted/70 px-3 py-1 text-center font-medium text-muted">
-                  <code>{c.code}</code>
-                </li>
-              ))}
-            </ul>
-          )}
+        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-3" id="expired-codes">
+          <div className="prose prose-headings:mt-0 prose-headings:mb-2 prose-p:mt-2 dark:prose-invert max-w-none">
+            <h2>Expired {game.name} Codes</h2>
+            {expired.length === 0 ? (
+              <p className="text-muted">We haven't tracked any expired codes yet.</p>
+            ) : null}
+          </div>
+          {expired.length === 0 ? null : <ExpiredCodes codes={expired} />}
         </section>
 
+        {redeemHtml ? (
+          <section className="mb-8" id="redeem">
+            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: redeemHtml }} />
+          </section>
+        ) : null}
+
         <section className="mb-10" id="description">
-          {html ? (
-            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
+          {descriptionHtml ? (
+            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
           ) : (
             <p className="text-muted">This section will explain the game and how to redeem codes.</p>
           )}
         </section>
+
+        {author ? <AuthorCard author={author} bioHtml={authorBioHtml} /> : null}
 
         <script
           type="application/ld+json"

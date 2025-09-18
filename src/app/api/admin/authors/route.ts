@@ -9,7 +9,7 @@ function authOK(req: NextRequest) {
 export async function GET(req: NextRequest) {
   if (!authOK(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const sb = supabaseAdmin();
-  const { data, error } = await sb.from("games").select("*").order("created_at", { ascending: false });
+  const { data, error } = await sb.from("authors").select("*").order("name", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
@@ -17,21 +17,26 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!authOK(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json();
+  if (!body?.name || !body?.slug) {
+    return NextResponse.json({ error: "name and slug required" }, { status: 400 });
+  }
   const sb = supabaseAdmin();
-  const { data, error } = await sb.from("games").upsert({
+  const payload = {
+    id: body.id || undefined,
     name: body.name,
     slug: body.slug,
-    author_id: body.author_id || null,
-    source_url: body.source_url || null,
-    cover_image: body.cover_image || null,
-    seo_title: body.seo_title || null,
-    seo_description: body.seo_description || null,
-    seo_keywords: body.seo_keywords || null,
-    intro_md: body.intro_md || null,
-    redeem_md: body.redeem_md || null,
-    description_md: body.description_md || null,
-    is_published: !!body.is_published
-  }).select("*").single();
+    gravatar_email: body.gravatar_email || null,
+    avatar_url: body.avatar_url || null,
+    bio_md: body.bio_md || null,
+    twitter: body.twitter || null,
+    youtube: body.youtube || null,
+    website: body.website || null,
+  };
+  const { data, error } = await sb
+    .from("authors")
+    .upsert(payload, { onConflict: "slug" })
+    .select("*")
+    .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }

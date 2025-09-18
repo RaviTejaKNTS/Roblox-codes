@@ -1,14 +1,31 @@
 import { supabaseAdmin } from "@/lib/supabase";
 
+export type Author = {
+  id: string;
+  name: string;
+  slug: string;
+  gravatar_email: string | null;
+  avatar_url: string | null;
+  bio_md: string | null;
+  twitter: string | null;
+  youtube: string | null;
+  website: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Game = {
   id: string;
   name: string;
   slug: string;
+  author_id: string | null;
   source_url: string | null;
   cover_image: string | null;
   seo_title: string | null;
   seo_description: string | null;
   seo_keywords: string | null;
+  intro_md: string | null;
+  redeem_md: string | null;
   description_md: string | null;
   reward_1: string | null;
   reward_2: string | null;
@@ -17,6 +34,8 @@ export type Game = {
   created_at: string;
   updated_at: string;
 };
+
+export type GameWithAuthor = Game & { author: Author | null };
 
 export type Code = {
   id: string;
@@ -39,6 +58,16 @@ export async function listPublishedGames(): Promise<Game[]> {
     .order("name", { ascending: true });
   if (error) throw error;
   return data as Game[];
+}
+
+export async function listAuthors(): Promise<Author[]> {
+  const sb = supabaseAdmin();
+  const { data, error } = await sb
+    .from("authors")
+    .select("*")
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data as Author[];
 }
 
 export type GameWithCounts = Game & { active_count: number };
@@ -79,15 +108,16 @@ export async function listGamesWithActiveCounts(): Promise<GameWithCounts[]> {
   })) as GameWithCounts[];
 }
 
-export async function getGameBySlug(slug: string): Promise<Game | null> {
+export async function getGameBySlug(slug: string): Promise<GameWithAuthor | null> {
   const sb = supabaseAdmin();
   const { data, error } = await sb
     .from("games")
-    .select("*")
+    .select("*, author:authors(*)")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
-  return data as Game | null;
+  if (!data) return null;
+  return data as GameWithAuthor;
 }
 
 export async function listCodesForGame(gameId: string): Promise<Code[]> {

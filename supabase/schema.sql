@@ -1,16 +1,34 @@
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
+-- authors table
+create table if not exists public.authors (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  slug text not null unique,
+  gravatar_email text,
+  avatar_url text,
+  bio_md text,
+  twitter text,
+  youtube text,
+  website text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- games table
 create table if not exists public.games (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
   slug text not null unique,
+  author_id uuid references public.authors(id),
   source_url text,
   cover_image text,
   seo_title text,
   seo_description text,
   seo_keywords text,
+  intro_md text,
+  redeem_md text,
   description_md text,
   reward_1 text,
   reward_2 text,
@@ -49,9 +67,14 @@ drop trigger if exists trg_games_updated_at on public.games;
 create trigger trg_games_updated_at before update on public.games
 for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_authors_updated_at on public.authors;
+create trigger trg_authors_updated_at before update on public.authors
+for each row execute function public.set_updated_at();
+
 -- RLS
 alter table public.games enable row level security;
 alter table public.codes enable row level security;
+alter table public.authors enable row level security;
 
 -- Policy: allow read of published games and their codes to anon
 drop policy if exists "read_published_games" on public.games;
@@ -63,6 +86,10 @@ create policy "read_codes_of_published_games" on public.codes
   for select using (
     exists (select 1 from public.games g where g.id = codes.game_id and g.is_published = true)
   );
+
+drop policy if exists "read_authors" on public.authors;
+create policy "read_authors" on public.authors
+  for select using (true);
 
 -- Admin insert/update via service role (bypass RLS)
 -- Upsert helper for codes (ensures last_seen_at is bumped; first_seen_at preserved)
