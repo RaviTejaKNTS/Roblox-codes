@@ -3,7 +3,7 @@ export function siteJsonLd({siteUrl}:{siteUrl:string}) {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "url": siteUrl,
-    "name": "Roblox Codes",
+    "name": "Bloxodes",
     "potentialAction": {
       "@type": "SearchAction",
       "target": `${siteUrl}/search?q={query}`,

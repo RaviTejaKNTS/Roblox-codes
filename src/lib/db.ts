@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { DEFAULT_AUTHOR_ID } from "./constants";
 
 export type Author = {
   id: string;
@@ -117,6 +118,18 @@ export async function getGameBySlug(slug: string): Promise<GameWithAuthor | null
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
+
+  if (!data.author && DEFAULT_AUTHOR_ID) {
+    const { data: fallback } = await sb
+      .from("authors")
+      .select("*")
+      .eq("id", DEFAULT_AUTHOR_ID)
+      .maybeSingle();
+    if (fallback) {
+      (data as any).author = fallback;
+    }
+  }
+
   return data as GameWithAuthor;
 }
 

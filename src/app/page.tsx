@@ -5,7 +5,7 @@ import { GameSearch } from "@/components/GameSearch";
 export const revalidate = 300;
 
 export const metadata = {
-  title: `Roblox Codes (${monthYear()})`,
+  title: `Bloxodes (${monthYear()})`,
   description: "Active & expired Roblox game codes. Browse games and find working codes with rewards.",
 };
 

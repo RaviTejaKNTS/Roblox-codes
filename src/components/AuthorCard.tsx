@@ -1,11 +1,5 @@
 import type { Author } from "@/lib/db";
-import { createHash } from "crypto";
-
-function gravatarUrl(email?: string | null, size = 160) {
-  if (!email) return null;
-  const hash = createHash("md5").update(email.trim().toLowerCase()).digest("hex");
-  return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=mp`;
-}
+import { authorAvatarUrl } from "@/lib/avatar";
 
 function normalizeTwitter(value?: string | null) {
   if (!value) return null;
@@ -19,7 +13,7 @@ function normalizeTwitter(value?: string | null) {
 const linkClass = "inline-flex items-center gap-2 rounded-full border border-border/50 bg-surface px-3 py-1 text-xs font-semibold text-foreground transition hover:border-accent/60 hover:text-accent";
 
 export function AuthorCard({ author, bioHtml }: { author: Author; bioHtml: string }) {
-  const avatar = author.avatar_url || gravatarUrl(author.gravatar_email) || "https://www.gravatar.com/avatar/?d=mp";
+  const avatar = authorAvatarUrl(author);
   const twitter = normalizeTwitter(author.twitter);
   const socials = [
     twitter ? { label: "Twitter", href: twitter } : null,

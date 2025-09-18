@@ -6,6 +6,7 @@ import { AuthorCard } from "@/components/AuthorCard";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { ExpiredCodes } from "@/components/ExpiredCodes";
 import { GameCard } from "@/components/GameCard";
+import { authorAvatarUrl } from "@/lib/avatar";
 
 export const revalidate = 0;
 
@@ -49,6 +50,7 @@ export default async function GamePage({ params }: Params) {
   const codes = await listCodesForGame(game.id);
   const allGames = await listGamesWithActiveCounts();
   const author = game.author;
+  const authorAvatar = author ? authorAvatarUrl(author, 72) : null;
 
   const active = codes.filter(c => c.status === "active");
   const needsCheck = codes.filter(c => c.status === "check");
@@ -80,10 +82,27 @@ export default async function GamePage({ params }: Params) {
       <article>
         <header className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">{game.name} Codes ({monthYear()})</h1>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
-            <time dateTime={lastUpdated}>
-              Last check and updated {game.name} codes on {lastUpdatedFormatted}
-            </time>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
+            {author ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <img
+                    src={authorAvatar || "https://www.gravatar.com/avatar/?d=mp"}
+                    alt={author.name}
+                    className="h-9 w-9 rounded-full border border-border/40 object-cover"
+                  />
+                  <span>
+                    Authored by <span className="font-semibold text-foreground">{author.name}</span>
+                  </span>
+                </div>
+                <span aria-hidden="true">•</span>
+              </>
+            ) : null}
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 font-medium text-accent">
+              <time dateTime={lastUpdated}>
+                Last check and updated {game.name} codes on {lastUpdatedFormatted}
+              </time>
+            </div>
           </div>
         </header>
 
@@ -93,7 +112,7 @@ export default async function GamePage({ params }: Params) {
           </section>
         ) : null}
 
-        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-3" id="active-codes">
+        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-0" id="active-codes">
           <div className="prose prose-headings:mt-0 prose-headings:mb-2 prose-p:mt-2 dark:prose-invert max-w-none">
             <h2>Active {game.name} Codes</h2>
             <p className="text-muted">
@@ -145,7 +164,7 @@ export default async function GamePage({ params }: Params) {
           )}
         </section>
 
-        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-3" id="needs-check">
+        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-0" id="needs-check">
           <div className="prose prose-headings:mt-0 prose-headings:mb-2 prose-p:mt-2 dark:prose-invert max-w-none">
             <h2>Codes To Double-Check</h2>
             {needsCheck.length === 0 ? (
@@ -187,7 +206,7 @@ export default async function GamePage({ params }: Params) {
           )}
         </section>
 
-        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-3" id="expired-codes">
+        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-0" id="expired-codes">
           <div className="prose prose-headings:mt-0 prose-headings:mb-2 prose-p:mt-2 dark:prose-invert max-w-none">
             <h2>Expired {game.name} Codes</h2>
             {expired.length === 0 ? (
