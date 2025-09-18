@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --color-background: 237 240 248;
+  --color-surface: 226 229 243;
+  --color-surface-muted: 212 215 231;
+  --color-foreground: 32 38 60;
+  --color-muted: 110 118 146;
+  --color-border: 198 202 224;
+  --color-accent: 79 70 229;
+  --color-accent-dark: 67 56 202;
+  --radius-sm: 0.75rem;
+  --radius-lg: 1.25rem;
+  --shadow-soft: none;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-background: 12 14 22;
+  --color-surface: 24 27 43;
+  --color-surface-muted: 31 34 52;
+  --color-foreground: 226 232 255;
+  --color-muted: 150 158 192;
+  --color-border: 58 63 92;
+  --color-accent: 129 140 248;
+  --color-accent-dark: 99 102 241;
+  --shadow-soft: 0 32px 60px -40px rgba(10, 13, 23, 0.7);
+}
+
+html,
+body {
+  @apply bg-background text-foreground;
+  font-feature-settings: "liga" on, "kern" on;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  @apply antialiased;
+}
+
+* {
+  border-color: rgb(var(--color-border) / 0.6);
+}
+
+.prose img {
+  @apply rounded-[var(--radius-sm)];
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight;
+  }
+
+  .prose {
+    @apply space-y-4 text-base leading-relaxed text-foreground;
+  }
+
+  .dark .prose {
+    @apply text-foreground;
+  }
+
+  .prose h1 {
+    @apply text-3xl font-semibold text-foreground;
+  }
+
+  .prose h2 {
+    @apply text-2xl font-semibold mt-6 text-foreground;
+  }
+
+  .prose h3 {
+    @apply text-xl font-semibold mt-4 text-foreground;
+  }
+
+  .prose h4 {
+    @apply text-lg font-medium mt-4 text-foreground;
+  }
+
+  .prose p {
+    @apply text-base leading-relaxed text-foreground/90;
+  }
+
+  .prose strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .prose em {
+    @apply italic text-foreground;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply space-y-2 pl-5 text-base text-foreground/90;
+  }
+
+  .prose ul {
+    list-style-type: disc;
+  }
+
+  .prose ol {
+    list-style-type: decimal;
+  }
+
+  .prose li {
+    @apply leading-relaxed;
+  }
+
+  .prose li > ul,
+  .prose li > ol {
+    @apply mt-2;
+  }
+
+  .prose a {
+    @apply text-accent underline-offset-4 transition hover:text-accent-dark;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-accent/40 pl-4 italic text-foreground/75;
+  }
+
+  .prose code {
+    @apply rounded-[0.5rem] bg-surface px-2 py-0.5 text-sm font-mono text-foreground;
+  }
+
+  .prose pre {
+    @apply overflow-x-auto rounded-[var(--radius-lg)] bg-surface-muted p-4 text-sm text-foreground border border-border/50;
+  }
+
+  .prose hr {
+    @apply border-t border-border/60 my-6;
+  }
+}
+
+@layer components {
+  .panel {
+    border-radius: var(--radius-lg);
+    background: rgb(var(--color-surface));
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgb(var(--color-border) / 0.65);
+  }
+
+  .chip {
+    border-radius: 9999px;
+    @apply inline-flex items-center gap-2 border border-border/50 bg-surface-muted px-3 py-1 text-xs font-medium text-muted;
+  }
+}
+
+@layer utilities {
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .bg-surface-muted {
+    background: rgb(var(--color-surface-muted));
+  }
+}

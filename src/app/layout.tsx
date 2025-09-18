@@ -1,0 +1,87 @@
+import "./globals.css";
+import { ReactNode } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+const themeScript = `(() => {
+  const storageKey = "roblox-codes-theme";
+  try {
+    const stored = window.localStorage.getItem(storageKey);
+    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = stored === "light" || stored === "dark" ? stored : (prefersDark ? "dark" : "light");
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    root.dataset.theme = theme;
+  } catch (error) {
+    /* noop */
+  }
+})();`;
+
+export const metadata = {
+  metadataBase: new URL(process.env.SITE_URL || "http://localhost:3000"),
+  title: {
+    default: "Roblox Codes — Active & Working Codes",
+    template: "%s · Roblox Codes"
+  },
+  description: "Find active and expired Roblox game codes with rewards, updated daily.",
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    siteName: "Roblox Codes",
+    title: "Roblox Codes — Active & Working Codes",
+    description: "Find active and expired Roblox game codes with rewards, updated daily."
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Roblox Codes — Active & Working Codes",
+    description: "Find active and expired Roblox game codes with rewards, updated daily."
+  },
+  alternates: {
+    types: { "application/rss+xml": "/feed.xml" }
+  }
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <header className="sticky top-0 z-40 border-b border-border/60 bg-surface/95 backdrop-blur">
+          <div className="container flex items-center justify-between gap-6 py-4">
+            <a href="/" className="flex items-center gap-2 text-lg font-semibold text-foreground">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent">RC</span>
+              <span>Roblox Codes</span>
+            </a>
+            <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
+              <a
+                href="/"
+                className="rounded-full px-4 py-2 text-muted transition hover:text-foreground hover:bg-surface-muted/70"
+              >
+                Home
+              </a>
+              <a
+                href="/admin"
+                className="rounded-full px-4 py-2 text-muted transition hover:text-foreground hover:bg-surface-muted/70"
+              >
+                Admin
+              </a>
+            </nav>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+            </div>
+          </div>
+        </header>
+        <main className="container py-10">{children}</main>
+        <footer className="mt-16 border-t border-border/60">
+          <div className="container flex flex-col gap-2 py-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
+            <p>© {new Date().getFullYear()} Roblox Codes (Unofficial). Not affiliated with Roblox.</p>
+            <p className="text-xs">Crafted for players hunting verified game rewards.</p>
+          </div>
+        </footer>
+      </body>
+    </html>
+  );
+}
