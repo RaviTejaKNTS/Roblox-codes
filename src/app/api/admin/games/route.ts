@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { DEFAULT_AUTHOR_ID } from "@/lib/constants";
 
 function authOK(req: NextRequest) {
   const token = req.headers.get("x-admin-token");
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await sb.from("games").upsert({
     name: body.name,
     slug: body.slug,
-    author_id: body.author_id || null,
+    author_id: body.author_id || DEFAULT_AUTHOR_ID || null,
     source_url: body.source_url || null,
     cover_image: body.cover_image || null,
     seo_title: body.seo_title || null,

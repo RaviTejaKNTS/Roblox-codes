@@ -55,20 +55,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent">RC</span>
               <span>Bloxodes</span>
             </a>
-            <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
-              <a
-                href="/"
-                className="rounded-full px-4 py-2 text-muted transition hover:text-foreground hover:bg-surface-muted/70"
-              >
-                Home
-              </a>
-              <a
-                href="/admin"
-                className="rounded-full px-4 py-2 text-muted transition hover:text-foreground hover:bg-surface-muted/70"
-              >
-                Admin
-              </a>
-            </nav>
             <div className="flex items-center gap-2">
               <ThemeToggle />
             </div>

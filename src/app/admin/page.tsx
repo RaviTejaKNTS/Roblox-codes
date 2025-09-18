@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DEFAULT_AUTHOR_ID } from "@/lib/constants";
 
 type Author = {
   id?: string;
@@ -30,7 +31,7 @@ type Game = {
   is_published?: boolean;
 };
 
-const empty: Game = { name: "", slug: "", author_id: null, is_published: false };
+const empty: Game = { name: "", slug: "", author_id: DEFAULT_AUTHOR_ID, is_published: false };
 const emptyAuthor: Author = { name: "", slug: "" };
 
 export default function AdminPage() {
@@ -60,19 +61,26 @@ export default function AdminPage() {
     setMsg("");
     if (!gamesRes.ok) return setMsg("Failed to load games");
     if (!authorsRes.ok) return setMsg("Failed to load authors");
-    setGames(await gamesRes.json());
+    const gamesData = await gamesRes.json();
+    setGames(
+      gamesData.map((g: Game) => ({
+        ...g,
+        author_id: g.author_id ?? DEFAULT_AUTHOR_ID,
+      }))
+    );
     setAuthors(await authorsRes.json());
   }
 
   async function save() {
     setMsg("Saving...");
+    const payload = { ...draft, author_id: draft.author_id || DEFAULT_AUTHOR_ID };
     const res = await fetch("/api/admin/games", {
       method: "POST",
       headers: { "content-type": "application/json", "x-admin-token": token },
-      body: JSON.stringify(draft)
+      body: JSON.stringify(payload)
     });
     if (!res.ok) { setMsg("Save failed"); return; }
-    setDraft(empty);
+    setDraft({ ...empty });
     await loadAll();
     setMsg("Saved");
   }
@@ -211,7 +219,7 @@ export default function AdminPage() {
         <h2 className="text-lg font-semibold text-foreground">Games</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {games.map((g) => {
-            const author = authors.find((a) => a.id === g.author_id);
+            const author = authors.find((a) => a.id === (g.author_id ?? DEFAULT_AUTHOR_ID)) || authors.find((a) => a.id === DEFAULT_AUTHOR_ID);
             return (
               <div key={g.id} className="rounded-[var(--radius-sm)] border border-border/60 bg-surface-muted/60 p-4">
                 <div className="flex items-start justify-between gap-3">

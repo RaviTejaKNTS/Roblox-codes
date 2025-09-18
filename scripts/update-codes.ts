@@ -24,6 +24,7 @@ type ProcessResult = {
   status: "ok" | "skipped" | "error";
   found?: number;
   upserted?: number;
+  rewards?: string[];
   error?: string;
 };
 

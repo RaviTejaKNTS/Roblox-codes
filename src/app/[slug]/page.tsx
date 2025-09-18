@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: Params) {
   const game = await getGameBySlug(params.slug);
   if (!game) return {};
   const when = monthYear();
-  const title = `${game.name} Codes (${when}) — Active & Working`;
-  const description = game.seo_description || `All active ${game.name} codes with rewards and how to redeem.`;
+  const title = game.seo_title || `${game.name} Codes (${when})`;
+  const description = game.seo_description || `Get the latest ${game.name} codes for ${when} and redeem them for free in-game rewards. Updated daily with only active and working codes.`;
   const url = `${process.env.SITE_URL}/${game.slug}`;
   const authors = game.author ? [{ name: game.author.name, url: game.author.website || undefined }] : undefined;
   return {
@@ -36,10 +36,15 @@ export async function generateMetadata({ params }: Params) {
     alternates: { canonical: url },
     authors,
     openGraph: {
-      title, description, url, images: [{ url: game.cover_image || "/og-image.png" }]
+      title,
+      description,
+      url,
+      images: [{ url: game.cover_image || "/og-image.png" }]
     },
     twitter: {
-      title, description, images: [game.cover_image || "/og-image.png"]
+      title,
+      description,
+      images: [game.cover_image || "/og-image.png"]
     }
   };
 }
@@ -81,7 +86,7 @@ export default async function GamePage({ params }: Params) {
     <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1.25fr)]">
       <article>
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">{game.name} Codes ({monthYear()})</h1>
+          <h1 className="text-5xl font-bold text-foreground">{game.name} Codes ({monthYear()})</h1>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
             {author ? (
               <>
