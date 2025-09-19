@@ -46,12 +46,15 @@ export function breadcrumbJsonLd(items: {name:string, url:string}[]) {
 }
 
 export function gameJsonLd({siteUrl, game}:{siteUrl:string, game:{name:string, slug:string, image?:string}}) {
+  const image = game.image
+    ? (game.image.startsWith("http") ? game.image : `${siteUrl.replace(/\/$/, "")}/${game.image.replace(/^\//, "")}`)
+    : `${siteUrl}/og-image.png`;
   return {
     "@context": "https://schema.org",
     "@type": "VideoGame",
     "name": game.name,
     "url": `${siteUrl}/${game.slug}`,
-    "image": game.image || `${siteUrl}/og-image.png`,
+    "image": image,
     "applicationCategory": "Game",
     "operatingSystem": "Roblox",
     "publisher": {
@@ -61,7 +64,15 @@ export function gameJsonLd({siteUrl, game}:{siteUrl:string, game:{name:string, s
   };
 }
 
-export function codesItemListJsonLd({siteUrl, game, codes}:{siteUrl:string, game:{name:string, slug:string}, codes:{code:string,status:string}[]}) {
+export function codesItemListJsonLd({
+  siteUrl,
+  game,
+  codes
+}: {
+  siteUrl: string;
+  game: { name: string; slug: string };
+  codes: { code: string; status: string; reward?: string | null }[];
+}) {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -75,7 +86,8 @@ export function codesItemListJsonLd({siteUrl, game, codes}:{siteUrl:string, game
       "item": {
         "@type": "Offer",
         "name": c.code,
-        "availability": c.status === "active" ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+        "availability": c.status === "active" ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        ...(c.reward ? { description: c.reward } : {})
       }
     }))
   };
@@ -177,5 +189,99 @@ export function authorJsonLd({
     ...(avatar ? { image: avatar } : {}),
     "description": description,
     ...(sameAs.length ? { sameAs } : {})
+  };
+}
+
+export function webPageJsonLd({
+  siteUrl,
+  slug,
+  title,
+  description,
+  image,
+  author,
+  publishedAt,
+  updatedAt
+}: {
+  siteUrl: string;
+  slug: string;
+  title: string;
+  description: string;
+  image: string;
+  author: { name: string; url?: string | null } | null;
+  publishedAt: string;
+  updatedAt: string;
+}) {
+  const canonical = `${siteUrl.replace(/\/$/, "")}/${slug.replace(/^\//, "")}`;
+  const imageUrl = image.startsWith("http") ? image : `${siteUrl.replace(/\/$/, "")}/${image.replace(/^\//, "")}`;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "url": canonical,
+    "name": title,
+    "headline": title,
+    "description": description,
+    "image": imageUrl,
+    "datePublished": publishedAt,
+    "dateModified": updatedAt,
+    "publisher": {
+      "@type": "Organization",
+      "name": SITE_NAME,
+      "url": siteUrl,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${siteUrl}/Bloxodes-dark.png`
+      }
+    },
+    ...(author?.name
+      ? {
+          author: {
+            "@type": "Person",
+            "name": author.name,
+            ...(author.url ? { url: author.url } : {})
+          }
+        }
+      : {
+          author: {
+            "@type": "Organization",
+            "name": SITE_NAME,
+            "url": siteUrl
+          }
+        })
+  };
+}
+
+export function howToJsonLd({
+  siteUrl,
+  game,
+  steps,
+  images
+}: {
+  siteUrl: string;
+  game: { name: string; slug: string };
+  steps: string[];
+  images?: string[];
+}) {
+  if (!steps.length) return null;
+  const canonical = `${siteUrl.replace(/\/$/, "")}/${game.slug.replace(/^\//, "")}`;
+  const normalizedImages = (images || [])
+    .map((src) =>
+      src.startsWith("http") ? src : `${siteUrl.replace(/\/$/, "")}/${src.replace(/^\//, "")}`
+    )
+    .slice(0, 3);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": `How to redeem ${game.name} codes`,
+    "description": `Step-by-step guide to redeem codes in ${game.name}.`,
+    "url": canonical,
+    ...(normalizedImages.length ? { image: normalizedImages } : {}),
+    "step": steps.map((text, index) => ({
+      "@type": "HowToStep",
+      "position": index + 1,
+      "name": text.length > 60 ? `${text.slice(0, 57)}...` : text,
+      "text": text
+    }))
   };
 }

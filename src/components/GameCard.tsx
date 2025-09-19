@@ -20,7 +20,7 @@ export function GameCard({ game, className }: GameCardProps) {
       <div className="relative aspect-[16/9] bg-surface-muted">
         {game.cover_image ? (
           <Image
-            src={game.cover_image}
+            src={game.cover_image.startsWith("http") ? game.cover_image : `/` + game.cover_image.replace(/^\//, "")}
             alt={game.name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"

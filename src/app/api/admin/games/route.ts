@@ -30,6 +30,9 @@ export async function POST(req: NextRequest) {
     seo_keywords: body.seo_keywords || null,
     intro_md: body.intro_md || null,
     redeem_md: body.redeem_md || null,
+    redeem_img_1: body.redeem_img_1 || null,
+    redeem_img_2: body.redeem_img_2 || null,
+    redeem_img_3: body.redeem_img_3 || null,
     description_md: body.description_md || null,
     is_published: !!body.is_published
   }).select("*").single();

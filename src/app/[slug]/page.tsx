@@ -17,7 +17,9 @@ import {
   breadcrumbJsonLd,
   codesItemListJsonLd,
   gameArticleJsonLd,
-  gameJsonLd
+  gameJsonLd,
+  webPageJsonLd,
+  howToJsonLd
 } from "@/lib/seo";
 
 export const revalidate = 0;
@@ -34,6 +36,30 @@ function cleanRewardsText(text?: string | null): string | null {
   return t || null;
 }
 
+function extractHowToSteps(markdown?: string | null): string[] {
+  if (!markdown) return [];
+  const steps: string[] = [];
+  const seen = new Set<string>();
+  const lines = markdown.split(/\r?\n/);
+  for (const raw of lines) {
+    const stripped = raw
+      .replace(/^[-*+]\s+/, "")
+      .replace(/^\d+[).]\s+/, "")
+      .replace(/^#+\s+/, "")
+      .replace(/[`*_]/g, "")
+      .trim();
+    if (!stripped) continue;
+    if (/^\s*<.+>\s*$/.test(stripped)) continue;
+    const normalized = stripped.replace(/\s+/g, " ");
+    if (normalized.length < 8) continue;
+    if (seen.has(normalized.toLowerCase())) continue;
+    seen.add(normalized.toLowerCase());
+    steps.push(normalized);
+    if (steps.length >= 10) break;
+  }
+  return steps;
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const game = await getGameBySlug(params.slug);
   if (!game) return {};
@@ -44,7 +70,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     `Get the latest ${game.name} codes for ${when} and redeem them for free in-game rewards. Updated daily with only active and working codes.`;
   const description = descriptionRaw?.trim() || SITE_DESCRIPTION;
   const canonicalUrl = `${SITE_URL}/${game.slug}`;
-  const coverImage = game.cover_image || `${SITE_URL}/og-image.png`;
+  const coverImage = game.cover_image?.startsWith("http")
+    ? game.cover_image
+    : game.cover_image
+    ? `${SITE_URL.replace(/\/$/, "")}/${game.cover_image.replace(/^\//, "")}`
+    : `${SITE_URL}/og-image.png`;
   const publishedTime = new Date(game.created_at).toISOString();
   const modifiedTime = new Date(game.updated_at).toISOString();
   const authors = game.author ? [{ name: game.author.name, url: game.author.website || undefined }] : undefined;
@@ -95,6 +125,7 @@ export default async function GamePage({ params }: Params) {
   const redeemImages = [game.redeem_img_1, game.redeem_img_2, game.redeem_img_3]
     .map((src) => src?.trim())
     .filter((src): src is string => !!src);
+  const redeemSteps = extractHowToSteps(game.redeem_md);
 
   const active = codes.filter(c => c.status === "active");
   const needsCheck = codes.filter(c => c.status === "check");
@@ -122,7 +153,11 @@ export default async function GamePage({ params }: Params) {
   ]);
 
   const canonicalUrl = `${SITE_URL}/${game.slug}`;
-  const coverImage = game.cover_image || `${SITE_URL}/og-image.png`;
+  const coverImage = game.cover_image?.startsWith("http")
+    ? game.cover_image
+    : game.cover_image
+    ? `${SITE_URL.replace(/\/$/, "")}/${game.cover_image.replace(/^\//, "")}`
+    : `${SITE_URL}/og-image.png`;
   const metaDescriptionRaw =
     game.seo_description ||
     `Get the latest ${game.name} codes for ${monthYear()} and redeem them for free in-game rewards. Updated daily with only active and working codes.`;
@@ -142,7 +177,11 @@ export default async function GamePage({ params }: Params) {
     codesItemListJsonLd({
       siteUrl: SITE_URL,
       game: { name: game.name, slug: game.slug },
-      codes: codes.map((code) => ({ code: code.code, status: code.status }))
+      codes: codes.map((code) => ({
+        code: code.code,
+        status: code.status,
+        reward: cleanRewardsText(code.rewards_text)
+      }))
     })
   );
   const articleData = JSON.stringify(
@@ -152,6 +191,28 @@ export default async function GamePage({ params }: Params) {
       author: author ? { name: author.name, url: author.website || null } : null,
       description: metaDescription,
       coverImage,
+      publishedAt: publishedIso,
+      updatedAt: updatedIso
+    })
+  );
+  const howToData = redeemSteps.length
+    ? JSON.stringify(
+        howToJsonLd({
+          siteUrl: SITE_URL,
+          game: { name: game.name, slug: game.slug },
+          steps: redeemSteps,
+          images: redeemImages
+        })
+      )
+    : null;
+  const webPageData = JSON.stringify(
+    webPageJsonLd({
+      siteUrl: SITE_URL,
+      slug: game.slug,
+      title: `${game.name} Codes (${monthYear()})`,
+      description: metaDescription,
+      image: coverImage,
+      author: author ? { name: author.name, url: author.website || null } : null,
       publishedAt: publishedIso,
       updatedAt: updatedIso
     })
@@ -341,25 +402,10 @@ export default async function GamePage({ params }: Params) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: videoGameData }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: codesItemListData }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: articleData }} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              "mainEntity": [
-                {
-                  "@type": "Question",
-                  "name": "How do I redeem codes in Roblox?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Open the game, look for the codes/redeem menu, paste a working code, and confirm."
-                  }
-                }
-              ]
-            })
-          }}
-        />
+        {howToData ? (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: howToData }} />
+        ) : null}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: webPageData }} />
       </article>
 
       {recommended.length > 0 ? (

@@ -27,6 +27,9 @@ type Game = {
   seo_keywords?: string;
   intro_md?: string;
   redeem_md?: string;
+  redeem_img_1?: string;
+  redeem_img_2?: string;
+  redeem_img_3?: string;
   description_md?: string;
   is_published?: boolean;
 };
@@ -164,6 +167,9 @@ export default function AdminPage() {
             value={draft.intro_md||""} onChange={e=>setKey("intro_md", e.target.value)} />
           <textarea className={`${inputClass} min-h-[120px] md:col-span-2`} placeholder="Redeem instructions (Markdown supported)"
             value={draft.redeem_md||""} onChange={e=>setKey("redeem_md", e.target.value)} />
+          <input className={inputClass} placeholder="Redeem image URL #1" value={draft.redeem_img_1||""} onChange={e=>setKey("redeem_img_1", e.target.value)} />
+          <input className={inputClass} placeholder="Redeem image URL #2" value={draft.redeem_img_2||""} onChange={e=>setKey("redeem_img_2", e.target.value)} />
+          <input className={inputClass} placeholder="Redeem image URL #3" value={draft.redeem_img_3||""} onChange={e=>setKey("redeem_img_3", e.target.value)} />
           <textarea className={`${inputClass} min-h-[160px] md:col-span-2`} placeholder="Description (Markdown supported)"
             value={draft.description_md||""} onChange={e=>setKey("description_md", e.target.value)} />
         </div>
