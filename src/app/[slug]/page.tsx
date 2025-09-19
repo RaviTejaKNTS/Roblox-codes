@@ -129,42 +129,45 @@ export default async function GamePage({ params }: Params) {
               We haven't confirmed any working codes right now{needsCheck.length ? ", but try the unverified ones below." : ". Check back soon."}
             </p>
           ) : (
-            <div className="overflow-hidden rounded-[var(--radius-sm)] border border-border/50">
-              <table className="w-full border-collapse text-sm text-foreground">
-                <thead className="bg-surface-muted/60 text-left text-xs uppercase tracking-wide text-muted">
-                  <tr>
-                    <th className="px-4 py-3">Code</th>
-                    <th className="px-4 py-3">Reward</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...active].reverse().map(c => {
-                    const rewards = cleanRewardsText(c.rewards_text);
-                    return (
-                      <tr key={c.id} className="border-t border-border/40 hover:bg-surface-muted/50">
-                        <td className="px-4 py-4 align-top">
-                          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-4">
+              {[...active].reverse().map(c => {
+                const rewards = cleanRewardsText(c.rewards_text);
+                return (
+                  <article
+                    key={c.id}
+                    className="rounded-[var(--radius-sm)] border border-accent/25 bg-surface px-5 py-4 shadow-soft transition hover:-translate-y-[1px] hover:border-accent/40 hover:shadow-lg"
+                  >
+                    <div className="flex flex-wrap gap-4 md:grid md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:items-start md:gap-6">
+                      <div className="basis-full flex flex-col gap-3 md:basis-auto">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="relative inline-flex">
                             <code
                               id={c.code}
                               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent-dark px-4 py-2 text-sm font-semibold tracking-wide text-white shadow-soft"
                             >
                               {c.code}
                             </code>
-                            <CopyCodeButton code={c.code} tone="accent" />
-                            {c.is_new ? <span className="chip bg-accent/15 text-accent">New</span> : null}
+                            {c.is_new ? (
+                              <span className="pointer-events-none absolute -top-2 -right-2 inline-flex items-center rounded-full bg-[#0f1121] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white shadow-[0_18px_28px_-16px_rgba(72,92,255,0.55)] ring-2 ring-accent/25 rotate-2 md:-top-2 md:-right-2 dark:bg-white dark:text-accent">
+                                New
+                              </span>
+                            ) : null}
                           </div>
+                          <CopyCodeButton code={c.code} tone="accent" />
                           {c.level_requirement != null ? (
-                            <p className="text-xs text-muted mt-2">Level required: {c.level_requirement}</p>
+                            <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent">
+                              Level {c.level_requirement}+
+                            </span>
                           ) : null}
-                        </td>
-                        <td className="px-4 py-4 align-top">
-                          {rewards ? <p className="text-sm text-foreground/90">{rewards}</p> : <p className="text-sm text-muted">No reward listed</p>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                      <div className="basis-full rounded-[var(--radius-sm)] bg-surface-muted/60 pl-1 pr-4 py-3 text-sm leading-relaxed text-foreground/90 md:basis-auto md:rounded-none md:border-l md:border-border/40 md:bg-transparent md:px-0 md:py-0 md:pl-6">
+                        {rewards ? rewards : <span className="text-muted">No reward listed</span>}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
@@ -177,36 +180,35 @@ export default async function GamePage({ params }: Params) {
             ) : null}
           </div>
           {needsCheck.length === 0 ? null : (
-            <div className="overflow-hidden rounded-[var(--radius-sm)] border border-border/60">
-              <table className="w-full border-collapse text-sm text-foreground">
-                <thead className="bg-surface-muted/60 text-left text-xs uppercase tracking-wide text-muted">
-                  <tr>
-                    <th className="px-4 py-3">Code</th>
-                    <th className="px-4 py-3">Reward</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...needsCheck].reverse().map(c => {
-                    const rewards = cleanRewardsText(c.rewards_text);
-                    return (
-                      <tr key={c.id} className="border-t border-border/40 hover:bg-surface-muted/50">
-                        <td className="px-4 py-4 align-top">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <code className="inline-flex items-center gap-2 rounded-full bg-surface px-4 py-2 text-sm font-semibold tracking-wide text-foreground">{c.code}</code>
-                            <CopyCodeButton code={c.code} />
-                          </div>
+            <div className="flex flex-col gap-4">
+              {[...needsCheck].reverse().map(c => {
+                const rewards = cleanRewardsText(c.rewards_text);
+                return (
+                  <article
+                    key={c.id}
+                    className="rounded-[var(--radius-sm)] border border-amber-200/70 bg-surface px-5 py-4 shadow-soft transition hover:-translate-y-[1px] hover:border-amber-300 dark:border-amber-500/40"
+                  >
+                    <div className="flex flex-wrap gap-4 md:grid md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:items-start md:gap-6">
+                      <div className="basis-full flex flex-col gap-3 md:basis-auto">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <code className="inline-flex items-center gap-2 rounded-full bg-surface-muted px-4 py-2 text-sm font-semibold tracking-wide text-foreground shadow-soft">
+                            {c.code}
+                          </code>
+                          <CopyCodeButton code={c.code} />
                           {c.level_requirement != null ? (
-                            <p className="text-xs text-muted mt-2">Level required: {c.level_requirement}</p>
+                            <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/80 bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-400/70 dark:bg-amber-500/10 dark:text-amber-100">
+                              Level {c.level_requirement}+
+                            </span>
                           ) : null}
-                        </td>
-                        <td className="px-4 py-4 align-top">
-                          {rewards ? <p className="text-sm text-foreground/90">{rewards}</p> : <p className="text-sm text-muted">No reward listed</p>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                      <div className="basis-full rounded-[var(--radius-sm)] bg-surface-muted/60 pl-0 pr-4 py-3 text-sm leading-relaxed text-foreground/90 md:basis-auto md:rounded-none md:border-l md:border-border/40 md:bg-transparent md:px-0 md:py-0 md:pl-6">
+                        {rewards ? rewards : <span className="text-muted">No reward listed</span>}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
