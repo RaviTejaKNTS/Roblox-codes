@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Author } from "@/lib/db";
 import { authorAvatarUrl } from "@/lib/avatar";
 
@@ -32,7 +33,15 @@ export function AuthorCard({ author, bioHtml }: { author: Author; bioHtml: strin
       </div>
       <div className="flex-1 space-y-3">
         <div className="prose prose-headings:mt-0 prose-p:mt-2 dark:prose-invert max-w-none">
-          <h3>About {author.name}</h3>
+          <h3>
+            {author.slug ? (
+              <Link href={`/authors/${author.slug}`} className="transition hover:text-accent">
+                About {author.name}
+              </Link>
+            ) : (
+              <>About {author.name}</>
+            )}
+          </h3>
           {bioHtml ? (
             <div dangerouslySetInnerHTML={{ __html: bioHtml }} />
           ) : (

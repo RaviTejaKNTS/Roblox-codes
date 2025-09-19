@@ -27,6 +27,9 @@ export type Game = {
   seo_keywords: string | null;
   intro_md: string | null;
   redeem_md: string | null;
+  redeem_img_1: string | null;
+  redeem_img_2: string | null;
+  redeem_img_3: string | null;
   description_md: string | null;
   reward_1: string | null;
   reward_2: string | null;
@@ -71,6 +74,17 @@ export async function listAuthors(): Promise<Author[]> {
   return data as Author[];
 }
 
+export async function getAuthorBySlug(slug: string): Promise<Author | null> {
+  const sb = supabaseAdmin();
+  const { data, error } = await sb
+    .from("authors")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Author) || null;
+}
+
 export type GameWithCounts = Game & { active_count: number };
 
 export async function listAllGames(): Promise<Game[]> {
@@ -106,6 +120,39 @@ export async function listGamesWithActiveCounts(): Promise<GameWithCounts[]> {
   return (games || []).map((g) => ({
     ...g,
     active_count: counts.get(g.id) || 0,
+  })) as GameWithCounts[];
+}
+
+export async function listPublishedGamesByAuthorWithActiveCounts(authorId: string): Promise<GameWithCounts[]> {
+  const sb = supabaseAdmin();
+  const { data: games, error: gamesError } = await sb
+    .from("games")
+    .select("*")
+    .eq("is_published", true)
+    .eq("author_id", authorId)
+    .order("name", { ascending: true });
+  if (gamesError) throw gamesError;
+
+  if (!games || games.length === 0) {
+    return [];
+  }
+
+  const gameIds = games.map((g) => g.id);
+  const { data: activeCodes, error: codesError } = await sb
+    .from("codes")
+    .select("game_id")
+    .eq("status", "active")
+    .in("game_id", gameIds);
+  if (codesError) throw codesError;
+
+  const counts = new Map<string, number>();
+  for (const row of activeCodes || []) {
+    counts.set(row.game_id, (counts.get(row.game_id) || 0) + 1);
+  }
+
+  return games.map((g) => ({
+    ...(g as Game),
+    active_count: counts.get(g.id) || 0
   })) as GameWithCounts[];
 }
 

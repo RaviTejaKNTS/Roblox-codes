@@ -1,12 +1,24 @@
-import { getGameBySlug, listCodesForGame, listGamesWithActiveCounts } from "@/lib/db";
+import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { monthYear } from "@/lib/date";
 import { marked } from "marked";
 import { AuthorCard } from "@/components/AuthorCard";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { ExpiredCodes } from "@/components/ExpiredCodes";
 import { GameCard } from "@/components/GameCard";
+import { RedeemImageGallery } from "@/components/RedeemImageGallery";
 import { authorAvatarUrl } from "@/lib/avatar";
+import { monthYear } from "@/lib/date";
+import { getGameBySlug, listCodesForGame, listGamesWithActiveCounts } from "@/lib/db";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  breadcrumbJsonLd,
+  codesItemListJsonLd,
+  gameArticleJsonLd,
+  gameJsonLd
+} from "@/lib/seo";
 
 export const revalidate = 0;
 
@@ -22,29 +34,53 @@ function cleanRewardsText(text?: string | null): string | null {
   return t || null;
 }
 
-export async function generateMetadata({ params }: Params) {
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const game = await getGameBySlug(params.slug);
   if (!game) return {};
   const when = monthYear();
   const title = game.seo_title || `${game.name} Codes (${when})`;
-  const description = game.seo_description || `Get the latest ${game.name} codes for ${when} and redeem them for free in-game rewards. Updated daily with only active and working codes.`;
-  const url = `${process.env.SITE_URL}/${game.slug}`;
+  const descriptionRaw =
+    game.seo_description ||
+    `Get the latest ${game.name} codes for ${when} and redeem them for free in-game rewards. Updated daily with only active and working codes.`;
+  const description = descriptionRaw?.trim() || SITE_DESCRIPTION;
+  const canonicalUrl = `${SITE_URL}/${game.slug}`;
+  const coverImage = game.cover_image || `${SITE_URL}/og-image.png`;
+  const publishedTime = new Date(game.created_at).toISOString();
+  const modifiedTime = new Date(game.updated_at).toISOString();
   const authors = game.author ? [{ name: game.author.name, url: game.author.website || undefined }] : undefined;
   return {
     title,
     description,
-    alternates: { canonical: url },
+    keywords: [
+      `${game.name} codes`,
+      "Roblox codes",
+      "Roblox promo codes",
+      "gaming rewards",
+      "Bloxodes"
+    ],
+    category: "Gaming",
+    alternates: { canonical: canonicalUrl },
     authors,
+    publisher: SITE_NAME,
     openGraph: {
+      type: "article",
       title,
       description,
-      url,
-      images: [{ url: game.cover_image || "/og-image.png" }]
+      url: canonicalUrl,
+      siteName: SITE_NAME,
+      images: [coverImage],
+      publishedTime,
+      modifiedTime,
+      locale: "en_US",
+      authors: authors?.map((author) => author.name) ?? [SITE_NAME]
     },
     twitter: {
+      card: "summary_large_image",
       title,
       description,
-      images: [game.cover_image || "/og-image.png"]
+      creator: "@bloxodes",
+      site: "@bloxodes",
+      images: [coverImage]
     }
   };
 }
@@ -56,11 +92,14 @@ export default async function GamePage({ params }: Params) {
   const allGames = await listGamesWithActiveCounts();
   const author = game.author;
   const authorAvatar = author ? authorAvatarUrl(author, 72) : null;
+  const redeemImages = [game.redeem_img_1, game.redeem_img_2, game.redeem_img_3]
+    .map((src) => src?.trim())
+    .filter((src): src is string => !!src);
 
   const active = codes.filter(c => c.status === "active");
   const needsCheck = codes.filter(c => c.status === "check");
   const expired = codes.filter(c => c.status === "expired");
-  const lastUpdated = codes.reduce((acc, c) => acc > c.last_seen_at ? acc : c.last_seen_at, "1970-01-01T00:00:00Z");
+  const lastUpdated = codes.reduce((acc, c) => (acc > c.last_seen_at ? acc : c.last_seen_at), game.updated_at);
   const recommended = allGames
     .filter((g) => g.id !== game.id)
     .sort((a, b) => {
@@ -82,29 +121,85 @@ export default async function GamePage({ params }: Params) {
     author?.bio_md ? marked.parse(author.bio_md) : "",
   ]);
 
+  const canonicalUrl = `${SITE_URL}/${game.slug}`;
+  const coverImage = game.cover_image || `${SITE_URL}/og-image.png`;
+  const metaDescriptionRaw =
+    game.seo_description ||
+    `Get the latest ${game.name} codes for ${monthYear()} and redeem them for free in-game rewards. Updated daily with only active and working codes.`;
+  const metaDescription = metaDescriptionRaw?.trim() || SITE_DESCRIPTION;
+  const publishedIso = new Date(game.created_at).toISOString();
+  const updatedIso = new Date(lastUpdated).toISOString();
+  const breadcrumbData = JSON.stringify(
+    breadcrumbJsonLd([
+      { name: "Home", url: SITE_URL },
+      { name: `${game.name} Codes`, url: canonicalUrl }
+    ])
+  );
+  const videoGameData = JSON.stringify(
+    gameJsonLd({ siteUrl: SITE_URL, game: { name: game.name, slug: game.slug, image: coverImage } })
+  );
+  const codesItemListData = JSON.stringify(
+    codesItemListJsonLd({
+      siteUrl: SITE_URL,
+      game: { name: game.name, slug: game.slug },
+      codes: codes.map((code) => ({ code: code.code, status: code.status }))
+    })
+  );
+  const articleData = JSON.stringify(
+    gameArticleJsonLd({
+      siteUrl: SITE_URL,
+      game: { name: game.name, slug: game.slug },
+      author: author ? { name: author.name, url: author.website || null } : null,
+      description: metaDescription,
+      coverImage,
+      publishedAt: publishedIso,
+      updatedAt: updatedIso
+    })
+  );
+
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1.25fr)]">
-      <article>
+      <article itemScope itemType="https://schema.org/Article">
+        <meta itemProp="mainEntityOfPage" content={canonicalUrl} />
+        <meta itemProp="datePublished" content={publishedIso} />
+        <meta itemProp="dateModified" content={updatedIso} />
+        <meta itemProp="description" content={metaDescription} />
+        <meta itemProp="image" content={coverImage} />
+        {!author ? <meta itemProp="author" content={SITE_NAME} /> : null}
         <header className="mb-6">
-          <h1 className="text-5xl font-bold text-foreground">{game.name} Codes ({monthYear()})</h1>
+          <h1 className="text-5xl font-bold text-foreground" itemProp="headline">
+            {game.name} Codes ({monthYear()})
+          </h1>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
             {author ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <img
-                    src={authorAvatar || "https://www.gravatar.com/avatar/?d=mp"}
-                    alt={author.name}
-                    className="h-9 w-9 rounded-full border border-border/40 object-cover"
-                  />
-                  <span>
-                    Authored by <span className="font-semibold text-foreground">{author.name}</span>
-                  </span>
-                </div>
-                <span aria-hidden="true">•</span>
-              </>
-            ) : null}
+              <div className="flex items-center gap-2" itemProp="author" itemScope itemType="https://schema.org/Person">
+                <img
+                  src={authorAvatar || "https://www.gravatar.com/avatar/?d=mp"}
+                  alt={author.name}
+                  className="h-9 w-9 rounded-full border border-border/40 object-cover"
+                />
+                <span>
+                  Authored by {author.slug ? (
+                    <Link
+                      href={`/authors/${author.slug}`}
+                      className="font-semibold text-foreground transition hover:text-accent"
+                      itemProp="name"
+                    >
+                      {author.name}
+                    </Link>
+                  ) : (
+                    <span className="font-semibold text-foreground" itemProp="name">{author.name}</span>
+                  )}
+                </span>
+              </div>
+            ) : (
+              <span className="font-semibold text-foreground" itemProp="author">
+                Published by {SITE_NAME}
+              </span>
+            )}
+            {author ? <span aria-hidden="true">•</span> : null}
             <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 font-medium text-accent">
-              <time dateTime={lastUpdated}>
+              <time dateTime={updatedIso} itemProp="dateModified">
                 Last check and updated {game.name} codes on {lastUpdatedFormatted}
               </time>
             </div>
@@ -112,7 +207,7 @@ export default async function GamePage({ params }: Params) {
         </header>
 
         {introHtml ? (
-          <section className="mb-8" id="intro">
+          <section className="mb-8" id="intro" itemProp="articleBody">
             <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: introHtml }} />
           </section>
         ) : null}
@@ -224,12 +319,15 @@ export default async function GamePage({ params }: Params) {
         </section>
 
         {redeemHtml ? (
-          <section className="mb-8" id="redeem">
+          <section className="mb-8" id="redeem" itemProp="articleBody">
             <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: redeemHtml }} />
+            {redeemImages.length ? (
+              <RedeemImageGallery images={redeemImages} gameName={game.name} />
+            ) : null}
           </section>
         ) : null}
 
-        <section className="mb-10" id="description">
+        <section className="mb-10" id="description" itemProp="articleBody">
           {descriptionHtml ? (
             <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
           ) : (
@@ -239,17 +337,28 @@ export default async function GamePage({ params }: Params) {
 
         {author ? <AuthorCard author={author} bioHtml={authorBioHtml} /> : null}
 
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: breadcrumbData }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: videoGameData }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: codesItemListData }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: articleData }} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [{
-              "@type": "Question",
-              "name": "How do I redeem codes in Roblox?",
-              "acceptedAnswer": { "@type": "Answer", "text": "Open the game, look for the codes/redeem menu, paste a working code, and confirm." }
-            }]
-          }) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "How do I redeem codes in Roblox?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Open the game, look for the codes/redeem menu, paste a working code, and confirm."
+                  }
+                }
+              ]
+            })
+          }}
         />
       </article>
 

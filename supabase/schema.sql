@@ -29,6 +29,9 @@ create table if not exists public.games (
   seo_keywords text,
   intro_md text,
   redeem_md text,
+  redeem_img_1 text,
+  redeem_img_2 text,
+  redeem_img_3 text,
   description_md text,
   reward_1 text,
   reward_2 text,
@@ -54,6 +57,11 @@ create table if not exists public.codes (
 
 create index if not exists idx_codes_game_status on public.codes (game_id, status);
 create index if not exists idx_games_published on public.games (is_published);
+
+-- ensure redeem image columns exist when applying to existing databases
+alter table if exists public.games add column if not exists redeem_img_1 text;
+alter table if exists public.games add column if not exists redeem_img_2 text;
+alter table if exists public.games add column if not exists redeem_img_3 text;
 
 -- trigger to update updated_at
 create or replace function public.set_updated_at() returns trigger as $$
