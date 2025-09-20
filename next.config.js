@@ -1,4 +1,5 @@
 const nextConfig = {
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.roblox.com" },
