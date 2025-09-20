@@ -219,7 +219,7 @@ export function webPageJsonLd({
   title: string;
   description: string;
   image: string;
-  author: { name: string; url?: string | null } | null;
+  author: { name: string; url?: string | null; description?: string | null; sameAs?: string[] | null } | null;
   publishedAt: string;
   updatedAt: string;
 }) {
