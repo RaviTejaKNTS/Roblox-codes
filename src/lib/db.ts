@@ -31,9 +31,6 @@ export type Game = {
   redeem_img_2: string | null;
   redeem_img_3: string | null;
   description_md: string | null;
-  reward_1: string | null;
-  reward_2: string | null;
-  reward_3: string | null;
   is_published: boolean;
   created_at: string;
   updated_at: string;

@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { scrapeRobloxdenPage } from "@/lib/robloxden";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Game } from "@/lib/db";
-import { extractRewardItems } from "@/lib/rewards";
 
 const PAGE_SIZE = Number(process.env.REFRESH_PAGE_SIZE ?? 500);
 const CONCURRENCY = Math.max(1, Number(process.env.REFRESH_CONCURRENCY ?? 5));
@@ -24,7 +23,6 @@ type ProcessResult = {
   status: "ok" | "skipped" | "error";
   found?: number;
   upserted?: number;
-  rewards?: string[];
   error?: string;
 };
 
@@ -59,7 +57,6 @@ async function processGame(sb: ReturnType<typeof supabaseAdmin>, game: GameRow):
 
   const scraped = await scrapeRobloxdenPage(game.source_url);
   let upserted = 0;
-  const rewardMap = new Map<string, string>();
 
   for (const c of scraped) {
     const { error } = await sb.rpc("upsert_code", {
@@ -75,24 +72,8 @@ async function processGame(sb: ReturnType<typeof supabaseAdmin>, game: GameRow):
       throw new Error(`upsert failed for ${c.code}: ${error.message}`);
     }
 
-    const items = extractRewardItems(c.rewardsText);
-    for (const item of items) {
-      const key = item.toLowerCase();
-      if (!rewardMap.has(key)) rewardMap.set(key, item);
-    }
-
     upserted += 1;
   }
-
-  const rewards = Array.from(rewardMap.values());
-  await sb
-    .from("games")
-    .update({
-      reward_1: rewards[0] ?? null,
-      reward_2: rewards[1] ?? null,
-      reward_3: rewards[2] ?? null,
-    })
-    .eq("id", game.id);
 
   return {
     slug: game.slug,
@@ -100,7 +81,6 @@ async function processGame(sb: ReturnType<typeof supabaseAdmin>, game: GameRow):
     status: "ok",
     found: scraped.length,
     upserted,
-    rewards: rewards.slice(0, 3),
   };
 }
 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { scrapeRobloxdenPage } from "@/lib/robloxden";
-import { extractRewardItems } from "@/lib/rewards";
 
 type ImportPayload = {
   sourceUrl: string;
@@ -80,7 +79,6 @@ async function importSingle(sb: ReturnType<typeof supabaseAdmin>, payload: Impor
 
   const scraped = await scrapeRobloxdenPage(sourceUrl);
   let upserted = 0;
-  const rewardMap = new Map<string, string>();
 
   for (const c of scraped) {
     const { error: rpcError } = await sb.rpc("upsert_code", {
@@ -96,26 +94,10 @@ async function importSingle(sb: ReturnType<typeof supabaseAdmin>, payload: Impor
       throw new Error(`upsert failed for ${c.code}: ${rpcError.message}`);
     }
 
-    const items = extractRewardItems(c.rewardsText);
-    for (const item of items) {
-      const key = item.toLowerCase();
-      if (!rewardMap.has(key)) rewardMap.set(key, item);
-    }
-
     upserted += 1;
   }
 
-  const rewards = Array.from(rewardMap.values());
-  await sb
-    .from("games")
-    .update({
-      reward_1: rewards[0] ?? null,
-      reward_2: rewards[1] ?? null,
-      reward_3: rewards[2] ?? null,
-    })
-    .eq("id", game.id);
-
-  return { game, codesFound: scraped.length, codesUpserted: upserted, rewardsStored: rewards.slice(0, 3) };
+  return { game, codesFound: scraped.length, codesUpserted: upserted };
 }
 
 export async function POST(req: NextRequest) {
