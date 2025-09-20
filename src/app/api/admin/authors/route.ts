@@ -40,3 +40,31 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
+
+export async function DELETE(req: NextRequest) {
+  if (!authOK(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const body = await req
+    .json()
+    .catch(() => null) as { id?: string; slug?: string } | null;
+
+  const identifier = body?.id ? { key: "id", value: body.id } : body?.slug ? { key: "slug", value: body.slug } : null;
+
+  if (!identifier) {
+    return NextResponse.json({ error: "id or slug required" }, { status: 400 });
+  }
+
+  const sb = supabaseAdmin();
+  const query = sb.from("authors").delete().eq(identifier.key, identifier.value).select("*").maybeSingle();
+  const { data, error } = await query;
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!data) {
+    return NextResponse.json({ error: "author not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true, deleted: data });
+}
