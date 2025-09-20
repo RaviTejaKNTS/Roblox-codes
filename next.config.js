@@ -12,6 +12,16 @@ const nextConfig = {
     serverActions: { allowedOrigins: ["*"] },
     serverComponentsExternalPackages: ["@supabase/supabase-js"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.bloxodes.com" }],
+        destination: "https://bloxodes.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
