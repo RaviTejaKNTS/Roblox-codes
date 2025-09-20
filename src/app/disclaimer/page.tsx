@@ -4,14 +4,43 @@ import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const title = "Disclaimer";
 const description = "Understand how Bloxodes verifies Roblox codes and why some listings may stop working.";
+const canonical = `${SITE_URL.replace(/\/$/, "")}/disclaimer`;
+const ogImage = `${SITE_URL}/og-image.png`;
 
 export const metadata: Metadata = {
   title: `${title} | ${SITE_NAME}`,
   description,
-  alternates: { canonical: `${SITE_URL.replace(/\/$/, "")}/disclaimer` }
+  alternates: { canonical },
+  openGraph: {
+    type: "website",
+    url: canonical,
+    title: `${title} | ${SITE_NAME}`,
+    description,
+    siteName: SITE_NAME,
+    images: [ogImage]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${title} | ${SITE_NAME}`,
+    description,
+    images: [ogImage]
+  }
 };
 
 export default function DisclaimerPage() {
+  const structuredData = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: canonical,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL
+    }
+  });
+
   return (
     <article className="prose dark:prose-invert max-w-3xl space-y-6">
       <header>
@@ -65,6 +94,8 @@ export default function DisclaimerPage() {
           and <Link href="/privacy-policy">privacy policy</Link>.
         </p>
       </section>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
     </article>
   );
 }

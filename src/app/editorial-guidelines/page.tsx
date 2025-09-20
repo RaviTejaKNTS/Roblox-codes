@@ -4,14 +4,48 @@ import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const title = "Editorial Guidelines";
 const description = "See how Bloxodes researches, verifies, and maintains every Roblox code guide.";
+const canonical = `${SITE_URL.replace(/\/$/, "")}/editorial-guidelines`;
+const ogImage = `${SITE_URL}/og-image.png`;
 
 export const metadata: Metadata = {
   title: `${title} | ${SITE_NAME}`,
   description,
-  alternates: { canonical: `${SITE_URL.replace(/\/$/, "")}/editorial-guidelines` }
+  alternates: { canonical },
+  openGraph: {
+    type: "article",
+    url: canonical,
+    title: `${title} | ${SITE_NAME}`,
+    description,
+    siteName: SITE_NAME,
+    images: [ogImage]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${title} | ${SITE_NAME}`,
+    description,
+    images: [ogImage]
+  }
 };
 
 export default function EditorialGuidelinesPage() {
+  const structuredData = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: canonical,
+    mainEntity: {
+      "@type": "CreativeWork",
+      name: title,
+      about: "Editorial standards for Roblox code coverage"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL
+    }
+  });
+
   return (
     <article className="prose dark:prose-invert max-w-3xl space-y-6">
       <header>
@@ -69,6 +103,8 @@ export default function EditorialGuidelinesPage() {
           with a revision date so you always know how the team operates.
         </p>
       </section>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
     </article>
   );
 }

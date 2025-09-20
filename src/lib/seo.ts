@@ -98,7 +98,12 @@ export function codesItemListJsonLd({
   };
 }
 
-type ArticleAuthor = { name: string; url?: string | null } | null | undefined;
+type ArticleAuthor = {
+  name: string;
+  url?: string | null;
+  description?: string | null;
+  sameAs?: string[] | null;
+} | null | undefined;
 
 export function gameArticleJsonLd({
   siteUrl,
@@ -121,7 +126,9 @@ export function gameArticleJsonLd({
     ? {
         "@type": "Person",
         "name": author.name,
-        ...(author.url ? { url: author.url } : {})
+        ...(author.url ? { url: author.url } : {}),
+        ...(author.description ? { description: author.description } : {}),
+        ...(author.sameAs && author.sameAs.length ? { sameAs: author.sameAs } : {})
       }
     : {
         "@type": "Organization",
@@ -243,7 +250,9 @@ export function webPageJsonLd({
           author: {
             "@type": "Person",
             "name": author.name,
-            ...(author.url ? { url: author.url } : {})
+            ...(author.url ? { url: author.url } : {}),
+            ...(author.description ? { description: author.description } : {}),
+            ...(author.sameAs && author.sameAs.length ? { sameAs: author.sameAs } : {})
           }
         }
       : {

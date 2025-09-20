@@ -4,14 +4,43 @@ import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const title = "About Bloxodes";
 const description = "Discover the mission behind Bloxodes and how our team keeps Roblox code lists accurate.";
+const canonical = `${SITE_URL.replace(/\/$/, "")}/about`;
+const ogImage = `${SITE_URL}/og-image.png`;
 
 export const metadata: Metadata = {
   title: `${title} | ${SITE_NAME}`,
   description,
-  alternates: { canonical: `${SITE_URL.replace(/\/$/, "")}/about` }
+  alternates: { canonical },
+  openGraph: {
+    type: "website",
+    url: canonical,
+    title: `${title} | ${SITE_NAME}`,
+    description,
+    siteName: SITE_NAME,
+    images: [ogImage]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${title} | ${SITE_NAME}`,
+    description,
+    images: [ogImage]
+  }
 };
 
 export default function AboutPage() {
+  const structuredData = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    name: title,
+    description,
+    url: canonical,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL
+    }
+  });
+
   return (
     <article className="prose dark:prose-invert max-w-3xl space-y-6">
       <header>
@@ -59,6 +88,8 @@ export default function AboutPage() {
           page</Link> and we will respond within one business day.
         </p>
       </section>
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
     </article>
   );
 }

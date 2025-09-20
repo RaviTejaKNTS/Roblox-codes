@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, organizationJsonLd, siteJsonLd } from "@/lib/seo";
 
@@ -87,6 +88,8 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const currentYear = new Date().getFullYear();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground transition-colors duration-300">
@@ -123,9 +126,45 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </header>
         <main className="container py-10">{children}</main>
         <footer className="mt-16 border-t border-border/60">
-          <div className="container flex flex-col gap-2 py-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
-            <p>© {new Date().getFullYear()} Bloxodes. Not affiliated with Roblox.</p>
-            <p className="text-xs">Crafted for players hunting verified game rewards.</p>
+          <div className="container flex flex-col gap-6 py-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
+            <Link href="/" className="flex items-center gap-3 text-foreground">
+              <div className="relative h-8 w-auto">
+                <Image
+                  src="/Bloxodes-dark.png"
+                  alt="Bloxodes"
+                  width={948}
+                  height={319}
+                  className="hidden h-8 w-auto dark:block"
+                />
+                <Image
+                  src="/Bloxodes-light.png"
+                  alt="Bloxodes"
+                  width={948}
+                  height={319}
+                  className="block h-8 w-auto dark:hidden"
+                />
+              </div>
+            </Link>
+            <nav className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-wide text-muted md:text-sm">
+              <Link href="/about" className="transition hover:text-foreground">
+                About
+              </Link>
+              <Link href="/contact" className="transition hover:text-foreground">
+                Contact
+              </Link>
+              <Link href="/editorial-guidelines" className="transition hover:text-foreground">
+                Editorial Guidelines
+              </Link>
+              <Link href="/privacy-policy" className="transition hover:text-foreground">
+                Privacy Policy
+              </Link>
+              <Link href="/disclaimer" className="transition hover:text-foreground">
+                Disclaimer
+              </Link>
+            </nav>
+            <div className="text-xs text-muted md:text-right">
+              <p>© {currentYear} Bloxodes. Not affiliated with Roblox.</p>
+            </div>
           </div>
         </footer>
       </body>

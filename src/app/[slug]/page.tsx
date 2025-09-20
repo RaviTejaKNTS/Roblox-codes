@@ -60,6 +60,52 @@ function extractHowToSteps(markdown?: string | null): string[] {
   return steps;
 }
 
+function markdownToPlain(text?: string | null): string {
+  if (!text) return "";
+  return text
+    .replace(/\[(.+?)\]\((.*?)\)/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[*_`>#~|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeTwitter(value?: string | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http")) return trimmed;
+  const handle = trimmed.replace(/^@/, "");
+  if (!handle) return null;
+  return `https://twitter.com/${handle}`;
+}
+
+function normalizeUrl(value?: string | null): string | null {
+  if (!value) return null;
+  let trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!/^https?:\/\//i.test(trimmed)) {
+    trimmed = `https://${trimmed.replace(/^\/\//, "")}`;
+  }
+  return trimmed;
+}
+
+function collectAuthorSameAs(author?: { twitter?: string | null; youtube?: string | null; website?: string | null }): string[] {
+  if (!author) return [];
+  const links: string[] = [];
+  const twitter = normalizeTwitter(author.twitter);
+  if (twitter) links.push(twitter);
+  if (author.youtube) {
+    const yt = normalizeUrl(author.youtube);
+    if (yt) links.push(yt);
+  }
+  if (author.website) {
+    const site = normalizeUrl(author.website);
+    if (site) links.push(site);
+  }
+  return Array.from(new Set(links));
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const game = await getGameBySlug(params.slug);
   if (!game) return {};
@@ -90,6 +136,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     ? `${SITE_URL.replace(/\/$/, "")}/authors/${game.author.slug}`
     : undefined;
   const authors = game.author ? [{ name: game.author.name, url: authorUrl }] : undefined;
+  const authorBioPlain = markdownToPlain(game.author?.bio_md);
+  const authorSameAs = collectAuthorSameAs(game.author);
+  const otherMeta: Record<string, string> = {};
+  if (authorBioPlain) {
+    otherMeta["author:bio"] = authorBioPlain;
+  }
+  authorSameAs.forEach((url, idx) => {
+    otherMeta[`author:social:${idx + 1}`] = url;
+  });
   return {
     title,
     description,
@@ -123,7 +178,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       creator: "@bloxodes",
       site: "@bloxodes",
       images: [coverImage]
-    }
+    },
+    ...(Object.keys(otherMeta).length ? { other: otherMeta } : {})
   };
 }
 
@@ -187,13 +243,18 @@ export default async function GamePage({ params }: Params) {
   const publishedIso = new Date(game.created_at).toISOString();
   const updatedIso = new Date(lastContentUpdate).toISOString();
   const lastCheckedIso = new Date(lastChecked).toISOString();
-  const structuredAuthor = author?.slug
+  const authorBioPlain = markdownToPlain(author?.bio_md) || null;
+  const authorSameAs = collectAuthorSameAs(author || undefined);
+  const authorProfileUrl = author?.slug
+    ? `${SITE_URL.replace(/\/$/, "")}/authors/${author.slug}`
+    : undefined;
+  const structuredAuthor = author
     ? {
         name: author.name,
-        url: `${SITE_URL.replace(/\/$/, "")}/authors/${author.slug}`
+        url: authorProfileUrl || null,
+        description: authorBioPlain,
+        sameAs: authorSameAs.length ? authorSameAs : null
       }
-    : author
-    ? { name: author.name, url: null }
     : null;
   const breadcrumbData = JSON.stringify(
     breadcrumbJsonLd([
@@ -265,6 +326,11 @@ export default async function GamePage({ params }: Params) {
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
             {author ? (
               <div className="flex items-center gap-2" itemProp="author" itemScope itemType="https://schema.org/Person">
+                {authorProfileUrl ? <link itemProp="url" href={authorProfileUrl} /> : null}
+                {authorBioPlain ? <meta itemProp="description" content={authorBioPlain} /> : null}
+                {authorSameAs.map((url) => (
+                  <link key={url} itemProp="sameAs" href={url} />
+                ))}
                 <img
                   src={authorAvatar || "https://www.gravatar.com/avatar/?d=mp"}
                   alt={author.name}
