@@ -90,7 +90,7 @@ function normalizeUrl(value?: string | null): string | null {
   return trimmed;
 }
 
-function collectAuthorSameAs(author?: { twitter?: string | null; youtube?: string | null; website?: string | null }): string[] {
+function collectAuthorSameAs(author?: { twitter?: string | null; youtube?: string | null; website?: string | null } | null): string[] {
   if (!author) return [];
   const links: string[] = [];
   const twitter = normalizeTwitter(author.twitter);
