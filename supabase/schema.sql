@@ -59,9 +59,6 @@ create index if not exists idx_games_published on public.games (is_published);
 alter table if exists public.games add column if not exists redeem_img_1 text;
 alter table if exists public.games add column if not exists redeem_img_2 text;
 alter table if exists public.games add column if not exists redeem_img_3 text;
-alter table if exists public.games drop column if exists reward_1;
-alter table if exists public.games drop column if exists reward_2;
-alter table if exists public.games drop column if exists reward_3;
 
 -- trigger to update updated_at
 create or replace function public.set_updated_at() returns trigger as $$
