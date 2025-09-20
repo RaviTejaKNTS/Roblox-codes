@@ -124,7 +124,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <main className="container py-10">{children}</main>
         <footer className="mt-16 border-t border-border/60">
           <div className="container flex flex-col gap-2 py-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
-            <p>© {new Date().getFullYear()} Bloxodes (Unofficial). Not affiliated with Roblox.</p>
+            <p>© {new Date().getFullYear()} Bloxodes. Not affiliated with Roblox.</p>
             <p className="text-xs">Crafted for players hunting verified game rewards.</p>
           </div>
         </footer>

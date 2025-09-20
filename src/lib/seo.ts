@@ -84,10 +84,15 @@ export function codesItemListJsonLd({
       "url": `${siteUrl}/${game.slug}#${encodeURIComponent(c.code)}`,
       "additionalType": "https://schema.org/Coupon",
       "item": {
-        "@type": "Offer",
+        "@type": "Coupon",
         "name": c.code,
-        "availability": c.status === "active" ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-        ...(c.reward ? { description: c.reward } : {})
+        "couponCode": c.code,
+        ...(c.reward ? { description: c.reward } : {}),
+        "additionalProperty": {
+          "@type": "PropertyValue",
+          "name": "status",
+          "value": c.status
+        }
       }
     }))
   };

@@ -63,6 +63,15 @@ function extractHowToSteps(markdown?: string | null): string[] {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const game = await getGameBySlug(params.slug);
   if (!game) return {};
+  const codes = await listCodesForGame(game.id);
+  const latestCodeFirstSeen = codes.reduce<string | null>((latest, code) => {
+    if (!code.first_seen_at) return latest;
+    if (!latest || code.first_seen_at > latest) return code.first_seen_at;
+    return latest;
+  }, null);
+  const lastContentUpdate = latestCodeFirstSeen && latestCodeFirstSeen > game.updated_at
+    ? latestCodeFirstSeen
+    : game.updated_at;
   const when = monthYear();
   const title = game.seo_title || `${game.name} Codes (${when})`;
   const descriptionRaw =
@@ -76,8 +85,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     ? `${SITE_URL.replace(/\/$/, "")}/${game.cover_image.replace(/^\//, "")}`
     : `${SITE_URL}/og-image.png`;
   const publishedTime = new Date(game.created_at).toISOString();
-  const modifiedTime = new Date(game.updated_at).toISOString();
-  const authors = game.author ? [{ name: game.author.name, url: game.author.website || undefined }] : undefined;
+  const modifiedTime = new Date(lastContentUpdate).toISOString();
+  const authorUrl = game.author?.slug
+    ? `${SITE_URL.replace(/\/$/, "")}/authors/${game.author.slug}`
+    : undefined;
+  const authors = game.author ? [{ name: game.author.name, url: authorUrl }] : undefined;
   return {
     title,
     description,
@@ -130,7 +142,17 @@ export default async function GamePage({ params }: Params) {
   const active = codes.filter(c => c.status === "active");
   const needsCheck = codes.filter(c => c.status === "check");
   const expired = codes.filter(c => c.status === "expired");
-  const lastUpdated = codes.reduce((acc, c) => (acc > c.last_seen_at ? acc : c.last_seen_at), game.updated_at);
+  const latestCodeFirstSeen = codes.reduce<string | null>((latest, code) => {
+    if (!code.first_seen_at) return latest;
+    if (!latest || code.first_seen_at > latest) return code.first_seen_at;
+    return latest;
+  }, null);
+
+  const lastContentUpdate = latestCodeFirstSeen && latestCodeFirstSeen > game.updated_at
+    ? latestCodeFirstSeen
+    : game.updated_at;
+
+  const lastChecked = codes.reduce((acc, c) => (acc > c.last_seen_at ? acc : c.last_seen_at), game.updated_at);
   const recommended = allGames
     .filter((g) => g.id !== game.id)
     .sort((a, b) => {
@@ -139,7 +161,7 @@ export default async function GamePage({ params }: Params) {
     })
     .slice(0, 6);
 
-  const lastUpdatedFormatted = new Date(lastUpdated).toLocaleDateString("en-US", {
+  const lastCheckedFormatted = new Date(lastChecked).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -163,7 +185,16 @@ export default async function GamePage({ params }: Params) {
     `Get the latest ${game.name} codes for ${monthYear()} and redeem them for free in-game rewards. Updated daily with only active and working codes.`;
   const metaDescription = metaDescriptionRaw?.trim() || SITE_DESCRIPTION;
   const publishedIso = new Date(game.created_at).toISOString();
-  const updatedIso = new Date(lastUpdated).toISOString();
+  const updatedIso = new Date(lastContentUpdate).toISOString();
+  const lastCheckedIso = new Date(lastChecked).toISOString();
+  const structuredAuthor = author?.slug
+    ? {
+        name: author.name,
+        url: `${SITE_URL.replace(/\/$/, "")}/authors/${author.slug}`
+      }
+    : author
+    ? { name: author.name, url: null }
+    : null;
   const breadcrumbData = JSON.stringify(
     breadcrumbJsonLd([
       { name: "Home", url: SITE_URL },
@@ -188,7 +219,7 @@ export default async function GamePage({ params }: Params) {
     gameArticleJsonLd({
       siteUrl: SITE_URL,
       game: { name: game.name, slug: game.slug },
-      author: author ? { name: author.name, url: author.website || null } : null,
+      author: structuredAuthor,
       description: metaDescription,
       coverImage,
       publishedAt: publishedIso,
@@ -212,7 +243,7 @@ export default async function GamePage({ params }: Params) {
       title: `${game.name} Codes (${monthYear()})`,
       description: metaDescription,
       image: coverImage,
-      author: author ? { name: author.name, url: author.website || null } : null,
+      author: structuredAuthor,
       publishedAt: publishedIso,
       updatedAt: updatedIso
     })
@@ -260,8 +291,8 @@ export default async function GamePage({ params }: Params) {
             )}
             {author ? <span aria-hidden="true">•</span> : null}
             <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 font-medium text-accent">
-              <time dateTime={updatedIso} itemProp="dateModified">
-                Last check and updated {game.name} codes on {lastUpdatedFormatted}
+              <time dateTime={lastCheckedIso}>
+                Last checked for {game.name} codes on {lastCheckedFormatted}
               </time>
             </div>
           </div>
