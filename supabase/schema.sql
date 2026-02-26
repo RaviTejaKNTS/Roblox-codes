@@ -1,6 +1,7 @@
 -- Enable UUID extension
+create schema if not exists extensions;
 create extension if not exists "uuid-ossp";
-create extension if not exists pg_trgm;
+create extension if not exists pg_trgm with schema extensions;
 
 -- authors table
 create table if not exists public.authors (
@@ -2722,3 +2723,70 @@ drop trigger if exists trg_refresh_search_index_music on public.roblox_music_ids
 create trigger trg_refresh_search_index_music
 after insert or update or delete on public.roblox_music_ids
 for each statement execute function public.trg_refresh_search_index_music();
+
+-- Security hardening sync (latest migrations)
+alter view if exists public.limited_items_trading_view set (security_invoker = true);
+alter view if exists public.roblox_music_artists_view set (security_invoker = true);
+alter view if exists public.checklist_pages_view set (security_invoker = true);
+alter view if exists public.tools_view set (security_invoker = true);
+alter view if exists public.game_pages_index_view set (security_invoker = true);
+alter view if exists public.game_lists_view set (security_invoker = true);
+alter view if exists public.game_code_stats set (security_invoker = true);
+alter view if exists public.catalog_pages_view set (security_invoker = true);
+alter view if exists public.quiz_pages_view set (security_invoker = true);
+alter view if exists public.code_pages_view set (security_invoker = true);
+alter view if exists public.roblox_music_ids_ranked_view set (security_invoker = true);
+alter view if exists public.article_pages_index_view set (security_invoker = true);
+alter view if exists public.article_pages_view set (security_invoker = true);
+alter view if exists public.roblox_music_genres_view set (security_invoker = true);
+alter view if exists public.game_lists_index_view set (security_invoker = true);
+alter view if exists public.roblox_music_ids_boombox_view set (security_invoker = true);
+
+alter table public.quiz_pages enable row level security;
+
+drop policy if exists "quiz_pages_public_read" on public.quiz_pages;
+create policy "quiz_pages_public_read"
+  on public.quiz_pages
+  for select
+  to anon, authenticated
+  using (is_published = true);
+
+drop policy if exists "quiz_pages_admin_full_access" on public.quiz_pages;
+create policy "quiz_pages_admin_full_access"
+  on public.quiz_pages
+  for all
+  to authenticated
+  using (public.is_admin(auth.uid()))
+  with check (public.is_admin(auth.uid()));
+
+do $$
+declare
+  fn record;
+begin
+  for fn in
+    select
+      format('%I.%I(%s)', n.nspname, p.proname, pg_get_function_identity_arguments(p.oid)) as signature
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.prokind = 'f'
+      and not exists (
+        select 1
+        from pg_depend d
+        where d.classid = 'pg_proc'::regclass
+          and d.objid = p.oid
+          and d.deptype = 'e'
+      )
+  loop
+    execute format('alter function %s set search_path = pg_catalog, public', fn.signature);
+  end loop;
+end;
+$$;
+
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_trgm') then
+    execute 'alter extension pg_trgm set schema extensions';
+  end if;
+end;
+$$;
