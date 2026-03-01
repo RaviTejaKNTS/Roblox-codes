@@ -106,7 +106,7 @@ export function CookieSettingsContent() {
           />
           <div>
             <p className="font-semibold">Ads/marketing</p>
-            <p className="text-sm text-muted-foreground">Used for ads if enabled (AdSense/Ezoic).</p>
+            <p className="text-sm text-muted-foreground">Used for ads if enabled (Mediavine Journey/Ezoic).</p>
           </div>
         </label>
       </div>

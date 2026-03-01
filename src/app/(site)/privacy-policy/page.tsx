@@ -115,24 +115,20 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">2. Advertising (AdSense) and Google Policies</h2>
-          <p>We use Google AdSense to display ads so we can offer our content for free.</p>
+          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">2. Advertising and Ad Partner Policies</h2>
+          <p>We use advertising partners, including Mediavine Journey, to display ads so we can offer our content for free.</p>
           <p>
-            Third-party vendors, including Google, use cookies to serve ads based on your visits to this and other sites. Google and partners
-            may use advertising cookies to show ads based on your interests and to prevent fraud.
+            Third-party vendors may use cookies and similar technologies to serve ads based on your visits to this and other sites, measure
+            performance, and help prevent fraud.
           </p>
           <p>
-            Learn how Google uses data:{" "}
-            <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">
-              https://policies.google.com/technologies/partner-sites
+            Learn how Mediavine handles advertising data:{" "}
+            <a href="https://www.mediavine.com/privacy-policy/" target="_blank" rel="noopener noreferrer">
+              https://www.mediavine.com/privacy-policy/
             </a>
           </p>
           <p>
             Manage your ad preferences or opt out of personalized ads:
-            <br />
-            <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">
-              Google Ad Settings / My Ad Center
-            </a>
             <br />
             <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener noreferrer">
               https://www.aboutads.info/choices
@@ -165,7 +161,7 @@ export default function PrivacyPolicyPage() {
           <div className="space-y-2">
             <p className="font-medium">Analytics and advertising cookies:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Set by Google Analytics and Google AdSense to measure views, clicks, and prevent fraud.</li>
+              <li>Set by analytics providers and ad partners to measure views, clicks, ad delivery, and prevent fraud.</li>
             </ul>
           </div>
           <p>
@@ -182,7 +178,8 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">5. Data Sharing</h2>
           <p>We do not sell personal data. We share technical data only with providers that help run the site:</p>
           <ul className="list-disc pl-6 space-y-2">
-            <li>Google (AdSense/Analytics) as an independent controller for ads and measurement.</li>
+            <li>Google Analytics for usage measurement.</li>
+            <li>Mediavine Journey and other ad partners for advertising delivery and measurement.</li>
             <li>Vercel for secure hosting, edge delivery, and performance monitoring (Analytics/Speed Insights run by default).</li>
             <li>Supabase for authentication, database storage, and account management.</li>
           </ul>

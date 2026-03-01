@@ -109,7 +109,7 @@ export function ConsentBanner() {
               />
               <div className="text-sm">
                 <p className="font-semibold">Ads/marketing</p>
-                <p className="text-muted-foreground">Used if we show ads (Google AdSense).</p>
+                <p className="text-muted-foreground">Used if we show ads (Mediavine Journey).</p>
               </div>
             </label>
 

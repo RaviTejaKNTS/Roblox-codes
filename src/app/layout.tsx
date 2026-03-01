@@ -1,12 +1,11 @@
 import "./globals.css";
 import { ReactNode } from "react";
-import Script from "next/script";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { ConsentProvider } from "@/components/consent/ConsentProvider";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ConsentGate } from "@/components/consent/ConsentGate";
 import { ConsentMode } from "@/components/consent/ConsentMode";
-import { GoogleAdSense } from "@/components/GoogleAdSense";
+import { JourneyAds } from "@/components/JourneyAds";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LayoutClientAnalytics, LayoutGlobalSearch } from "@/components/LayoutClient";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, organizationJsonLd, siteJsonLd } from "@/lib/seo";
@@ -82,14 +81,11 @@ const consentModeScript = `(() => {
   }
 })();`;
 
-const growInitializerScript = `!(function(){window.growMe||((window.growMe=function(e){window.growMe._.push(e);}),(window.growMe._=[]));var e=document.createElement("script");(e.type="text/javascript"),(e.src="https://faves.grow.me/main.js"),(e.defer=!0),e.setAttribute("data-grow-faves-site-id","U2l0ZTo3NWQ5YWI3ZC0yNjhjLTRlMDMtYmI2Yy0xODBjYTRiOGQ1ZWQ=");var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t);})();`;
 const structuredData = JSON.stringify({
   "@context": "https://schema.org",
   "@graph": [siteJsonLd({ siteUrl: SITE_URL }), organizationJsonLd({ siteUrl: SITE_URL })]
 });
 const googleAnalyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
-const googleAdSenseClientId =
-  process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID ?? "ca-pub-5243258773824278";
 const alternatesTypes = { "application/rss+xml": `${SITE_URL}/feed.xml` };
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -178,9 +174,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: consentModeScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
-        <Script id="grow-initializer" strategy="afterInteractive">
-          {growInitializerScript}
-        </Script>
         <ConsentProvider>
           <ConsentMode />
           <ConsentBanner />
@@ -189,7 +182,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <LayoutClientAnalytics />
           </ConsentGate>
           <ConsentGate category="marketing">
-            <GoogleAdSense clientId={googleAdSenseClientId} />
+            <JourneyAds />
           </ConsentGate>
           <AnalyticsTracker />
           <LayoutGlobalSearch />
