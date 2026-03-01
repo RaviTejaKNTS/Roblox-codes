@@ -5,7 +5,6 @@ import { ConsentProvider } from "@/components/consent/ConsentProvider";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ConsentGate } from "@/components/consent/ConsentGate";
 import { ConsentMode } from "@/components/consent/ConsentMode";
-import { JourneyAds } from "@/components/JourneyAds";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LayoutClientAnalytics, LayoutGlobalSearch } from "@/components/LayoutClient";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, organizationJsonLd, siteJsonLd } from "@/lib/seo";
@@ -174,15 +173,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: consentModeScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+        <script
+          type="text/javascript"
+          async={true}
+          data-noptimize="1"
+          data-cfasync="false"
+          src="//scripts.scriptwrapper.com/tags/75d9ab7d-268c-4e03-bb6c-180ca4b8d5ed.js"
+        />
         <ConsentProvider>
           <ConsentMode />
           <ConsentBanner />
           <ConsentGate category="analytics">
             <GoogleAnalytics measurementId={googleAnalyticsId} />
             <LayoutClientAnalytics />
-          </ConsentGate>
-          <ConsentGate category="marketing">
-            <JourneyAds />
           </ConsentGate>
           <AnalyticsTracker />
           <LayoutGlobalSearch />
