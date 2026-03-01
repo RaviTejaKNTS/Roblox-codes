@@ -47,6 +47,37 @@ function isSupabasePoolTimeoutError(error: unknown): boolean {
   return message.includes("timed out acquiring connection from connection pool");
 }
 
+function isTransientUpstreamListError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+    status?: unknown;
+  };
+
+  const code = typeof candidate.code === "string" ? candidate.code : "";
+  const status = typeof candidate.status === "number" ? candidate.status : null;
+  const message = [candidate.message, candidate.details, candidate.hint]
+    .filter((value): value is string => typeof value === "string")
+    .join(" ")
+    .toLowerCase();
+
+  if (status !== null && status >= 500) return true;
+  if (code === "57014") return true;
+
+  return (
+    message.includes("bad gateway") ||
+    message.includes("error code 502") ||
+    message.includes("cloudflare") ||
+    message.includes("<!doctype html") ||
+    message.includes("statement timeout") ||
+    message.includes("canceling statement due to statement timeout")
+  );
+}
+
 async function wait(ms: number): Promise<void> {
   if (ms <= 0) return;
   await new Promise((resolve) => setTimeout(resolve, ms));
@@ -63,11 +94,14 @@ async function withPoolTimeoutRetry<T>(
       return await run();
     } catch (error) {
       attempt += 1;
-      if (!isSupabasePoolTimeoutError(error) || attempt >= maxAttempts) {
+      const isRetryable = isSupabasePoolTimeoutError(error) || isTransientUpstreamListError(error);
+      if (!isRetryable || attempt >= maxAttempts) {
         throw error;
       }
       const delayMs = Math.min(2000, 250 * Math.pow(2, attempt - 1));
-      console.warn(`[lists:${label}] Supabase pool timeout (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs}ms`);
+      console.warn(
+        `[lists:${label}] transient upstream error (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs}ms`
+      );
       await wait(delayMs);
     }
   }
