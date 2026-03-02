@@ -63,6 +63,29 @@ function normalizeQuery(value: string | null): string {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }
 
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
+async function searchSiteFallback(query: string, limit: number): Promise<SearchRow[]> {
+  const sb = supabaseAdmin();
+  const pattern = `%${escapeLike(query)}%`;
+  const { data, error } = await sb
+    .from("search_index")
+    .select("entity_type,entity_id,slug,title,subtitle,url,updated_at")
+    .eq("is_published", true)
+    .ilike("search_text", pattern)
+    .order("updated_at", { ascending: false, nullsFirst: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  return ((data ?? []) as Omit<SearchRow, "active_code_count">[]).map((row) => ({
+    ...row,
+    active_code_count: null
+  }));
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -80,12 +103,15 @@ export async function GET(request: Request) {
       p_limit: safeLimit,
       p_offset: 0
     });
-    if (error) throw error;
 
-    const rows = (data ?? []) as SearchRow[];
+    const rows = error ? await searchSiteFallback(rawQuery, safeLimit) : ((data ?? []) as SearchRow[]);
+    if (error) {
+      console.warn("search_site RPC failed, using search_index fallback", error);
+    }
+
     const items: SearchItem[] = rows.map((row) => {
       const type = TYPE_MAP[row.entity_type] ?? "article";
-      const badge = row.entity_type === "code" ? `${row.active_code_count ?? 0} active` : null;
+      const badge = row.entity_type === "code" && row.active_code_count != null ? `${row.active_code_count} active` : null;
       return {
         id: `${row.entity_type}-${row.entity_id}`,
         title: row.title,

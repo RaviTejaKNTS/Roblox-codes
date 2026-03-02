@@ -2205,6 +2205,7 @@ returns table (
 )
 language plpgsql
 stable
+set search_path = pg_catalog, public
 as $$
 declare
   v_query text := trim(coalesce(p_query, ''));
@@ -2241,7 +2242,7 @@ begin
   order by
     greatest(
       ts_rank_cd(si.search_vector, q.tsq),
-      similarity(si.search_text, v_query)
+      extensions.similarity(si.search_text, v_query)
     ) desc,
     updated_at desc nulls last
   limit v_limit

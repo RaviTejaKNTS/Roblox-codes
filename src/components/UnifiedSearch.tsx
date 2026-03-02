@@ -50,10 +50,11 @@ export function UnifiedSearch({ autoFocus = false }: Props) {
     setError(null);
 
     let cancelled = false;
-    const controller = new AbortController();
+    let controller: AbortController | null = null;
     const timeout = setTimeout(async () => {
       try {
         setLoading(true);
+        controller = new AbortController();
         const params = new URLSearchParams({
           q: trimmedQuery,
           limit: String(SEARCH_LIMIT)
@@ -83,7 +84,9 @@ export function UnifiedSearch({ autoFocus = false }: Props) {
     return () => {
       cancelled = true;
       clearTimeout(timeout);
-      controller.abort();
+      if (controller && !controller.signal.aborted) {
+        controller.abort("Unified search request was replaced");
+      }
     };
   }, [canSearch, trimmedQuery]);
 

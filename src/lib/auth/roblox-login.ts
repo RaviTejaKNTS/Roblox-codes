@@ -46,38 +46,59 @@ function toBase64Url(value: Buffer) {
     .replace(/=+$/g, "");
 }
 
-export function resolveRobloxLoginRedirectUri(origin: string): string {
-  const fallback = `${origin}${ROBLOX_LOGIN_CALLBACK_PATH}`;
-  const configured = process.env.ROBLOX_OAUTH_LOGIN_REDIRECT_URI?.trim();
-  if (!configured) {
-    return fallback;
-  }
+function isAllowedRobloxCallbackPath(pathname: string): boolean {
+  return pathname === ROBLOX_LOGIN_CALLBACK_PATH || pathname === ROBLOX_LOGIN_LEGACY_CALLBACK_PATH;
+}
+
+function parseRobloxRedirectUriCandidate(value: string | null | undefined): URL | null {
+  if (!value) return null;
 
   let parsed: URL;
   try {
-    parsed = new URL(configured);
+    parsed = new URL(value.trim());
   } catch {
-    return fallback;
+    return null;
   }
 
   const protocol = parsed.protocol.toLowerCase();
   if (process.env.NODE_ENV === "production" && protocol !== "https:") {
-    return fallback;
+    return null;
   }
   if (protocol !== "https:" && !isLocalHost(parsed.hostname.toLowerCase())) {
-    return fallback;
+    return null;
   }
-
-  if (
-    parsed.pathname !== ROBLOX_LOGIN_CALLBACK_PATH &&
-    parsed.pathname !== ROBLOX_LOGIN_LEGACY_CALLBACK_PATH
-  ) {
-    return fallback;
+  if (!isAllowedRobloxCallbackPath(parsed.pathname)) {
+    return null;
   }
 
   parsed.hash = "";
   parsed.search = "";
-  return parsed.toString();
+  return parsed;
+}
+
+export function getRobloxLoginRedirectConfigurationError(origin: string): string | null {
+  const configured = parseRobloxRedirectUriCandidate(process.env.ROBLOX_OAUTH_LOGIN_REDIRECT_URI);
+  if (configured) return null;
+
+  let requestOrigin: URL;
+  try {
+    requestOrigin = new URL(origin);
+  } catch {
+    return "Roblox OAuth redirect origin is invalid.";
+  }
+
+  if (!isLocalHost(requestOrigin.hostname.toLowerCase())) {
+    return null;
+  }
+
+  const expectedCallback = `${requestOrigin.origin}${ROBLOX_LOGIN_CALLBACK_PATH}`;
+  return `Roblox OAuth is not configured for this local URL. Register ${expectedCallback} in your Roblox app or set ROBLOX_OAUTH_LOGIN_REDIRECT_URI to an allowed callback.`;
+}
+
+export function resolveRobloxLoginRedirectUri(origin: string): string {
+  const fallback = `${origin}${ROBLOX_LOGIN_CALLBACK_PATH}`;
+  const configured = parseRobloxRedirectUriCandidate(process.env.ROBLOX_OAUTH_LOGIN_REDIRECT_URI);
+  return configured?.toString() ?? fallback;
 }
 
 function cookieOptions() {

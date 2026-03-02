@@ -5,6 +5,7 @@ import {
   createRobloxCodeChallenge,
   createRobloxCodeVerifier,
   createRobloxOauthState,
+  getRobloxLoginRedirectConfigurationError,
   resolveRobloxLoginRedirectUri,
   setRobloxLoginOauthCookies
 } from "@/lib/auth/roblox-login";
@@ -58,6 +59,11 @@ export async function GET(request: NextRequest) {
     return withNoIndexHeaders(
       NextResponse.redirect(buildLoginRedirect(origin, "error", "Roblox OAuth is not configured.", nextPath))
     );
+  }
+
+  const redirectConfigError = getRobloxLoginRedirectConfigurationError(origin);
+  if (redirectConfigError) {
+    return withNoIndexHeaders(NextResponse.redirect(buildLoginRedirect(origin, "error", redirectConfigError, nextPath)));
   }
 
   const state = createRobloxOauthState();

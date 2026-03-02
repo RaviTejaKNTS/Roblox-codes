@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentAppUser } from "@/lib/auth/app-session";
-import { signInWithRoblox, signOut } from "./actions";
+import { sanitizeNextPath } from "@/lib/auth/navigation";
+import { signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -26,6 +27,8 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
   const errorMessage = Array.isArray(resolvedSearchParams?.error) ? resolvedSearchParams?.error[0] : resolvedSearchParams?.error ?? null;
   const successMessage = Array.isArray(resolvedSearchParams?.success) ? resolvedSearchParams?.success[0] : resolvedSearchParams?.success ?? null;
   const nextParam = Array.isArray(resolvedSearchParams?.next) ? resolvedSearchParams?.next[0] : resolvedSearchParams?.next ?? "";
+  const nextPath = sanitizeNextPath(nextParam || null);
+  const robloxLoginHref = nextPath ? `/auth/roblox/login?next=${encodeURIComponent(nextPath)}` : "/auth/roblox/login";
 
   const signedInName =
     appUser?.display_name ??
@@ -42,15 +45,14 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
           <p className="text-sm text-muted">Use your Roblox account to access your saved progress and account data.</p>
         </header>
 
-        <form action={signInWithRoblox} className="space-y-4">
-          {nextParam ? <input type="hidden" name="next" value={nextParam} /> : null}
-          <button
-            type="submit"
+        <div className="space-y-4">
+          <Link
+            href={robloxLoginHref}
             className="inline-flex w-full items-center justify-center rounded-[var(--radius-lg)] border border-border/60 bg-surface px-4 py-3 text-sm font-semibold text-foreground transition hover:border-accent hover:text-accent"
           >
             Continue with Roblox
-          </button>
-        </form>
+          </Link>
+        </div>
 
         <p className="text-xs text-muted">
           By continuing, you agree to our{" "}
