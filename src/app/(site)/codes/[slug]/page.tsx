@@ -853,13 +853,12 @@ export default async function GamePage({ params }: Params) {
           </div>
         </header>
 
+        <div id="article-body" itemProp="articleBody" className="article-content">
         {introHtml ? (
-          <section className="mb-8" id="intro" itemProp="articleBody">
-            <div
-              className="prose dark:prose-invert max-w-none game-copy"
-              dangerouslySetInnerHTML={processHtmlLinks(introHtml)}
-            />
-          </section>
+          <div
+            className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
+            dangerouslySetInnerHTML={processHtmlLinks(introHtml)}
+          />
         ) : null}
 
         <div className="mb-8">
@@ -879,55 +878,47 @@ export default async function GamePage({ params }: Params) {
 
         {redeemHtml ? (
           <>
-            <section className="mb-8" id="redeem" itemProp="articleBody">
-              <div
-                className="prose dark:prose-invert max-w-none game-copy"
-                dangerouslySetInnerHTML={processHtmlLinks(redeemHtml)}
-              />
-            </section>
+            <div
+              className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
+              dangerouslySetInnerHTML={processHtmlLinks(redeemHtml)}
+            />
             <ContentSlot slot={CODES_IN_ARTICLE_AD_SLOT} className="mb-8" />
           </>
         ) : null}
         {interlinkHtml ? (
-          <section className="mb-8" id="more-games">
-            <div
-              className="prose dark:prose-invert max-w-none game-copy"
-              dangerouslySetInnerHTML={processHtmlLinks(interlinkHtml)}
-            />
-          </section>
+          <div
+            className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
+            dangerouslySetInnerHTML={processHtmlLinks(interlinkHtml)}
+          />
         ) : null}
-        <section className="panel mb-8 space-y-3 px-5 pb-5 pt-0" id="expired-codes">
+        <div className="panel mb-8 space-y-3 px-5 pb-5 pt-0" id="expired-codes">
           <ExpiredCodes codes={expiredWithoutSpaces} gameName={game.name} gameSlug={game.slug} />
-        </section>
+        </div>
 
         {hasSupplemental ? (
           <>
             {troubleshootHtml ? (
               <>
-                <section className="mb-8" id="troubleshoot">
-                  <div
-                    className="prose dark:prose-invert max-w-none game-copy"
-                    dangerouslySetInnerHTML={processHtmlLinks(troubleshootHtml)}
-                  />
-                </section>
+                <div
+                  className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
+                  dangerouslySetInnerHTML={processHtmlLinks(troubleshootHtml)}
+                />
                 <ContentSlot slot={CODES_IN_ARTICLE_AD_SLOT} className="mb-8" />
               </>
             ) : null}
 
             {rewardsHtml ? (
-              <section className="mb-8" id="rewards">
-                <div
-                  className="prose dark:prose-invert max-w-none game-copy"
-                  dangerouslySetInnerHTML={processHtmlLinks(rewardsHtml)}
-                />
-              </section>
+              <div
+                className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
+                dangerouslySetInnerHTML={processHtmlLinks(rewardsHtml)}
+              />
             ) : null}
 
             {shouldShowSocialSection ? (
-              <section className="mb-8 space-y-4" id={`more-${game.slug}-codes`}>
+              <div className="mb-8 space-y-4" id={`more-${game.slug}-codes`}>
                 {findCodesHtml ? (
                   <div
-                    className="prose dark:prose-invert max-w-none game-copy"
+                    className="article-content prose dark:prose-invert max-w-none game-copy"
                     dangerouslySetInnerHTML={processHtmlLinks(findCodesHtml)}
                   />
                 ) : null}
@@ -952,11 +943,9 @@ export default async function GamePage({ params }: Params) {
                 ) : (
                   <p className="mt-3 text-sm text-muted">We haven't found any official social media links yet.</p>
                 )}
-                <div className="prose dark:prose-invert max-w-none game-copy">
-                  <p>
-                    We keep track of these sources and update this page as soon as new codes drop. Bookmark this page or follow our channels to get the codes right away.
-                  </p>
-                </div>
+                <p className="article-content prose dark:prose-invert max-w-none game-copy">
+                  We keep track of these sources and update this page as soon as new codes drop. Bookmark this page or follow our channels to get the codes right away.
+                </p>
                 <div className="flex flex-wrap gap-3">
                   <a
                     href="https://t.me/bloxodes"
@@ -995,21 +984,19 @@ export default async function GamePage({ params }: Params) {
                     <span>Install Chrome Extension</span>
                   </a>
                 </div>
-              </section>
+              </div>
             ) : null}
 
           </>
         ) : descriptionHtml ? (
-          <section className="mb-8 space-y-4" id="description">
-            <div
-              className="prose dark:prose-invert max-w-none game-copy"
-              dangerouslySetInnerHTML={processHtmlLinks(descriptionHtml)}
-            />
-          </section>
+          <div
+            className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
+            dangerouslySetInnerHTML={processHtmlLinks(descriptionHtml)}
+          />
         ) : null}
 
         {universe ? (
-          <section className="mb-8" id="game-details">
+          <div className="mb-8" id="game-details">
             <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border/65 shadow-soft">
               <div className="border-b border-border/60 px-5 py-4 sm:px-6">
                 <h2 className="text-2xl font-bold leading-tight text-foreground">
@@ -1036,14 +1023,15 @@ export default async function GamePage({ params }: Params) {
               {hasGameAboutDescription ? (
                 <div className="px-5 py-5 sm:px-6">
                   <div
-                    className="prose dark:prose-invert max-w-none game-copy text-foreground"
+                    className="article-content prose dark:prose-invert max-w-none game-copy text-foreground"
                     dangerouslySetInnerHTML={processHtmlLinks(universe.game_description_md || "")}
                   />
                 </div>
               ) : null}
             </div>
-          </section>
+          </div>
         ) : null}
+        </div>
 
         {game.author ? (
           <div className="mt-10">

@@ -43,7 +43,7 @@ export default function HowWeGatherAndVerifyCodesPage() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1.25fr)]">
-      <article className="prose dark:prose-invert max-w-none game-copy">
+      <article className="article-content prose dark:prose-invert max-w-none game-copy">
         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">How We Gather and Verify Codes</h1>
 
         <p>

@@ -519,10 +519,10 @@ export function ListPageView({
             {showIntroOutro ? (
               <section className="space-y-6">
                 {heroHtml ? (
-                  <div className="prose dark:prose-invert max-w-none game-copy" dangerouslySetInnerHTML={{ __html: heroHtml }} />
+                  <div className="article-content prose dark:prose-invert max-w-none game-copy" dangerouslySetInnerHTML={{ __html: heroHtml }} />
                 ) : null}
                 {introHtml ? (
-                  <div className="prose dark:prose-invert max-w-none game-copy" dangerouslySetInnerHTML={{ __html: introHtml }} />
+                  <div className="article-content prose dark:prose-invert max-w-none game-copy" dangerouslySetInnerHTML={{ __html: introHtml }} />
                 ) : null}
               </section>
             ) : null}
@@ -568,7 +568,7 @@ export function ListPageView({
           {showIntroOutro && outroHtml ? (
             <section className="space-y-4 text-muted">
               <div
-                className="prose dark:prose-invert max-w-none game-copy"
+                className="article-content prose dark:prose-invert max-w-none game-copy"
                 dangerouslySetInnerHTML={{ __html: outroHtml }}
               />
             </section>

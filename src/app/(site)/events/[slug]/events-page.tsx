@@ -597,7 +597,7 @@ function UpcomingEventBlock({ event }: { event: UpcomingEventView }) {
         </div>
         {event.summary_html ? (
           <div
-            className="prose dark:prose-invert max-w-none game-copy"
+            className="article-content prose dark:prose-invert max-w-none game-copy"
             dangerouslySetInnerHTML={{ __html: event.summary_html }}
           />
         ) : null}
@@ -619,7 +619,7 @@ function UpcomingEventBlock({ event }: { event: UpcomingEventView }) {
       {event.details_html ? (
         <div className="space-y-4">
           <div
-            className="prose dark:prose-invert max-w-none game-copy"
+            className="article-content prose dark:prose-invert max-w-none game-copy"
             dangerouslySetInnerHTML={{ __html: event.details_html }}
           />
           <div>
@@ -670,7 +670,7 @@ function CurrentEventCard({ event }: { event: CurrentEventView }) {
           </div>
           {event.summary_html ? (
             <div
-              className="prose dark:prose-invert game-copy max-w-none"
+              className="article-content prose dark:prose-invert game-copy max-w-none"
               dangerouslySetInnerHTML={{ __html: event.summary_html }}
             />
           ) : null}
@@ -743,7 +743,7 @@ function PastEventsTable({ events }: { events: VirtualEvent[] }) {
   if (!events.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border/70 bg-surface-muted/60 p-6">
-        <div className="prose dark:prose-invert game-copy max-w-none">
+        <div className="article-content prose dark:prose-invert game-copy max-w-none">
           <p>No past events listed yet.</p>
         </div>
       </div>
@@ -1050,12 +1050,12 @@ export async function renderEventsPage({ slug }: { slug: string }) {
         </header>
         {introHtml ? (
           <article
-            className="prose dark:prose-invert max-w-none game-copy mb-10"
+            className="article-content prose dark:prose-invert max-w-none game-copy mb-10"
             dangerouslySetInnerHTML={{ __html: introHtml }}
           />
         ) : null}
         {upcomingEvents.length > 0 ? (
-          <div className="prose dark:prose-invert max-w-none game-copy mb-8">
+          <div className="article-content prose dark:prose-invert max-w-none game-copy mb-8">
             <p>
               {upcomingEvents.length === 1
                 ? `Right now, there is 1 upcoming event for ${universeName}.`
@@ -1075,7 +1075,7 @@ export async function renderEventsPage({ slug }: { slug: string }) {
                 ))}
               </div>
             ) : (
-              <div className="prose dark:prose-invert game-copy max-w-none">
+              <div className="article-content prose dark:prose-invert game-copy max-w-none">
                 {(() => {
                   // Get the last known event (current or most recent past event)
                   const lastEvent = currentEvents.length > 0

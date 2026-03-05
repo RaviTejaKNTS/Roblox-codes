@@ -187,7 +187,7 @@ export default async function GrowGardenCropValueCalculatorPage() {
             </p>
           ) : null}
           {introHtml ? (
-            <div className="prose dark:prose-invert game-copy max-w-3xl" dangerouslySetInnerHTML={{ __html: introHtml }} />
+            <div className="article-content prose dark:prose-invert game-copy max-w-3xl" dangerouslySetInnerHTML={{ __html: introHtml }} />
           ) : null}
         </header>
 
@@ -214,7 +214,7 @@ export default async function GrowGardenCropValueCalculatorPage() {
         {(descriptionHtml?.length || howHtml || (faqHtml && faqHtml.length)) ? (
           <div className="space-y-6">
             {descriptionHtml?.length ? (
-              <section className="prose dark:prose-invert game-copy max-w-3xl">
+              <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
                 {descriptionHtml.map((item) => (
                   <div key={item.key} dangerouslySetInnerHTML={{ __html: item.html }} />
                 ))}
@@ -222,7 +222,7 @@ export default async function GrowGardenCropValueCalculatorPage() {
             ) : null}
 
             {howHtml ? (
-              <section className="prose dark:prose-invert game-copy max-w-3xl">
+              <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
                 <div dangerouslySetInnerHTML={{ __html: howHtml }} />
               </section>
             ) : null}

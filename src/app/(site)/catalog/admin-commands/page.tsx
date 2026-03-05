@@ -154,7 +154,7 @@ export default async function AdminCommandsHubPage() {
 
       {introHtml ? (
         <section
-          className="prose dark:prose-invert game-copy max-w-3xl"
+          className="article-content prose dark:prose-invert game-copy max-w-3xl"
           dangerouslySetInnerHTML={{ __html: introHtml }}
         />
       ) : null}
@@ -191,7 +191,7 @@ export default async function AdminCommandsHubPage() {
       ) : null}
 
       {descriptionHtml.length ? (
-        <section className="prose dark:prose-invert game-copy max-w-3xl">
+        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
           {descriptionHtml.map((entry) => (
             <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
           ))}
@@ -199,7 +199,7 @@ export default async function AdminCommandsHubPage() {
       ) : null}
 
       {howHtml ? (
-        <section className="prose dark:prose-invert game-copy max-w-3xl">
+        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
           <div dangerouslySetInnerHTML={{ __html: howHtml }} />
         </section>
       ) : null}

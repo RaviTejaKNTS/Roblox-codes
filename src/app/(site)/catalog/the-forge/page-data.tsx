@@ -592,7 +592,7 @@ export function renderForgeCatalogPage({
 
       {introHtml ? (
         <section
-          className="prose dark:prose-invert game-copy max-w-3xl"
+          className="article-content prose dark:prose-invert game-copy max-w-3xl"
           dangerouslySetInnerHTML={{ __html: introHtml }}
         />
       ) : null}
@@ -610,7 +610,7 @@ export function renderForgeCatalogPage({
       {hasDetails ? (
         <section className="space-y-6">
           {descriptionHtml.length ? (
-            <div className="prose dark:prose-invert game-copy max-w-3xl">
+            <div className="article-content prose dark:prose-invert game-copy max-w-3xl">
               {descriptionHtml.map((entry) => (
                 <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
               ))}
@@ -618,7 +618,7 @@ export function renderForgeCatalogPage({
           ) : null}
 
           {howHtml ? (
-            <div className="prose dark:prose-invert game-copy max-w-3xl">
+            <div className="article-content prose dark:prose-invert game-copy max-w-3xl">
               <div dangerouslySetInnerHTML={{ __html: howHtml }} />
             </div>
           ) : null}
@@ -650,7 +650,7 @@ export function renderForgeCatalogPage({
                   >
                     <summary className="cursor-pointer text-lg font-semibold text-foreground">{faq.q}</summary>
                     <div
-                      className="prose dark:prose-invert game-copy mt-3"
+                      className="article-content prose dark:prose-invert game-copy mt-3"
                       dangerouslySetInnerHTML={{ __html: faq.a }}
                     />
                   </details>

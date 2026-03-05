@@ -219,7 +219,7 @@ export default async function QuizPage({ params }: PageProps) {
         ) : null}
         {descriptionHtml ? (
           <div
-            className="prose dark:prose-invert game-copy max-w-3xl"
+            className="article-content prose dark:prose-invert game-copy max-w-3xl"
             dangerouslySetInnerHTML={{ __html: descriptionHtml }}
           />
         ) : description ? (
@@ -235,7 +235,7 @@ export default async function QuizPage({ params }: PageProps) {
       {aboutHtml ? (
         <section className="mt-10 border-t border-border/60 pt-6" id="about">
           <div
-            className="prose dark:prose-invert max-w-none game-copy"
+            className="article-content prose dark:prose-invert max-w-none game-copy"
             dangerouslySetInnerHTML={{ __html: aboutHtml }}
           />
         </section>

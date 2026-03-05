@@ -178,7 +178,7 @@ export default async function ForgeInventoryOptimizerPage() {
                     </p>
                 ) : null}
                 {introHtml ? (
-                    <div className="prose dark:prose-invert game-copy max-w-3xl" dangerouslySetInnerHTML={{ __html: introHtml }} />
+                    <div className="article-content prose dark:prose-invert game-copy max-w-3xl" dangerouslySetInnerHTML={{ __html: introHtml }} />
                 ) : (
                     <p className="max-w-3xl text-base text-muted md:text-lg">{fallbackIntro}</p>
                 )}
@@ -209,7 +209,7 @@ export default async function ForgeInventoryOptimizerPage() {
             {(descriptionHtml.length || howHtml || faqHtml.length) ? (
                 <div className="space-y-6">
                     {descriptionHtml.length ? (
-                        <section className="prose dark:prose-invert game-copy max-w-3xl">
+                        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
                             {descriptionHtml.map((entry) => (
                                 <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
                             ))}
@@ -217,7 +217,7 @@ export default async function ForgeInventoryOptimizerPage() {
                     ) : null}
 
                     {howHtml ? (
-                        <section className="prose dark:prose-invert game-copy max-w-3xl">
+                        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
                             <div dangerouslySetInnerHTML={{ __html: howHtml }} />
                         </section>
                     ) : null}

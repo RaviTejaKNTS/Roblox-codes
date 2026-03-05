@@ -43,7 +43,7 @@ export default function DisclaimerPage() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1.25fr)]">
-      <article className="prose dark:prose-invert max-w-none game-copy">
+      <article className="article-content prose dark:prose-invert max-w-none game-copy">
         <header className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Disclaimer from Bloxodes.com</h1>
           <p className="text-base text-muted sm:text-lg">Effective Date: January 31, 2026 · Last Updated: January 31, 2026</p>

@@ -40,7 +40,7 @@ export function EventCountdown({
   if (!target) {
     return (
       <div className="rounded-2xl border border-dashed border-border/70 bg-surface-muted/60 p-4">
-        <div className="prose dark:prose-invert game-copy max-w-none">
+        <div className="article-content prose dark:prose-invert game-copy max-w-none">
           <p>{fallbackLabel}</p>
         </div>
       </div>

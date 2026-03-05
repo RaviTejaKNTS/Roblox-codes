@@ -49,7 +49,7 @@ export function EventTimePanel({
   if (!startDate) {
     return (
       <div className="rounded-2xl border border-dashed border-border/70 bg-surface-muted/60 p-4">
-        <div className="prose dark:prose-invert game-copy max-w-none">
+        <div className="article-content prose dark:prose-invert game-copy max-w-none">
           <p>Start time not announced yet.</p>
         </div>
       </div>
@@ -70,14 +70,14 @@ export function EventTimePanel({
 
   return (
     <div className="space-y-4">
-      <div className="prose dark:prose-invert game-copy max-w-none">
+      <div className="article-content prose dark:prose-invert game-copy max-w-none">
         <p>
           The event {startVerb} on <time dateTime={startDate.toISOString()}>{ptStartLabel} PT</time>.{durationSentence}
         </p>
       </div>
       <LocalTimeWidget startUtc={startUtc} endUtc={endUtc} />
       <div className="space-y-3">
-        <div className="prose dark:prose-invert game-copy max-w-none">
+        <div className="article-content prose dark:prose-invert game-copy max-w-none">
           <p>Use this countdown to track exactly when the event begins.</p>
         </div>
         <EventCountdown
@@ -87,7 +87,7 @@ export function EventTimePanel({
           initialLabel={initialCountdown}
         />
       </div>
-      <div className="prose dark:prose-invert game-copy max-w-none">
+      <div className="article-content prose dark:prose-invert game-copy max-w-none">
         <p>And here's the {eventName} update release date and time for select regions:</p>
       </div>
       <div className="table-scroll-wrapper">

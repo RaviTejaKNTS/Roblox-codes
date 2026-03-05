@@ -42,7 +42,6 @@ import { EventsPageCard, type EventsPageCardProps } from "@/components/EventsPag
 import { listPublishedToolsByUniverseId, type ToolListEntry } from "@/lib/tools";
 import { ContentSlot } from "@/components/ContentSlot";
 import { ArticleImageLightbox } from "@/components/ArticleImageLightbox";
-import { buildArticleContentBlocks } from "@/lib/ad-placement";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { formatUpdatedLabel } from "@/lib/updated-label";
 import { getUniverseEventSummary } from "@/lib/events-summary";
@@ -229,7 +228,6 @@ async function renderArticlePage(article: ArticleWithRelations) {
 
   const processedArticleHtml = processHtmlLinks(articleHtml);
   const articleHtmlWithGalleries = buildImageGalleries(processedArticleHtml.__html);
-  const articleBlocks = buildArticleContentBlocks(articleHtmlWithGalleries);
   const processedAuthorBioHtml = authorBioHtml ? processHtmlLinks(authorBioHtml) : null;
 
   const relatedChecklists = universeId ? await listPublishedChecklistsByUniverseId(universeId, 1) : [];
@@ -350,19 +348,12 @@ async function renderArticlePage(article: ArticleWithRelations) {
           </div>
         </header>
 
-        <section id="article-body" itemProp="articleBody">
-          {articleBlocks.map((block, index) =>
-            block.type === "html" ? (
-              <div
-                key={`article-chunk-${index}`}
-                className="prose dark:prose-invert max-w-none game-copy"
-                dangerouslySetInnerHTML={{ __html: block.html }}
-              />
-            ) : (
-              <ContentSlot key={`article-ad-${index}`} slot="1622145724" className="my-8" />
-            )
-          )}
-        </section>
+        <section
+          id="article-body"
+          itemProp="articleBody"
+          className="article-content prose dark:prose-invert max-w-none game-copy"
+          dangerouslySetInnerHTML={{ __html: articleHtmlWithGalleries }}
+        />
         <ArticleImageLightbox />
 
         {article.author ? (
