@@ -1,6 +1,8 @@
 name: Generate Event Guides
 
 on:
+  schedule:
+    - cron: "15 */4 * * *"
   workflow_dispatch:
 
 jobs:

@@ -1,6 +1,8 @@
 name: Daily Events Refresh
 
 on:
+  schedule:
+    - cron: "5 0 * * *"
   workflow_dispatch:
 
 jobs:
