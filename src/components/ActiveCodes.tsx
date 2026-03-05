@@ -2,10 +2,17 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { FiCheckCircle, FiClock, FiKey } from "react-icons/fi";
+import { FiClock, FiKey, FiRotateCcw } from "react-icons/fi";
 import type { Code } from "@/lib/db";
 import { cleanRewardsText, isCodeWithinNewThreshold } from "@/lib/code-utils";
 import { trackEvent } from "@/lib/analytics";
+import {
+  loadAccountCodeProgress,
+  readLocalCodeProgress,
+  saveAccountCodeProgress,
+  useCodeProgressSession,
+  writeLocalCodeProgress
+} from "@/lib/code-progress-client";
 import { CopyCodeButton } from "./CopyCodeButton";
 
 type Props = {
@@ -40,35 +47,55 @@ export function ActiveCodes({
   coverImage,
   nowMs
 }: Props) {
-  const storageKey = useMemo(() => {
-    const slug = gameName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "default";
-    return `roblox-codes-checked-${slug}`;
-  }, [gameName]);
-
   const [usedCodes, setUsedCodes] = useState<Set<string>>(() => new Set());
+  const [progressReady, setProgressReady] = useState(false);
+  const session = useCodeProgressSession();
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setUsedCodes(new Set(parsed.filter((code): code is string => typeof code === "string")));
-        }
+    if (session.status !== "ready") {
+      setProgressReady(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadProgress() {
+      const localUsedCodes = readLocalCodeProgress(gameSlug, gameName);
+
+      if (!session.userId) {
+        if (cancelled) return;
+        setUsedCodes(new Set(localUsedCodes));
+        setProgressReady(true);
+        return;
       }
-    } catch {
-      /* ignore storage errors */
+
+      const accountUsedCodes = await loadAccountCodeProgress(gameSlug);
+      if (cancelled) return;
+
+      const mergedUsedCodes = Array.from(new Set([...accountUsedCodes, ...localUsedCodes]));
+      setUsedCodes(new Set(mergedUsedCodes));
+      setProgressReady(true);
     }
-  }, [storageKey]);
+
+    void loadProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [gameName, gameSlug, session.status, session.userId]);
 
   useEffect(() => {
-    try {
-      const serialized = JSON.stringify(Array.from(usedCodes));
-      window.localStorage.setItem(storageKey, serialized);
-    } catch {
-      /* ignore storage errors */
+    if (!progressReady) {
+      return;
     }
-  }, [usedCodes, storageKey]);
+
+    const serializedCodes = Array.from(usedCodes);
+    writeLocalCodeProgress(gameSlug, gameName, serializedCodes);
+
+    if (session.userId) {
+      void saveAccountCodeProgress(gameSlug, serializedCodes);
+    }
+  }, [gameName, gameSlug, progressReady, session.userId, usedCodes]);
 
   const enriched = useMemo<EnrichedCode[]>(() => {
     return codes.map((code) => {
@@ -85,18 +112,30 @@ export function ActiveCodes({
 
   const normalizedCover = normalizeCoverImage(coverImage);
 
-  function toggleUsed(code: string) {
-    const nextUsed = !usedCodes.has(code);
+  function markUsed(code: string) {
+    if (usedCodes.has(code)) {
+      return;
+    }
+
     setUsedCodes((prev) => {
       const next = new Set(prev);
-      if (next.has(code)) {
-        next.delete(code);
-      } else {
-        next.add(code);
-      }
+      next.add(code);
       return next;
     });
-    trackEvent("code_mark_used", { game_slug: gameSlug, code, used: nextUsed });
+    trackEvent("code_mark_used", { game_slug: gameSlug, code, used: true });
+  }
+
+  function markUnused(code: string) {
+    if (!usedCodes.has(code)) {
+      return;
+    }
+
+    setUsedCodes((prev) => {
+      const next = new Set(prev);
+      next.delete(code);
+      return next;
+    });
+    trackEvent("code_mark_used", { game_slug: gameSlug, code, used: false });
   }
 
   return (
@@ -172,27 +211,9 @@ export function ActiveCodes({
                   <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-transparent opacity-0 transition-opacity duration-200 hover:opacity-100" />
                   <div className="relative grid gap-4 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6 sm:px-5">
                     <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleUsed(code.code)}
-                        className={`group relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border/60 bg-surface-muted/80 transition ${
-                          isUsed ? "border-accent/50 bg-accent/10" : "hover:border-border/40"
-                        }`}
-                        aria-pressed={isUsed}
-                        aria-label={isUsed ? "Mark as unused" : "Mark as used"}
-                        title={isUsed ? "Mark as unused" : "Mark as used"}
-                      >
-                        <span className={`text-sm font-semibold text-muted transition ${isUsed ? "opacity-0" : "opacity-100 group-hover:opacity-0"}`}>
-                          {index + 1}
-                        </span>
-                        <span
-                          className={`absolute inset-0 grid place-items-center transition-opacity ${
-                            isUsed ? "opacity-100 text-accent" : "opacity-0 text-foreground/80 group-hover:opacity-100"
-                          }`}
-                        >
-                          <FiCheckCircle className="h-4 w-4" />
-                        </span>
-                      </button>
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border/60 bg-surface-muted/80">
+                        <span className="text-sm font-semibold text-muted">{index + 1}</span>
+                      </div>
                       <div className="space-y-2 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <code
@@ -219,19 +240,35 @@ export function ActiveCodes({
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 pl-14 sm:pl-0 sm:justify-end sm:gap-3 sm:[&>*]:whitespace-nowrap">
-                      <CopyCodeButton
-                        code={code.code}
-                        tone="accent"
-                        analytics={{
-                          event: "copy_code",
-                          params: {
-                            game_slug: gameSlug,
-                            code: code.code,
-                            is_new: code.isNew,
-                            status: "active"
-                          }
-                        }}
-                      />
+                      <div className="flex flex-row items-center justify-end gap-2">
+                        {isUsed ? (
+                          <button
+                            type="button"
+                            onClick={() => markUnused(code.code)}
+                            className="order-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-accent/40 bg-accent/15 text-accent shadow-soft transition hover:border-accent/60 hover:bg-accent/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                            aria-label={`Uncheck code ${code.code}`}
+                            title="Uncheck code"
+                          >
+                            <FiRotateCcw className="h-3.5 w-3.5" aria-hidden />
+                          </button>
+                        ) : null}
+                        <div className="order-2">
+                          <CopyCodeButton
+                            code={code.code}
+                            tone="accent"
+                            onCopySuccess={() => markUsed(code.code)}
+                            analytics={{
+                              event: "copy_code",
+                              params: {
+                                game_slug: gameSlug,
+                                code: code.code,
+                                is_new: code.isNew,
+                                status: "active"
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
                       {code.addedAtLabel ? (
                         <span className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted">
                           Added {code.addedAtLabel}

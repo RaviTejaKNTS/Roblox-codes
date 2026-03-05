@@ -10,19 +10,21 @@ type Props = {
   code: string;
   tone?: Tone;
   size?: Size;
+  onCopySuccess?: () => void;
   analytics?: {
     event: string;
     params?: Record<string, string | number | boolean>;
   };
 };
 
-export function CopyCodeButton({ code, tone = "surface", size = "md", analytics }: Props) {
+export function CopyCodeButton({ code, tone = "surface", size = "md", onCopySuccess, analytics }: Props) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
+      onCopySuccess?.();
       if (analytics) {
         trackEvent(analytics.event, analytics.params);
       }

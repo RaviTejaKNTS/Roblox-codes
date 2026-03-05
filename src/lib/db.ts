@@ -66,6 +66,7 @@ export type RobloxUniverseInfo = {
   creator_id: number | null;
   creator_type: string | null;
   social_links: Record<string, unknown> | null;
+  created_at_api?: string | null;
 };
 
 export type Article = {
@@ -1633,11 +1634,11 @@ export async function getGameBySlug(slug: string): Promise<GameWithAuthor | null
 const cachedGetRobloxUniverseById = unstable_cache(
   async (universeId: number) => {
     const sb = supabaseAdmin();
-    const { data, error } = await sb
-      .from("roblox_universes")
-      .select("universe_id, name, display_name, creator_name, creator_id, creator_type, social_links")
-      .eq("universe_id", universeId)
-      .maybeSingle();
+  const { data, error } = await sb
+    .from("roblox_universes")
+    .select("universe_id, name, display_name, creator_name, creator_id, creator_type, social_links, created_at_api")
+    .eq("universe_id", universeId)
+    .maybeSingle();
 
     if (error) throw error;
     return (data as RobloxUniverseInfo) || null;

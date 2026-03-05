@@ -27,6 +27,7 @@ import { sortCodesByFirstSeenDesc } from "@/lib/code-utils";
 import {
   getGameBySlug,
   getEventsPageByUniverseId,
+  getRobloxUniverseById,
   listGamesWithActiveCounts,
   listGamesWithActiveCountsByUniverseId,
   listPublishedCodeSlugs,
@@ -697,12 +698,46 @@ export default async function GamePage({ params }: Params) {
 
   const universeLabel = universe?.display_name ?? universe?.name ?? game.name;
   const universeId = game.universe_id ?? null;
+  const universeMeta = universeId ? await getRobloxUniverseById(universeId) : null;
   const relatedChecklists = universeId ? await listPublishedChecklistsByUniverseId(universeId, 1) : [];
   const relatedArticles = universeId ? await listPublishedArticlesByUniverseId(universeId, 3) : [];
   const relatedTools: ToolListEntry[] = universeId ? await listPublishedToolsByUniverseId(universeId, 3) : [];
   const relatedEventsPage = universeId ? await getEventsPageByUniverseId(universeId) : null;
   const eventSummary = universeId ? await getUniverseEventSummary(universeId) : null;
   const relatedGame = universeId ? await listGamesWithActiveCountsByUniverseId(universeId, 1) : [];
+  const gameCreatedOnLabel = universeMeta?.created_at_api
+    ? new Date(universeMeta.created_at_api).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC"
+      })
+    : null;
+  const gameDetailRows = [
+    universe?.creator_name
+      ? { label: "Developer", value: universe.creator_name }
+      : null,
+    gameCreatedOnLabel
+      ? { label: "Game created on", value: gameCreatedOnLabel }
+      : null,
+    universe?.genre_l1 || universe?.genre_l2
+      ? { label: "Genre", value: [universe.genre_l1, universe.genre_l2].filter(Boolean).join(", ") }
+      : null,
+    (universe?.desktop_enabled || universe?.mobile_enabled || universe?.tablet_enabled ||
+      universe?.console_enabled || universe?.vr_enabled)
+      ? {
+          label: "Platforms",
+          value: [
+            universe.desktop_enabled && "Desktop",
+            universe.mobile_enabled && "Mobile",
+            universe.tablet_enabled && "Tablet",
+            universe.console_enabled && "Console",
+            universe.vr_enabled && "VR"
+          ].filter(Boolean).join(", ")
+        }
+      : null
+  ].filter((row): row is { label: string; value: string } => Boolean(row));
+  const hasGameAboutDescription = Boolean(universe?.game_description_md);
 
   const relatedChecklistCards = relatedChecklists.map((row) => {
     const summary = summarize(row.seo_description ?? row.description_md ?? null, CHECKLISTS_DESCRIPTION);
@@ -975,58 +1010,37 @@ export default async function GamePage({ params }: Params) {
 
         {universe ? (
           <section className="mb-8" id="game-details">
-            <div className="prose dark:prose-invert max-w-none game-copy">
-              <h2>About {universe.display_name || universe.name || game.name}</h2>
-              <table>
-                <tbody>
-                  {universe.creator_name ? (
-                    <tr>
-                      <td><strong>Developer</strong></td>
-                      <td>{universe.creator_name}</td>
-                    </tr>
-                  ) : null}
-                  {universe.created ? (
-                    <tr>
-                      <td><strong>Created</strong></td>
-                      <td>
-                        {new Date(universe.created).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric"
-                        })}
-                      </td>
-                    </tr>
-                  ) : null}
-                  {(universe.genre_l1 || universe.genre_l2) ? (
-                    <tr>
-                      <td><strong>Genre</strong></td>
-                      <td>{[universe.genre_l1, universe.genre_l2].filter(Boolean).join(", ")}</td>
-                    </tr>
-                  ) : null}
-                  {(universe.desktop_enabled || universe.mobile_enabled || universe.tablet_enabled ||
-                    universe.console_enabled || universe.vr_enabled) ? (
-                    <tr>
-                      <td><strong>Platforms</strong></td>
-                      <td>
-                        {[
-                          universe.desktop_enabled && "Desktop",
-                          universe.mobile_enabled && "Mobile",
-                          universe.tablet_enabled && "Tablet",
-                          universe.console_enabled && "Console",
-                          universe.vr_enabled && "VR"
-                        ].filter(Boolean).join(", ")}
-                      </td>
-                    </tr>
-                  ) : null}
-                  {universe.game_description_md ? (
-                    <tr>
-                      <td colSpan={2}>
-                        <div dangerouslySetInnerHTML={{ __html: universe.game_description_md }} />
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
+            <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border/65 shadow-soft">
+              <div className="border-b border-border/60 px-5 py-4 sm:px-6">
+                <h2 className="text-2xl font-bold leading-tight text-foreground">
+                  About {universe.display_name || universe.name || game.name}
+                </h2>
+              </div>
+
+              {gameDetailRows.length ? (
+                <div className="grid gap-3 border-b border-border/60 px-5 py-5 sm:grid-cols-2 sm:px-6 xl:grid-cols-4">
+                  {gameDetailRows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="rounded-[var(--radius-sm)] border border-border/60 px-4 py-3"
+                    >
+                      <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted">
+                        {row.label}
+                      </dt>
+                      <dd className="mt-1 text-sm font-semibold leading-6 text-foreground">{row.value}</dd>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {hasGameAboutDescription ? (
+                <div className="px-5 py-5 sm:px-6">
+                  <div
+                    className="prose dark:prose-invert max-w-none game-copy text-foreground"
+                    dangerouslySetInnerHTML={processHtmlLinks(universe.game_description_md || "")}
+                  />
+                </div>
+              ) : null}
             </div>
           </section>
         ) : null}
