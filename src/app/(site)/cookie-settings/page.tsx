@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CookieSettingsContent } from "./Content";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Cookie settings",
@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function CookieSettingsPage() {
-  return <CookieSettingsContent />;
+  notFound();
 }

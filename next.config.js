@@ -4,24 +4,44 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const contentSecurityPolicy = [
+const productionDirectives = [
   "default-src 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'self'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.gstatic.com https://scripts.scriptwrapper.com https://scripts.journeymv.com https://exchange.journeymv.com https://securepubads.g.doubleclick.net https://va.vercel-scripts.com",
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.gstatic.com https://scripts.scriptwrapper.com https://scripts.journeymv.com https://exchange.journeymv.com https://securepubads.g.doubleclick.net https://eu-us.consentmanager.net https://eu-us-cdn.consentmanager.net https://scripts.grow.me https://metrics.rapidedge.io https://va.vercel-scripts.com",
   "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com https:",
-  "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://www.googletagmanager.com https://*.google.com https://scripts.journeymv.com https://keywords.journeymv.com https://exchange.journeymv.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://www.googletagmanager.com https://*.google.com https://scripts.journeymv.com https://keywords.journeymv.com https://exchange.journeymv.com https://eu-us.consentmanager.net https://eu-us-cdn.consentmanager.net https://metrics.rapidedge.io https://*.axiom.co https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "media-src 'self' data: blob: https:",
-  isProduction ? "upgrade-insecure-requests" : ""
-].filter(Boolean).join("; ");
+  "upgrade-insecure-requests"
+];
+
+const developmentDirectives = [
+  "default-src 'self' http: https: data: blob:",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self'",
+  "object-src 'none'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https: blob:",
+  "script-src-attr 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: http: https:",
+  "font-src 'self' data: https://fonts.gstatic.com http: https:",
+  "connect-src 'self' http: https: ws: wss:",
+  "frame-src 'self' http: https:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "media-src 'self' data: blob: http: https:"
+];
+
+const contentSecurityPolicy = (isProduction ? productionDirectives : developmentDirectives).join("; ");
 
 const nextConfig = {
   poweredByHeader: false,

@@ -1,12 +1,8 @@
 import "./globals.css";
 import { ReactNode } from "react";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
-import { ConsentProvider } from "@/components/consent/ConsentProvider";
-import { ConsentBanner } from "@/components/consent/ConsentBanner";
-import { ConsentGate } from "@/components/consent/ConsentGate";
-import { ConsentMode } from "@/components/consent/ConsentMode";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
-import { LayoutClientAnalytics, LayoutGlobalSearch } from "@/components/LayoutClient";
+import { LayoutGlobalSearch } from "@/components/LayoutClient";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, organizationJsonLd, siteJsonLd } from "@/lib/seo";
 import { THEME_COOKIE } from "@/lib/theme";
 
@@ -26,65 +22,12 @@ const themeScript = `(() => {
   }
 })();`;
 
-const consentModeScript = `(() => {
-  try {
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = window.gtag || function gtag(){window.dataLayer.push(arguments);};
-
-    var requireCookie = document.cookie
-      .split("; ")
-      .find(function(row){return row.startsWith("require-consent=");});
-    var requiresConsent = requireCookie ? requireCookie.split("=").slice(1).join("=") === "1" : true;
-
-    var stored = null;
-    try {
-      stored = JSON.parse(window.localStorage.getItem("gdpr-consent") || "null");
-    } catch (error) {
-      stored = null;
-    }
-
-    var decided = stored && typeof stored.decided === "boolean" ? stored.decided : false;
-    var analytics = stored && typeof stored.analytics === "boolean" ? stored.analytics : false;
-    var marketing = stored && typeof stored.marketing === "boolean" ? stored.marketing : false;
-
-    if (!requiresConsent) {
-      decided = true;
-      analytics = true;
-      marketing = true;
-    }
-
-    var signal = {
-      ad_storage: !requiresConsent || (decided && marketing) ? "granted" : "denied",
-      analytics_storage: !requiresConsent || (decided && analytics) ? "granted" : "denied",
-      ad_user_data: !requiresConsent || (decided && marketing) ? "granted" : "denied",
-      ad_personalization: !requiresConsent || (decided && marketing) ? "granted" : "denied",
-      wait_for_update: 500
-    };
-
-    window.gtag("consent", "default", signal);
-    window.__bloxodesConsentDefaultsSet = true;
-    window.__bloxodesConsentDefaults = {
-      ad_storage: signal.ad_storage,
-      analytics_storage: signal.analytics_storage,
-      ad_user_data: signal.ad_user_data,
-      ad_personalization: signal.ad_personalization
-    };
-    window.__bloxodesConsent = {
-      requiresConsent: requiresConsent,
-      decided: decided,
-      analytics: analytics,
-      marketing: marketing
-    };
-  } catch (error) {
-    /* noop */
-  }
-})();`;
-
 const structuredData = JSON.stringify({
   "@context": "https://schema.org",
   "@graph": [siteJsonLd({ siteUrl: SITE_URL }), organizationJsonLd({ siteUrl: SITE_URL })]
 });
 const googleAnalyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
+const isProduction = process.env.NODE_ENV === "production";
 const alternatesTypes = { "application/rss+xml": `${SITE_URL}/feed.xml` };
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -171,26 +114,22 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning className="dark" data-theme="dark">
       <body className="min-h-screen bg-background text-foreground transition-colors duration-300">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <script dangerouslySetInnerHTML={{ __html: consentModeScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
-        <script
-          type="text/javascript"
-          async={true}
-          data-noptimize="1"
-          data-cfasync="false"
-          src="//scripts.scriptwrapper.com/tags/75d9ab7d-268c-4e03-bb6c-180ca4b8d5ed.js"
-        />
-        <ConsentProvider>
-          <ConsentMode />
-          <ConsentBanner />
-          <ConsentGate category="analytics">
-            <GoogleAnalytics measurementId={googleAnalyticsId} />
-            <LayoutClientAnalytics />
-          </ConsentGate>
+        {isProduction ? (
+          <script
+            type="text/javascript"
+            async={true}
+            data-noptimize="1"
+            data-cfasync="false"
+            src="https://scripts.scriptwrapper.com/tags/75d9ab7d-268c-4e03-bb6c-180ca4b8d5ed.js"
+          />
+        ) : null}
+        <>
+          <GoogleAnalytics measurementId={googleAnalyticsId} />
           <AnalyticsTracker />
           <LayoutGlobalSearch />
           {children}
-        </ConsentProvider>
+        </>
       </body>
     </html>
   );

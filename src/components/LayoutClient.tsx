@@ -10,25 +10,6 @@ const GlobalSearchOverlay = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const VercelAnalytics = dynamic(() => import("@vercel/analytics/react").then((mod) => mod.Analytics), {
-  ssr: false,
-  loading: () => null
-});
-
-const VercelSpeedInsights = dynamic(() => import("@vercel/speed-insights/next").then((mod) => mod.SpeedInsights), {
-  ssr: false,
-  loading: () => null
-});
-
-export function LayoutClientAnalytics() {
-  return (
-    <>
-      <VercelAnalytics />
-      <VercelSpeedInsights />
-    </>
-  );
-}
-
 export function LayoutGlobalSearch() {
   return <GlobalSearchOverlay />;
 }

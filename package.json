@@ -58,8 +58,6 @@
     "@supabase/ssr": "^0.6.0",
     "@supabase/supabase-js": "^2.58.0",
     "@types/highlight.js": "^9.12.4",
-    "@vercel/analytics": "^1.5.0",
-    "@vercel/speed-insights": "^1.0.12",
     "cheerio": "1.0.0-rc.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
