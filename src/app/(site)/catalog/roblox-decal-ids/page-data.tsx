@@ -3,10 +3,13 @@ import path from "node:path";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { CatalogAdSlot } from "@/components/CatalogAdSlot";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { breadcrumbJsonLd, CATALOG_DESCRIPTION, SITE_URL, webPageJsonLd } from "@/lib/seo";
+import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 
 const PAGE_SIZE = 24;
 
@@ -43,6 +46,10 @@ export type CatalogContentHtml = {
     ctaLabel?: string | null;
     ctaUrl?: string | null;
 };
+
+function renderCatalogNodes(html: string, keyPrefix: string): ReactNode[] {
+    return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
+}
 
 type PageData = {
     decals: DecalRow[];
@@ -419,6 +426,15 @@ export function renderRobloxDecalIdsPage({
     const hasDetails =
         Boolean(descriptionHtml.length) || Boolean(howHtml) || Boolean(faqHtml.length) ||
         Boolean(contentHtml?.ctaLabel && contentHtml?.ctaUrl);
+    const introNodes = introHtml ? renderCatalogNodes(introHtml, "decal-intro") : null;
+    const descriptionNodes = descriptionHtml.flatMap((entry) =>
+        renderCatalogNodes(entry.html, `decal-description-${entry.key}`)
+    );
+    const howNodes = howHtml ? renderCatalogNodes(howHtml, "decal-how") : null;
+    const faqNodes = faqHtml.map((faq, idx) => ({
+        ...faq,
+        nodes: renderCatalogNodes(faq.a, `decal-faq-${idx}`)
+    }));
 
     const listSchema = buildDecalItemListSchema({
         title: pageTitle,
@@ -468,40 +484,28 @@ export function renderRobloxDecalIdsPage({
                 </header>
             )}
 
-            {introHtml && showHero ? (
-                <section className="article-content prose dark:prose-invert game-copy max-w-3xl" dangerouslySetInnerHTML={{ __html: introHtml }} />
-            ) : null}
+            <section id="article-body" itemProp="articleBody" className="article-content md-copy-scope copy-with-sidebar-space space-y-6">
+                {introNodes && showHero ? introNodes : null}
 
-            <CatalogAdSlot />
+                <CatalogAdSlot />
 
-            <DecalIdGrid decals={decals} />
+                <DecalIdGrid decals={decals} />
 
-            {totalPages > 1 ? (
-                <Pagination currentPage={currentPage} totalPages={totalPages} basePath={BASE_PATH} />
-            ) : null}
+                {totalPages > 1 ? (
+                    <Pagination currentPage={currentPage} totalPages={totalPages} basePath={BASE_PATH} />
+                ) : null}
 
-            <CatalogAdSlot />
+                <CatalogAdSlot />
 
-            {showHero && hasDetails ? (
-                <section className="space-y-6">
-                    {descriptionHtml.length ? (
-                        <div className="article-content prose dark:prose-invert game-copy max-w-3xl">
-                            {descriptionHtml.map((entry) => (
-                                <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
-                            ))}
-                        </div>
-                    ) : null}
+                {showHero && hasDetails ? (
+                    <>
+                        {descriptionNodes.length ? descriptionNodes : null}
 
-                    {howHtml ? (
-                        <div className="article-content prose dark:prose-invert game-copy max-w-3xl">
-                            <div dangerouslySetInnerHTML={{ __html: howHtml }} />
-                        </div>
-                    ) : null}
+                        {howNodes ? howNodes : null}
 
-                    {contentHtml?.ctaLabel && contentHtml?.ctaUrl ? (
-                        <div className="rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-soft">
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                <p className="text-sm text-muted">{contentHtml.ctaLabel}</p>
+                        {contentHtml?.ctaLabel && contentHtml?.ctaUrl ? (
+                            <p data-md-copy className="md-copy-node md-copy-p">
+                                {contentHtml.ctaLabel}{" "}
                                 <a
                                     href={contentHtml.ctaUrl}
                                     className="rounded-full bg-accent px-6 py-2 text-sm font-semibold text-white transition hover:bg-accent-dark"
@@ -510,33 +514,32 @@ export function renderRobloxDecalIdsPage({
                                 >
                                     Learn More
                                 </a>
-                            </div>
-                        </div>
-                    ) : null}
+                            </p>
+                        ) : null}
 
-                    {faqHtml.length ? (
-                        <div className="space-y-4">
-                            <h2 className="text-2xl font-semibold text-foreground">Frequently Asked Questions</h2>
-                            <div className="space-y-4">
-                                {faqHtml.map((faq, index) => (
-                                    <details
-                                        key={index}
-                                        className="group rounded-2xl border border-border/60 bg-surface p-5 transition hover:border-accent/60"
-                                    >
-                                        <summary className="cursor-pointer text-lg font-semibold text-foreground">
-                                            {faq.q}
-                                        </summary>
-                                        <div
-                                            className="article-content prose dark:prose-invert game-copy mt-3"
-                                            dangerouslySetInnerHTML={{ __html: faq.a }}
-                                        />
-                                    </details>
-                                ))}
-                            </div>
-                        </div>
-                    ) : null}
-                </section>
-            ) : null}
+                        {faqNodes.length ? (
+                            <>
+                                <div className="space-y-4">
+                                    <h2 className="text-2xl font-semibold text-foreground">Frequently Asked Questions</h2>
+                                    <div className="space-y-4">
+                                        {faqNodes.map((faq, index) => (
+                                            <details
+                                                key={index}
+                                                className="group rounded-2xl border border-border/60 bg-surface p-5 transition hover:border-accent/60"
+                                            >
+                                                <summary className="cursor-pointer text-lg font-semibold text-foreground">
+                                                    {faq.q}
+                                                </summary>
+                                                {faq.nodes}
+                                            </details>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        ) : null}
+                    </>
+                ) : null}
+            </section>
 
             {contentHtml?.id ? (
                 <div className="mt-10">

@@ -1,11 +1,14 @@
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { CatalogAdSlot } from "@/components/CatalogAdSlot";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { getFreeItemCategories, getFreeItemSubcategories, listFreeItems, type FreeItem } from "@/lib/db";
 import { breadcrumbJsonLd, SITE_URL, webPageJsonLd } from "@/lib/seo";
 import { Suspense } from "react";
 import { FreeItemsBrowser } from "./FreeItemsBrowser";
+import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 
 const PAGE_SIZE = 24;
 
@@ -23,6 +26,10 @@ export type CatalogContentHtml = {
   ctaLabel?: string | null;
   ctaUrl?: string | null;
 };
+
+function renderCatalogNodes(html: string, keyPrefix: string): ReactNode[] {
+  return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
+}
 
 type PageData = {
   items: FreeItem[];
@@ -408,6 +415,15 @@ export function renderRobloxFreeItemsPage({
       }))
     )
   );
+  const introNodes = introHtml ? renderCatalogNodes(introHtml, "free-items-intro") : null;
+  const descriptionNodes = descriptionHtml.flatMap((entry) =>
+    renderCatalogNodes(entry.html, `free-items-description-${entry.key}`)
+  );
+  const howNodes = howHtml ? renderCatalogNodes(howHtml, "free-items-how") : null;
+  const faqNodes = faqHtml.map((faq, idx) => ({
+    ...faq,
+    nodes: renderCatalogNodes(faq.a, `free-items-faq-${idx}`)
+  }));
 
   return (
     <div className="space-y-10">
@@ -439,123 +455,107 @@ export function renderRobloxFreeItemsPage({
         </header>
       )}
 
-      {introHtml && showHero ? (
-        <section
-          className="article-content prose dark:prose-invert game-copy max-w-3xl"
-          dangerouslySetInnerHTML={{ __html: introHtml }}
-        />
-      ) : null}
+      <section id="article-body" itemProp="articleBody" className="article-content md-copy-scope copy-with-sidebar-space space-y-6">
+        {introNodes && showHero ? introNodes : null}
 
-      <CatalogAdSlot />
+        <CatalogAdSlot />
 
-      <FreeItemsNav active={navActive} />
+        <FreeItemsNav active={navActive} />
 
-      {subcategories?.length && categorySlug ? (
-        <section className="flex flex-wrap gap-2">
-          <Link
-            href={`${BASE_PATH}/categories/${categorySlug}`}
-            className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-              activeSubcategorySlug
-                ? "border-border/70 bg-background/70 text-muted hover:border-accent/70 hover:text-accent"
-                : "border-accent/70 bg-accent/10 text-accent"
-            }`}
-          >
-            {categoryLabel ? `All ${categoryLabel}` : "All"}
-          </Link>
-          {subcategories.map((subcategory) => {
-            const isActive = subcategory.slug === activeSubcategorySlug;
-            return (
-              <Link
-                key={subcategory.slug}
-                href={`${BASE_PATH}/categories/${categorySlug}/${subcategory.slug}`}
-                className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                  isActive
-                    ? "border-accent/70 bg-accent/10 text-accent"
-                    : "border-border/70 bg-background/70 text-muted hover:border-accent/70 hover:text-accent"
-                }`}
-              >
-                {subcategory.label}
-              </Link>
-            );
-          })}
-        </section>
-      ) : null}
-
-      <Suspense
-        fallback={
-          <div className="rounded-2xl border border-border/60 bg-surface/60 p-6 text-sm text-muted">
-            Loading free items...
-          </div>
-        }
-      >
-        <FreeItemsBrowser
-          initialItems={items}
-          initialTotalPages={totalPages}
-          currentPage={currentPage}
-          basePath={basePath}
-          category={categoryLabel}
-          subcategory={
-            subcategories?.find((subcategory) => subcategory.slug === activeSubcategorySlug)?.label ?? undefined
-          }
-        />
-      </Suspense>
-
-      <CatalogAdSlot />
-
-      {showHero && hasDetails ? (
-        <section className="space-y-6">
-          {descriptionHtml.length ? (
-            <div className="article-content prose dark:prose-invert game-copy max-w-3xl">
-              {descriptionHtml.map((entry) => (
-                <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
-              ))}
-            </div>
-          ) : null}
-
-          {howHtml ? (
-            <div className="article-content prose dark:prose-invert game-copy max-w-3xl">
-              <div dangerouslySetInnerHTML={{ __html: howHtml }} />
-            </div>
-          ) : null}
-
-          {contentHtml?.ctaLabel && contentHtml?.ctaUrl ? (
-            <div className="rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-soft">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">Next step</p>
-                  <p className="text-lg font-semibold text-foreground">Keep exploring free Roblox items</p>
-                </div>
-                <a
-                  href={contentHtml.ctaUrl}
-                  className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-accent-dark dark:bg-accent-dark dark:hover:bg-accent"
+        {subcategories?.length && categorySlug ? (
+          <section className="flex flex-wrap gap-2">
+            <Link
+              href={`${BASE_PATH}/categories/${categorySlug}`}
+              className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                activeSubcategorySlug
+                  ? "border-border/70 bg-background/70 text-muted hover:border-accent/70 hover:text-accent"
+                  : "border-accent/70 bg-accent/10 text-accent"
+              }`}
+            >
+              {categoryLabel ? `All ${categoryLabel}` : "All"}
+            </Link>
+            {subcategories.map((subcategory) => {
+              const isActive = subcategory.slug === activeSubcategorySlug;
+              return (
+                <Link
+                  key={subcategory.slug}
+                  href={`${BASE_PATH}/categories/${categorySlug}/${subcategory.slug}`}
+                  className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                    isActive
+                      ? "border-accent/70 bg-accent/10 text-accent"
+                      : "border-border/70 bg-background/70 text-muted hover:border-accent/70 hover:text-accent"
+                  }`}
                 >
-                  {contentHtml.ctaLabel}
-                </a>
-              </div>
-            </div>
-          ) : null}
+                  {subcategory.label}
+                </Link>
+              );
+            })}
+          </section>
+        ) : null}
 
-          {faqHtml.length ? (
-            <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
-              <div className="mt-3 space-y-4">
-                {faqHtml.map((faq, idx) => (
-                  <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
-                      <p className="text-base font-semibold text-foreground">{faq.q}</p>
-                    </div>
-                    <div
-                      className="prose mt-2"
-                      dangerouslySetInnerHTML={{ __html: faq.a }}
-                    />
+        <Suspense
+          fallback={
+            <div className="rounded-2xl border border-border/60 bg-surface/60 p-6 text-sm text-muted">
+              Loading free items...
+            </div>
+          }
+        >
+          <FreeItemsBrowser
+            initialItems={items}
+            initialTotalPages={totalPages}
+            currentPage={currentPage}
+            basePath={basePath}
+            category={categoryLabel}
+            subcategory={
+              subcategories?.find((subcategory) => subcategory.slug === activeSubcategorySlug)?.label ?? undefined
+            }
+          />
+        </Suspense>
+
+        <CatalogAdSlot />
+
+        {showHero && hasDetails ? (
+          <>
+            {descriptionNodes.length ? descriptionNodes : null}
+
+            {howNodes ? howNodes : null}
+
+            {contentHtml?.ctaLabel && contentHtml?.ctaUrl ? (
+              <>
+                <h3 data-md-copy className="md-copy-node md-copy-heading md-copy-h3">Next step</h3>
+                <p data-md-copy className="md-copy-node md-copy-p">Keep exploring free Roblox items.</p>
+                <p data-md-copy className="md-copy-node md-copy-p">
+                  <a
+                    href={contentHtml.ctaUrl}
+                    className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-accent-dark dark:bg-accent-dark dark:hover:bg-accent"
+                  >
+                    {contentHtml.ctaLabel}
+                  </a>
+                </p>
+              </>
+            ) : null}
+
+            {faqNodes.length ? (
+              <>
+                <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
+                  <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
+                  <div className="mt-3 space-y-4">
+                    {faqNodes.map((faq, idx) => (
+                      <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
+                          <p className="text-base font-semibold text-foreground">{faq.q}</p>
+                        </div>
+                        {faq.nodes}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </section>
-      ) : null}
+                </section>
+              </>
+            ) : null}
+          </>
+        ) : null}
+      </section>
 
       {contentHtml?.id ? (
         <div className="mt-10">

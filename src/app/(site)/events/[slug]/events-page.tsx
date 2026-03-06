@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { formatDistanceToNow } from "date-fns";
 import "@/styles/article-content.css";
 import { AuthorCard } from "@/components/AuthorCard";
@@ -21,6 +22,7 @@ import {
 import { collectAuthorSocials } from "@/lib/author-socials";
 import { renderMarkdown, markdownToPlainText } from "@/lib/markdown";
 import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 import { authorAvatarUrl } from "@/lib/avatar";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CHECKLISTS_DESCRIPTION, SITE_NAME, SITE_URL, breadcrumbJsonLd, resolveSeoTitle, buildAlternates } from "@/lib/seo";
@@ -125,6 +127,10 @@ const PT_FORMATTER = new Intl.DateTimeFormat("en-US", {
   timeZoneName: "short"
 });
 const EVENTS_IN_ARTICLE_AD_SLOT = "5764053793";
+
+function renderEventHtmlNodes(html: string, keyPrefix: string): ReactNode[] {
+  return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
+}
 
 function normalizeText(value: string | null | undefined): string | null {
   if (typeof value !== "string") return null;
@@ -585,9 +591,15 @@ function EventGuideLink({ guideSlug, eventId }: { guideSlug: string | null; even
 
 function UpcomingEventBlock({ event }: { event: UpcomingEventView }) {
   const eventName = getEventDisplayName(event);
+  const summaryNodes = event.summary_html
+    ? renderEventHtmlNodes(event.summary_html, `upcoming-summary-${event.event_id}`)
+    : null;
+  const detailNodes = event.details_html
+    ? renderEventHtmlNodes(event.details_html, `upcoming-details-${event.event_id}`)
+    : null;
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-8 md-copy-scope">
       <header className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 className="text-[2rem] font-semibold leading-[1.15] text-foreground">
@@ -595,11 +607,8 @@ function UpcomingEventBlock({ event }: { event: UpcomingEventView }) {
           </h2>
           <EventGuideLink guideSlug={event.guide_slug} eventId={event.event_id} />
         </div>
-        {event.summary_html ? (
-          <div
-            className="article-content prose dark:prose-invert max-w-none game-copy"
-            dangerouslySetInnerHTML={{ __html: event.summary_html }}
-          />
+        {summaryNodes ? (
+          summaryNodes
         ) : null}
       </header>
 
@@ -616,12 +625,9 @@ function UpcomingEventBlock({ event }: { event: UpcomingEventView }) {
       </div>
 
 
-      {event.details_html ? (
+      {detailNodes ? (
         <div className="space-y-4">
-          <div
-            className="article-content prose dark:prose-invert max-w-none game-copy"
-            dangerouslySetInnerHTML={{ __html: event.details_html }}
-          />
+          {detailNodes}
           <div>
             <a
               href={`https://www.roblox.com/events/${event.event_id}`}
@@ -640,6 +646,9 @@ function UpcomingEventBlock({ event }: { event: UpcomingEventView }) {
 
 function CurrentEventCard({ event }: { event: CurrentEventView }) {
   const eventName = getEventDisplayName(event);
+  const summaryNodes = event.summary_html
+    ? renderEventHtmlNodes(event.summary_html, `current-summary-${event.event_id}`)
+    : null;
   const startLabel = formatPtLongDateTime(event.start_utc);
   const endLabel = formatPtLongDateTime(event.end_utc);
   const startTime = parseDate(event.start_utc);
@@ -652,7 +661,7 @@ function CurrentEventCard({ event }: { event: CurrentEventView }) {
   const endIso = toIsoString(event.end_utc);
 
   return (
-    <article className="relative overflow-hidden rounded-2xl border border-border/60 bg-surface/60 shadow-soft">
+    <article className="relative overflow-hidden rounded-2xl border border-border/60 bg-surface/60 shadow-soft md-copy-scope">
       {backgroundImage ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -668,11 +677,8 @@ function CurrentEventCard({ event }: { event: CurrentEventView }) {
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Live now</p>
             <h3 className="text-xl font-semibold text-foreground">{eventName}</h3>
           </div>
-          {event.summary_html ? (
-            <div
-              className="article-content prose dark:prose-invert game-copy max-w-none"
-              dangerouslySetInnerHTML={{ __html: event.summary_html }}
-            />
+          {summaryNodes ? (
+            summaryNodes
           ) : null}
           <div className="text-sm text-foreground/90">
             {startLabel ? (
@@ -742,10 +748,8 @@ function CurrentEventCard({ event }: { event: CurrentEventView }) {
 function PastEventsTable({ events }: { events: VirtualEvent[] }) {
   if (!events.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/70 bg-surface-muted/60 p-6">
-        <div className="article-content prose dark:prose-invert game-copy max-w-none">
-          <p>No past events listed yet.</p>
-        </div>
+      <div className="rounded-2xl border border-dashed border-border/70 bg-surface-muted/60 p-6 md-copy-scope">
+        <p data-md-copy="true" className="md-copy-node md-copy-p">No past events listed yet.</p>
       </div>
     );
   }
@@ -817,6 +821,7 @@ export async function renderEventsPage({ slug }: { slug: string }) {
     page.author?.bio_md ? renderMarkdown(page.author.bio_md) : Promise.resolve("")
   ]);
   const introHtml = introHtmlRaw?.trim() ? introHtmlRaw : null;
+  const introNodes = introHtml ? renderEventHtmlNodes(introHtml, "events-intro") : null;
   const processedAuthorBioHtml = authorBioHtml ? processHtmlLinks(authorBioHtml) : null;
   const universeId = page.universe_id;
   const universeLabel = page.universe?.display_name ?? page.universe?.name ?? universeName;
@@ -1048,35 +1053,28 @@ export async function renderEventsPage({ slug }: { slug: string }) {
             </div>
           ) : null}
         </header>
-        {introHtml ? (
-          <article
-            className="article-content prose dark:prose-invert max-w-none game-copy mb-10"
-            dangerouslySetInnerHTML={{ __html: introHtml }}
-          />
-        ) : null}
-        {upcomingEvents.length > 0 ? (
-          <div className="article-content prose dark:prose-invert max-w-none game-copy mb-8">
-            <p>
+        <section id="article-body" itemProp="articleBody" className="article-content md-copy-scope">
+          {introNodes ? introNodes : null}
+          {upcomingEvents.length > 0 ? (
+            <p data-md-copy="true" className="md-copy-node md-copy-p mb-8">
               {upcomingEvents.length === 1
                 ? `Right now, there is 1 upcoming event for ${universeName}.`
                 : `Right now, there are ${upcomingEvents.length} upcoming events for ${universeName}.`}
             </p>
-          </div>
-        ) : null}
+          ) : null}
 
-        <ContentSlot slot={EVENTS_IN_ARTICLE_AD_SLOT} className="my-8" />
+          <ContentSlot slot={EVENTS_IN_ARTICLE_AD_SLOT} className="my-8" />
 
-        <div className="space-y-10">
-          <section className="space-y-6">
-            {upcomingEvents.length ? (
-              <div className="space-y-10">
-                {upcomingEvents.map((event) => (
-                  <UpcomingEventBlock key={event.event_id} event={event} />
-                ))}
-              </div>
-            ) : (
-              <div className="article-content prose dark:prose-invert game-copy max-w-none">
-                {(() => {
+          <div className="space-y-10">
+            <section className="space-y-6">
+              {upcomingEvents.length ? (
+                <div className="space-y-10">
+                  {upcomingEvents.map((event) => (
+                    <UpcomingEventBlock key={event.event_id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                (() => {
                   // Get the last known event (current or most recent past event)
                   const lastEvent = currentEvents.length > 0
                     ? currentEvents[0]
@@ -1093,7 +1091,7 @@ export async function renderEventsPage({ slug }: { slug: string }) {
 
                   if (!lastEvent) {
                     return (
-                      <p>
+                      <p data-md-copy="true" className="md-copy-node md-copy-p">
                         However, {developerName} has not announced any new details on upcoming events yet.
                         We update this page as soon as the developer announces a new event. So stay updated.
                       </p>
@@ -1106,57 +1104,65 @@ export async function renderEventsPage({ slug }: { slug: string }) {
                   if (isCurrentlyRunning) {
                     const startDatePT = formatPtLongDateTime(lastEvent.start_utc);
                     return (
-                      <p>
+                      <p data-md-copy="true" className="md-copy-node md-copy-p">
                         However, {developerName} has not announced any new details on upcoming events.
-                        The last known event was <strong>{eventName}</strong> which started on{' '}
-                        {startDatePT ? <strong>{startDatePT}</strong> : <strong>an unspecified date</strong>} and is still running.
+                        The last known event was <strong data-md-copy="true" className="md-copy-node md-copy-strong">{eventName}</strong> which started on{' '}
+                        {startDatePT ? (
+                          <strong data-md-copy="true" className="md-copy-node md-copy-strong">{startDatePT}</strong>
+                        ) : (
+                          <strong data-md-copy="true" className="md-copy-node md-copy-strong">an unspecified date</strong>
+                        )} and is still running.
                         You can check the details below.
                       </p>
                     );
                   } else {
                     const endDatePT = formatPtLongDateTime(lastEvent.end_utc);
                     return (
-                      <p>
+                      <p data-md-copy="true" className="md-copy-node md-copy-p">
                         However, {developerName} has not announced any new details on upcoming events.
-                        The last known event was <strong>{eventName}</strong> which ended on{' '}
-                        {endDatePT ? <strong>{endDatePT}</strong> : <strong>an unspecified date</strong>}.
+                        The last known event was <strong data-md-copy="true" className="md-copy-node md-copy-strong">{eventName}</strong> which ended on{' '}
+                        {endDatePT ? (
+                          <strong data-md-copy="true" className="md-copy-node md-copy-strong">{endDatePT}</strong>
+                        ) : (
+                          <strong data-md-copy="true" className="md-copy-node md-copy-strong">an unspecified date</strong>
+                        )}.
                         We update this page as soon as the developer announces a new event. So stay updated.
                       </p>
                     );
                   }
-                })()}
-              </div>
-            )}
-          </section>
+                })()
+              )}
+            </section>
 
-          {currentEvents.length > 0 ? (
+            {currentEvents.length > 0 ? (
+              <section className="space-y-6">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Live now</p>
+                    <h2 className="text-[2rem] font-semibold leading-[1.15] text-foreground">Current events</h2>
+                  </div>
+                  <span className="text-xs text-muted">{currentEvents.length} active</span>
+                </div>
+                <div className="space-y-6">
+                  {currentEvents.map((event) => (
+                    <CurrentEventCard key={event.event_id} event={event} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
             <section className="space-y-6">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Live now</p>
-                  <h2 className="text-[2rem] font-semibold leading-[1.15] text-foreground">Current events</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Archive</p>
+                  <h2 className="text-[2rem] font-semibold leading-[1.15] text-foreground">Past events</h2>
                 </div>
-                <span className="text-xs text-muted">{currentEvents.length} active</span>
+                <span className="text-xs text-muted">{grouped.past.length} events</span>
               </div>
-              <div className="space-y-6">
-                {currentEvents.map((event) => (
-                  <CurrentEventCard key={event.event_id} event={event} />
-                ))}
-              </div>
+              <PastEventsTable events={pastEvents} />
             </section>
-          ) : null}
-
-          <section className="space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted">Archive</p>
-                <h2 className="text-[2rem] font-semibold leading-[1.15] text-foreground">Past events</h2>
-              </div>
-              <span className="text-xs text-muted">{grouped.past.length} events</span>
-            </div>
-            <PastEventsTable events={pastEvents} />
-          </section>
-        </div>
+          </div>
+        </section>
 
         {page.author ? <AuthorCard author={page.author} bioHtml={processedAuthorBioHtml ?? ""} /> : null}
 

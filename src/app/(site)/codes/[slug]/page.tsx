@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { FaFacebook, FaTelegramPlane, FaTwitch, FaUsers, FaYoutube, FaDiscord } from "react-icons/fa";
 import { RiTwitterXLine } from "react-icons/ri";
@@ -10,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import "@/styles/article-content.css";
 import { renderMarkdown, markdownToPlainText } from "@/lib/markdown";
 import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 import { logger } from "@/lib/logger";
 import { ActiveCodes } from "@/components/ActiveCodes";
 import { ExpiredCodes } from "@/components/ExpiredCodes";
@@ -70,6 +72,10 @@ export async function generateStaticParams() {
 interface FaqEntry {
   question: string;
   answer: string;
+}
+
+function renderProcessedHtmlNodes(html: string, keyPrefix: string): ReactNode[] {
+  return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
 }
 
 function extractFaqEntries(markdown?: string | null): FaqEntry[] {
@@ -619,7 +625,18 @@ export default async function GamePage({ params }: Params) {
     aboutMarkdown ? renderMarkdown(aboutMarkdown) : "",
     findCodesMarkdown ? renderMarkdown(findCodesMarkdown) : ""
   ]);
+  const hasGameAboutDescription = Boolean(universe?.game_description_md);
   const hasSupplemental = Boolean(troubleshootHtml || rewardsHtml || aboutHtml);
+  const introNodes = introHtml ? renderProcessedHtmlNodes(introHtml, "codes-intro") : null;
+  const redeemNodes = redeemHtml ? renderProcessedHtmlNodes(redeemHtml, "codes-redeem") : null;
+  const interlinkNodes = interlinkHtml ? renderProcessedHtmlNodes(interlinkHtml, "codes-interlink") : null;
+  const troubleshootNodes = troubleshootHtml ? renderProcessedHtmlNodes(troubleshootHtml, "codes-troubleshoot") : null;
+  const rewardsNodes = rewardsHtml ? renderProcessedHtmlNodes(rewardsHtml, "codes-rewards") : null;
+  const findCodesNodes = findCodesHtml ? renderProcessedHtmlNodes(findCodesHtml, "codes-find-codes") : null;
+  const descriptionNodes = descriptionHtml ? renderProcessedHtmlNodes(descriptionHtml, "codes-description") : null;
+  const universeDescriptionNodes = hasGameAboutDescription
+    ? renderProcessedHtmlNodes(universe?.game_description_md || "", "codes-game-description")
+    : null;
 
   const canonicalUrl = `${SITE_URL}/codes/${game.slug}`;
   const coverImage = game.cover_image?.startsWith("http")
@@ -737,8 +754,6 @@ export default async function GamePage({ params }: Params) {
         }
       : null
   ].filter((row): row is { label: string; value: string } => Boolean(row));
-  const hasGameAboutDescription = Boolean(universe?.game_description_md);
-
   const relatedChecklistCards = relatedChecklists.map((row) => {
     const summary = summarize(row.seo_description ?? row.description_md ?? null, CHECKLISTS_DESCRIPTION);
     const itemsCount =
@@ -853,15 +868,16 @@ export default async function GamePage({ params }: Params) {
           </div>
         </header>
 
-        <div id="article-body" itemProp="articleBody" className="article-content">
-        {introHtml ? (
-          <div
-            className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
-            dangerouslySetInnerHTML={processHtmlLinks(introHtml)}
-          />
+        <section
+          id="article-body"
+          itemProp="articleBody"
+          className="article-content md-copy-scope"
+        >
+        {introNodes ? (
+          introNodes
         ) : null}
 
-        <div className="mb-8">
+        <div className="mb-8 mt-8">
           <ActiveCodes
             codes={sortedActive}
             gameName={game.name}
@@ -876,51 +892,36 @@ export default async function GamePage({ params }: Params) {
 
         <ContentSlot slot={CODES_IN_ARTICLE_AD_SLOT} className="mb-8" />
 
-        {redeemHtml ? (
+        {redeemNodes ? (
           <>
-            <div
-              className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
-              dangerouslySetInnerHTML={processHtmlLinks(redeemHtml)}
-            />
+            {redeemNodes}
             <ContentSlot slot={CODES_IN_ARTICLE_AD_SLOT} className="mb-8" />
           </>
         ) : null}
-        {interlinkHtml ? (
-          <div
-            className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
-            dangerouslySetInnerHTML={processHtmlLinks(interlinkHtml)}
-          />
+        {interlinkNodes ? (
+          interlinkNodes
         ) : null}
-        <div className="panel mb-8 space-y-3 px-5 pb-5 pt-0" id="expired-codes">
+        <div className="panel mb-8 mt-8 space-y-3 px-5 pb-5 pt-0" id="expired-codes">
           <ExpiredCodes codes={expiredWithoutSpaces} gameName={game.name} gameSlug={game.slug} />
         </div>
 
         {hasSupplemental ? (
           <>
-            {troubleshootHtml ? (
+            {troubleshootNodes ? (
               <>
-                <div
-                  className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
-                  dangerouslySetInnerHTML={processHtmlLinks(troubleshootHtml)}
-                />
+                {troubleshootNodes}
                 <ContentSlot slot={CODES_IN_ARTICLE_AD_SLOT} className="mb-8" />
               </>
             ) : null}
 
-            {rewardsHtml ? (
-              <div
-                className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
-                dangerouslySetInnerHTML={processHtmlLinks(rewardsHtml)}
-              />
+            {rewardsNodes ? (
+              rewardsNodes
             ) : null}
 
             {shouldShowSocialSection ? (
               <div className="mb-8 space-y-4" id={`more-${game.slug}-codes`}>
-                {findCodesHtml ? (
-                  <div
-                    className="article-content prose dark:prose-invert max-w-none game-copy"
-                    dangerouslySetInnerHTML={processHtmlLinks(findCodesHtml)}
-                  />
+                {findCodesNodes ? (
+                  findCodesNodes
                 ) : null}
                 {socialLinksToDisplay.length ? (
                   <div className="mt-4 flex flex-wrap gap-3">
@@ -943,7 +944,7 @@ export default async function GamePage({ params }: Params) {
                 ) : (
                   <p className="mt-3 text-sm text-muted">We haven't found any official social media links yet.</p>
                 )}
-                <p className="article-content prose dark:prose-invert max-w-none game-copy">
+                <p data-md-copy="true" className="md-copy-node md-copy-p">
                   We keep track of these sources and update this page as soon as new codes drop. Bookmark this page or follow our channels to get the codes right away.
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -988,11 +989,8 @@ export default async function GamePage({ params }: Params) {
             ) : null}
 
           </>
-        ) : descriptionHtml ? (
-          <div
-            className="article-content prose dark:prose-invert mb-8 max-w-none game-copy"
-            dangerouslySetInnerHTML={processHtmlLinks(descriptionHtml)}
-          />
+        ) : descriptionNodes ? (
+          descriptionNodes
         ) : null}
 
         {universe ? (
@@ -1020,18 +1018,15 @@ export default async function GamePage({ params }: Params) {
                 </div>
               ) : null}
 
-              {hasGameAboutDescription ? (
-                <div className="px-5 py-5 sm:px-6">
-                  <div
-                    className="article-content prose dark:prose-invert max-w-none game-copy text-foreground"
-                    dangerouslySetInnerHTML={processHtmlLinks(universe.game_description_md || "")}
-                  />
+              {universeDescriptionNodes ? (
+                <div className="article-content md-copy-scope px-5 py-5 sm:px-6">
+                  {universeDescriptionNodes}
                 </div>
               ) : null}
             </div>
           </div>
         ) : null}
-        </div>
+        </section>
 
         {game.author ? (
           <div className="mt-10">

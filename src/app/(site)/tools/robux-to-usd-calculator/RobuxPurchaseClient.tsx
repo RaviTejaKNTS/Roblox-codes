@@ -73,7 +73,6 @@ type RobuxPurchaseClientProps = {
   initialRobuxPlan?: PlanWithPlatform | null;
   initialValuePlan?: PlanWithPlatform | null;
   initialBudgetPlan?: BudgetPlan | null;
-  howItWorksHtml?: string;
 };
 
 export function RobuxPurchaseClient({
@@ -83,8 +82,7 @@ export function RobuxPurchaseClient({
   initialHasPremium = DEFAULT_HAS_PREMIUM,
   initialRobuxPlan = null,
   initialValuePlan = null,
-  initialBudgetPlan = null,
-  howItWorksHtml
+  initialBudgetPlan = null
 }: RobuxPurchaseClientProps) {
   const [mode, setMode] = useState<CalculatorMode>("robux_to_usd");
   const [targetRobuxInput, setTargetRobuxInput] = useState(() => initialRobuxTarget.toString());
@@ -129,7 +127,6 @@ export function RobuxPurchaseClient({
   const displayValuePlan = valueBundlePlan;
   const displayBudgetPlan = budgetPlan;
   const formattedTargetRobux = Number.isFinite(parsedRobux) ? formatNumber(parsedRobux) : "—";
-  const hasHowItWorks = Boolean(howItWorksHtml?.trim());
 
   return (
     <div className="space-y-10">
@@ -338,12 +335,6 @@ export function RobuxPurchaseClient({
             </div>
         </section>
       )}
-
-      {hasHowItWorks ? (
-        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-          <div dangerouslySetInnerHTML={{ __html: howItWorksHtml ?? "" }} />
-        </section>
-      ) : null}
 
       <section className="panel space-y-4 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

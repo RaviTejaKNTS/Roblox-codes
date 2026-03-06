@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { formatDistanceToNow } from "date-fns";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import "@/styles/article-content.css";
 import { renderMarkdown, markdownToPlainText } from "@/lib/markdown";
+import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 import { CHECKLISTS_DESCRIPTION, EVENTS_DESCRIPTION, SITE_NAME, SITE_URL, resolveSeoTitle, buildAlternates } from "@/lib/seo";
 import {
   getEventsPageByUniverseId,
@@ -80,6 +83,10 @@ function sortDescriptionEntries(description: Record<string, string> | null | und
     if (Number.isNaN(right)) return -1;
     return left - right;
   });
+}
+
+function renderToolNodes(html: string, keyPrefix: string): ReactNode[] {
+  return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
 }
 
 async function fetchTool(code: string): Promise<ToolContent | null> {
@@ -265,6 +272,16 @@ export default async function ToolFallbackPage({ params }: PageProps) {
       relatedArticles.length > 0 ||
       relatedTools.length > 0 ||
       Boolean(eventsCard));
+  const introNodes = introHtml ? renderToolNodes(introHtml, "tool-intro") : null;
+  const descriptionNodes = descriptionHtml.map((entry) => ({
+    key: entry.key,
+    nodes: renderToolNodes(entry.html, `tool-description-${entry.key}`)
+  }));
+  const howNodes = howHtml ? renderToolNodes(howHtml, "tool-how") : null;
+  const faqNodes = faqHtml.map((faq, idx) => ({
+    ...faq,
+    nodes: renderToolNodes(faq.a, `tool-faq-${idx}`)
+  }));
 
   const faqSchema =
     (tool.faq_json?.length ?? 0) > 0
@@ -346,56 +363,43 @@ export default async function ToolFallbackPage({ params }: PageProps) {
             {updatedRelativeLabel ? <span>{' '}({updatedRelativeLabel})</span> : null}
           </p>
         ) : null}
-        {introHtml ? (
-          <div className="article-content prose dark:prose-invert game-copy max-w-3xl" dangerouslySetInnerHTML={{ __html: introHtml }} />
-        ) : null}
       </header>
 
-      <ContentSlot
-        slot={TOOL_AD_SLOT}
-        className="mt-8 w-full"
-        adLayout={null}
-        adFormat="auto"
-        fullWidthResponsive
-      />
+      <section id="article-body" itemProp="articleBody" className="article-content md-copy-scope copy-with-sidebar-space mt-8 space-y-6">
+        {introNodes ? introNodes : null}
+        <ContentSlot
+          slot={TOOL_AD_SLOT}
+          className="mt-8 w-full"
+          adLayout={null}
+          adFormat="auto"
+          fullWidthResponsive
+        />
+        {(descriptionNodes.length || howNodes || faqNodes.length) ? (
+          <>
+          {descriptionNodes.length ? descriptionNodes.flatMap((entry) => entry.nodes) : null}
+          {howNodes ? howNodes : null}
 
-      {(descriptionHtml.length || howHtml || faqHtml.length) ? (
-        <div className="mt-8 space-y-6">
-          {descriptionHtml.length ? (
-            <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-              {descriptionHtml.map((entry) => (
-                <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
-              ))}
-            </section>
-          ) : null}
-
-          {howHtml ? (
-            <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-              <div dangerouslySetInnerHTML={{ __html: howHtml }} />
-            </section>
-          ) : null}
-
-          {faqHtml.length ? (
-            <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
-              <div className="mt-3 space-y-4">
-                {faqHtml.map((faq, idx) => (
-                  <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
-                      <p className="text-base font-semibold text-foreground">{faq.q}</p>
+          {faqNodes.length ? (
+            <>
+              <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
+                <div className="mt-3 space-y-4">
+                  {faqNodes.map((faq, idx) => (
+                    <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
+                        <p className="text-base font-semibold text-foreground">{faq.q}</p>
+                      </div>
+                      <div className="md-copy-scope mt-2">{faq.nodes}</div>
                     </div>
-                    <div
-                      className="prose mt-2"
-                      dangerouslySetInnerHTML={{ __html: faq.a }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+              </section>
+            </>
           ) : null}
-        </div>
-      ) : null}
+          </>
+        ) : null}
+      </section>
 
       {tool?.id ? (
         <div className="mt-10">

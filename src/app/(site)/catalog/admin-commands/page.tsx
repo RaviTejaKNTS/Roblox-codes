@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import "@/styles/article-content.css";
 import { renderMarkdown } from "@/lib/markdown";
+import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 import { getCatalogPageContentByCodes } from "@/lib/catalog";
 import { ADMIN_COMMANDS_DESCRIPTION, resolveSeoTitle, SITE_NAME, SITE_URL, buildAlternates } from "@/lib/seo";
 import { loadAdminCommandDatasets } from "@/lib/admin-commands";
@@ -24,6 +27,10 @@ type CatalogContentHtml = {
   ctaLabel: string | null;
   ctaUrl: string | null;
 };
+
+function renderCatalogNodes(html: string, keyPrefix: string): ReactNode[] {
+  return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
+}
 
 function sortDescriptionEntries(description: Record<string, string> | null | undefined) {
   return Object.entries(description ?? {}).sort((a, b) => {
@@ -113,6 +120,15 @@ export default async function AdminCommandsHubPage() {
   const howHtml = contentHtml?.howHtml?.trim() ? contentHtml.howHtml : "";
   const descriptionHtml = contentHtml?.descriptionHtml ?? [];
   const faqHtml = contentHtml?.faqHtml ?? [];
+  const introNodes = introHtml ? renderCatalogNodes(introHtml, "admin-intro") : null;
+  const descriptionNodes = descriptionHtml.flatMap((entry) =>
+    renderCatalogNodes(entry.html, `admin-description-${entry.key}`)
+  );
+  const howNodes = howHtml ? renderCatalogNodes(howHtml, "admin-how") : null;
+  const faqNodes = faqHtml.map((faq, idx) => ({
+    ...faq,
+    nodes: renderCatalogNodes(faq.a, `admin-faq-${idx}`)
+  }));
   const showCta = Boolean(contentHtml?.ctaLabel && contentHtml?.ctaUrl);
   const updatedDateValue = contentHtml?.updatedAt ?? null;
   const updatedDate = updatedDateValue ? new Date(updatedDateValue) : null;
@@ -152,88 +168,74 @@ export default async function AdminCommandsHubPage() {
         ) : null}
       </header>
 
-      {introHtml ? (
-        <section
-          className="article-content prose dark:prose-invert game-copy max-w-3xl"
-          dangerouslySetInnerHTML={{ __html: introHtml }}
-        />
-      ) : null}
+      <section id="article-body" itemProp="articleBody" className="article-content md-copy-scope copy-with-sidebar-space space-y-6">
+        {introNodes ? introNodes : null}
 
-      {datasets.length ? (
-        <section className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {datasets.map((dataset) => (
-              <Link
-                key={dataset.system.slug}
-                href={`/catalog/admin-commands/${dataset.system.slug}`}
-                aria-label={`${dataset.system.name} commands`}
-                className="block h-full"
-              >
-                <article className="group relative overflow-hidden rounded-2xl border border-border/60 bg-surface/80 px-5 py-4 transition hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-soft">
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-0 top-0 h-1 bg-accent/30 transition group-hover:bg-accent/60"
-                  />
-                  <div className="flex h-full flex-col gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-lg font-semibold text-foreground">{dataset.system.name}</p>
+        {datasets.length ? (
+          <section className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {datasets.map((dataset) => (
+                <Link
+                  key={dataset.system.slug}
+                  href={`/catalog/admin-commands/${dataset.system.slug}`}
+                  aria-label={`${dataset.system.name} commands`}
+                  className="block h-full"
+                >
+                  <article className="group relative overflow-hidden rounded-2xl border border-border/60 bg-surface/80 px-5 py-4 transition hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-soft">
+                    <span
+                      aria-hidden
+                      className="absolute inset-x-0 top-0 h-1 bg-accent/30 transition group-hover:bg-accent/60"
+                    />
+                    <div className="flex h-full flex-col gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-lg font-semibold text-foreground">{dataset.system.name}</p>
+                      </div>
+                      <p className="text-sm text-muted">{dataset.system.cardDescription}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                        {dataset.commandCount.toLocaleString("en-US")} commands
+                      </p>
                     </div>
-                    <p className="text-sm text-muted">{dataset.system.cardDescription}</p>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-                      {dataset.commandCount.toLocaleString("en-US")} commands
-                    </p>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {descriptionNodes.length ? descriptionNodes : null}
+
+        {howNodes ? howNodes : null}
+
+        {showCta ? (
+          <p data-md-copy className="md-copy-node md-copy-p">
+            <a
+              href={contentHtml?.ctaUrl ?? "#"}
+              className="inline-flex items-center justify-center rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background transition hover:opacity-90"
+            >
+              {contentHtml?.ctaLabel}
+            </a>
+          </p>
+        ) : null}
+
+        {faqNodes.length ? (
+          <>
+            <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
+              <div className="mt-3 space-y-4">
+                {faqNodes.map((faq, idx) => (
+                  <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
+                      <p className="text-base font-semibold text-foreground">{faq.q}</p>
+                    </div>
+                    {faq.nodes}
                   </div>
-                </article>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {descriptionHtml.length ? (
-        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-          {descriptionHtml.map((entry) => (
-            <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
-          ))}
-        </section>
-      ) : null}
-
-      {howHtml ? (
-        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-          <div dangerouslySetInnerHTML={{ __html: howHtml }} />
-        </section>
-      ) : null}
-
-      {showCta ? (
-        <section className="rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-soft">
-          <a
-            href={contentHtml?.ctaUrl ?? "#"}
-            className="inline-flex items-center justify-center rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background transition hover:opacity-90"
-          >
-            {contentHtml?.ctaLabel}
-          </a>
-        </section>
-      ) : null}
-
-      {faqHtml.length ? (
-        <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
-          <div className="mt-3 space-y-4">
-            {faqHtml.map((faq, idx) => (
-              <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
-                  <p className="text-base font-semibold text-foreground">{faq.q}</p>
-                </div>
-                <div
-                  className="prose mt-2"
-                  dangerouslySetInnerHTML={{ __html: faq.a }}
-                />
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+            </section>
+          </>
+        ) : null}
+      </section>
 
       {contentHtml?.id ? (
         <div className="mt-10">

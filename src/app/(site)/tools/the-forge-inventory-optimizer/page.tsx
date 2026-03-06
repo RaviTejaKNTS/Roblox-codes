@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { formatDistanceToNow } from "date-fns";
+import type { ReactNode } from "react";
 import "@/styles/article-content.css";
 import { renderMarkdown } from "@/lib/markdown";
+import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 import { SITE_NAME, SITE_URL, resolveSeoTitle, buildAlternates } from "@/lib/seo";
 import { getToolContent, type ToolContent, type ToolFaqEntry } from "@/lib/tools";
 import { loadForgeArmorDataset } from "@/lib/forge/armors";
@@ -18,6 +21,10 @@ const TOOL_CODE = "the-forge-inventory-optimizer";
 const CANONICAL = `${SITE_URL.replace(/\/$/, "")}/tools/the-forge-inventory-optimizer`;
 const FALLBACK_IMAGE = `${SITE_URL}/og-image.png`;
 const TOOL_AD_SLOT = "3529946151";
+
+function renderToolNodes(html: string, keyPrefix: string): ReactNode[] {
+    return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
+}
 
 function sortDescriptionEntries(description: Record<string, string> | null | undefined) {
     return Object.entries(description ?? {}).sort((a, b) => {
@@ -100,6 +107,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ForgeInventoryOptimizerPage() {
     const { tool, introHtml, howHtml, descriptionHtml, faqHtml } = await buildToolContent();
+    const introNodes = introHtml ? renderToolNodes(introHtml, "tool-intro") : null;
+    const descriptionNodes = descriptionHtml.map((entry) => ({
+        key: entry.key,
+        nodes: renderToolNodes(entry.html, `tool-description-${entry.key}`)
+    }));
+    const howNodes = howHtml ? renderToolNodes(howHtml, "tool-how") : null;
+    const faqNodes = faqHtml.map((faq, idx) => ({
+        ...faq,
+        nodes: renderToolNodes(faq.a, `tool-faq-${idx}`)
+    }));
     const oreDataset = await loadForgeOreDataset();
     const weaponDataset = await loadForgeWeaponDataset();
     const armorDataset = await loadForgeArmorDataset();
@@ -177,52 +194,37 @@ export default async function ForgeInventoryOptimizerPage() {
                         {updatedRelativeLabel ? <span>{' '}({updatedRelativeLabel})</span> : null}
                     </p>
                 ) : null}
-                {introHtml ? (
-                    <div className="article-content prose dark:prose-invert game-copy max-w-3xl" dangerouslySetInnerHTML={{ __html: introHtml }} />
-                ) : (
-                    <p className="max-w-3xl text-base text-muted md:text-lg">{fallbackIntro}</p>
-                )}
             </header>
 
-            <ContentSlot
-                slot={TOOL_AD_SLOT}
-                className="mt-8 w-full"
-                adLayout={null}
-                adFormat="auto"
-                fullWidthResponsive
-            />
-            <div className="mt-8">
-                <ForgeInventoryOptimizerClient
-                    ores={oreDataset.ores}
-                    weapons={weaponDataset.weapons}
-                    armorPieces={armorDataset.armorPieces}
+            <section id="article-body" itemProp="articleBody" className="article-content md-copy-scope copy-with-sidebar-space mt-8 space-y-6">
+                {introNodes ? introNodes : <p data-md-copy className="md-copy-node md-copy-p">{fallbackIntro}</p>}
+                <ContentSlot
+                    slot={TOOL_AD_SLOT}
+                    className="mt-8 w-full"
+                    adLayout={null}
+                    adFormat="auto"
+                    fullWidthResponsive
                 />
-            </div>
-            <ContentSlot
-                slot={TOOL_AD_SLOT}
-                className="my-8 w-full"
-                adLayout={null}
-                adFormat="auto"
-                fullWidthResponsive
-            />
+                <div className="mt-8">
+                    <ForgeInventoryOptimizerClient
+                        ores={oreDataset.ores}
+                        weapons={weaponDataset.weapons}
+                        armorPieces={armorDataset.armorPieces}
+                    />
+                </div>
+                <ContentSlot
+                    slot={TOOL_AD_SLOT}
+                    className="my-8 w-full"
+                    adLayout={null}
+                    adFormat="auto"
+                    fullWidthResponsive
+                />
+                {(descriptionNodes.length || howNodes || faqNodes.length) ? (
+                    <>
+                    {descriptionNodes.length ? descriptionNodes.flatMap((entry) => entry.nodes) : null}
+                    {howNodes ? howNodes : null}
 
-            {(descriptionHtml.length || howHtml || faqHtml.length) ? (
-                <div className="space-y-6">
-                    {descriptionHtml.length ? (
-                        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-                            {descriptionHtml.map((entry) => (
-                                <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
-                            ))}
-                        </section>
-                    ) : null}
-
-                    {howHtml ? (
-                        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-                            <div dangerouslySetInnerHTML={{ __html: howHtml }} />
-                        </section>
-                    ) : null}
-
-                    {faqHtml.length ? (
+                    {faqNodes.length ? (
                         <>
                             <ContentSlot
                                 slot={TOOL_AD_SLOT}
@@ -234,24 +236,22 @@ export default async function ForgeInventoryOptimizerPage() {
                             <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
                                 <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
                                 <div className="mt-3 space-y-4">
-                                    {faqHtml.map((faq, idx) => (
+                                    {faqNodes.map((faq, idx) => (
                                         <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
                                                 <p className="text-base font-semibold text-foreground">{faq.q}</p>
                                             </div>
-                                            <div
-                                                className="prose mt-2"
-                                                dangerouslySetInnerHTML={{ __html: faq.a }}
-                                            />
+                                            <div className="md-copy-scope mt-2">{faq.nodes}</div>
                                         </div>
                                     ))}
                                 </div>
                             </section>
                         </>
                     ) : null}
-                </div>
-            ) : null}
+                    </>
+                ) : null}
+            </section>
 
             {tool?.id ? (
                 <div className="mt-10">

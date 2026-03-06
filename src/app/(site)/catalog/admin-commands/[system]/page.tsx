@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import "@/styles/article-content.css";
 import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { renderMarkdown } from "@/lib/markdown";
+import { processHtmlLinks } from "@/lib/link-utils";
+import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 import { getCatalogPageContentByCodes } from "@/lib/catalog";
 import { ADMIN_COMMANDS_DESCRIPTION, resolveSeoTitle, SITE_NAME, SITE_URL, buildAlternates } from "@/lib/seo";
 import { getAdminCommandSystems, loadAdminCommandDataset, loadAdminCommandDatasets } from "@/lib/admin-commands";
@@ -65,6 +68,10 @@ type CatalogContentHtml = {
   ctaUrl: string | null;
   updatedAt: string | null;
 };
+
+function renderCatalogNodes(html: string, keyPrefix: string): ReactNode[] {
+  return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
+}
 
 export function generateStaticParams() {
   return getAdminCommandSystems().map((system) => ({ system: system.slug }));
@@ -427,6 +434,15 @@ export default async function AdminCommandSystemPage({ params }: { params: Promi
   const howHtml = contentHtml?.howHtml?.trim() ? contentHtml.howHtml : "";
   const descriptionHtml = contentHtml?.descriptionHtml ?? [];
   const faqHtml = contentHtml?.faqHtml ?? [];
+  const introNodes = introHtml ? renderCatalogNodes(introHtml, "admin-system-intro") : null;
+  const descriptionNodes = descriptionHtml.flatMap((entry) =>
+    renderCatalogNodes(entry.html, `admin-system-description-${entry.key}`)
+  );
+  const howNodes = howHtml ? renderCatalogNodes(howHtml, "admin-system-how") : null;
+  const faqNodes = faqHtml.map((faq, idx) => ({
+    ...faq,
+    nodes: renderCatalogNodes(faq.a, `admin-system-faq-${idx}`)
+  }));
   const showCta = Boolean(contentHtml?.ctaLabel && contentHtml?.ctaUrl);
   const updatedDateValue = contentHtml?.updatedAt ?? dataset.generatedOn ?? null;
   const updatedDate = updatedDateValue ? new Date(updatedDateValue) : null;
@@ -483,11 +499,9 @@ export default async function AdminCommandSystemPage({ params }: { params: Promi
         ) : null}
       </header>
 
-      {introHtml ? (
-        <section
-          className="article-content prose dark:prose-invert game-copy max-w-3xl"
-          dangerouslySetInnerHTML={{ __html: introHtml }}
-        />
+      <section id="article-body" itemProp="articleBody" className="article-content md-copy-scope copy-with-sidebar-space space-y-6">
+      {introNodes ? (
+        introNodes
       ) : null}
 
       {systemNavItems.length ? (
@@ -631,50 +645,40 @@ export default async function AdminCommandSystemPage({ params }: { params: Promi
         ))}
       </section>
 
-      {descriptionHtml.length ? (
-        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-          {descriptionHtml.map((entry) => (
-            <div key={entry.key} dangerouslySetInnerHTML={{ __html: entry.html }} />
-          ))}
-        </section>
-      ) : null}
+      {descriptionNodes.length ? descriptionNodes : null}
 
-      {howHtml ? (
-        <section className="article-content prose dark:prose-invert game-copy max-w-3xl">
-          <div dangerouslySetInnerHTML={{ __html: howHtml }} />
-        </section>
-      ) : null}
+      {howNodes ? howNodes : null}
 
       {showCta ? (
-        <section className="rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-soft">
+        <p data-md-copy className="md-copy-node md-copy-p">
           <a
             href={contentHtml?.ctaUrl ?? "#"}
             className="inline-flex items-center justify-center rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background transition hover:opacity-90"
           >
             {contentHtml?.ctaLabel}
           </a>
-        </section>
+        </p>
       ) : null}
 
-      {faqHtml.length ? (
-        <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
-          <div className="mt-3 space-y-4">
-            {faqHtml.map((faq, idx) => (
-              <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
-                  <p className="text-base font-semibold text-foreground">{faq.q}</p>
+      {faqNodes.length ? (
+        <>
+          <section className="rounded-2xl border border-border/60 bg-surface/40 p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-foreground">FAQ</h2>
+            <div className="mt-3 space-y-4">
+              {faqNodes.map((faq, idx) => (
+                <div key={`${faq.q}-${idx}`} className="rounded-xl border border-border/40 bg-background/60 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Q.</span>
+                    <p className="text-base font-semibold text-foreground">{faq.q}</p>
+                  </div>
+                  {faq.nodes}
                 </div>
-                <div
-                  className="prose mt-2"
-                  dangerouslySetInnerHTML={{ __html: faq.a }}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        </>
       ) : null}
+      </section>
 
       {contentHtml?.id ? (
         <div className="mt-10">
