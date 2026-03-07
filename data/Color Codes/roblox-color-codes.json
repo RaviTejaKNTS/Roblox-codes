@@ -1,0 +1,3982 @@
+{
+  "meta": {
+    "title": "Roblox color codes",
+    "updatedAt": "2026-03-07",
+    "itemCount": 208,
+    "sources": [
+      {
+        "label": "Official Roblox Creator Hub",
+        "url": "https://create.roblox.com/docs/reference/engine/datatypes/BrickColor",
+        "accessed": "2026-03-07"
+      },
+      {
+        "label": "Roblox API Reference",
+        "url": "https://robloxapi.github.io/ref/type/BrickColor.html",
+        "accessed": "2026-03-07"
+      }
+    ],
+    "columns": [
+      "name",
+      "slug",
+      "brickcolor number",
+      "hex",
+      "rgb (0-255)",
+      "rgb (0-1)",
+      "sort order"
+    ]
+  },
+  "items": [
+    {
+      "name": "White",
+      "slug": "white",
+      "number": 1,
+      "hex": "#F2F3F3",
+      "rgb255": "242, 243, 243",
+      "rgb255Channels": [
+        242,
+        243,
+        243
+      ],
+      "rgb01": "0.950, 0.953, 0.953",
+      "rgb01Channels": [
+        0.95,
+        0.953,
+        0.953
+      ],
+      "sortOrder": 1
+    },
+    {
+      "name": "Grey",
+      "slug": "grey",
+      "number": 2,
+      "hex": "#A1A5A2",
+      "rgb255": "161, 165, 162",
+      "rgb255Channels": [
+        161,
+        165,
+        162
+      ],
+      "rgb01": "0.632, 0.648, 0.636",
+      "rgb01Channels": [
+        0.632,
+        0.648,
+        0.636
+      ],
+      "sortOrder": 2
+    },
+    {
+      "name": "Light yellow",
+      "slug": "light-yellow",
+      "number": 3,
+      "hex": "#F9E999",
+      "rgb255": "249, 233, 153",
+      "rgb255Channels": [
+        249,
+        233,
+        153
+      ],
+      "rgb01": "0.977, 0.914, 0.600",
+      "rgb01Channels": [
+        0.977,
+        0.914,
+        0.6
+      ],
+      "sortOrder": 3
+    },
+    {
+      "name": "Brick yellow",
+      "slug": "brick-yellow",
+      "number": 5,
+      "hex": "#D7C59A",
+      "rgb255": "215, 197, 154",
+      "rgb255Channels": [
+        215,
+        197,
+        154
+      ],
+      "rgb01": "0.844, 0.773, 0.604",
+      "rgb01Channels": [
+        0.844,
+        0.773,
+        0.604
+      ],
+      "sortOrder": 4
+    },
+    {
+      "name": "Light green (Mint)",
+      "slug": "light-green-mint",
+      "number": 6,
+      "hex": "#C2DAB8",
+      "rgb255": "194, 218, 184",
+      "rgb255Channels": [
+        194,
+        218,
+        184
+      ],
+      "rgb01": "0.761, 0.855, 0.722",
+      "rgb01Channels": [
+        0.761,
+        0.855,
+        0.722
+      ],
+      "sortOrder": 5
+    },
+    {
+      "name": "Light reddish violet",
+      "slug": "light-reddish-violet",
+      "number": 9,
+      "hex": "#E8BAC8",
+      "rgb255": "232, 186, 200",
+      "rgb255Channels": [
+        232,
+        186,
+        200
+      ],
+      "rgb01": "0.910, 0.730, 0.785",
+      "rgb01Channels": [
+        0.91,
+        0.73,
+        0.785
+      ],
+      "sortOrder": 6
+    },
+    {
+      "name": "Pastel Blue",
+      "slug": "pastel-blue",
+      "number": 11,
+      "hex": "#80BBDB",
+      "rgb255": "128, 187, 219",
+      "rgb255Channels": [
+        128,
+        187,
+        219
+      ],
+      "rgb01": "0.502, 0.734, 0.859",
+      "rgb01Channels": [
+        0.502,
+        0.734,
+        0.859
+      ],
+      "sortOrder": 7
+    },
+    {
+      "name": "Light orange brown",
+      "slug": "light-orange-brown",
+      "number": 12,
+      "hex": "#CB8442",
+      "rgb255": "203, 132, 66",
+      "rgb255Channels": [
+        203,
+        132,
+        66
+      ],
+      "rgb01": "0.797, 0.518, 0.259",
+      "rgb01Channels": [
+        0.797,
+        0.518,
+        0.259
+      ],
+      "sortOrder": 8
+    },
+    {
+      "name": "Nougat",
+      "slug": "nougat",
+      "number": 18,
+      "hex": "#CC8E69",
+      "rgb255": "204, 142, 105",
+      "rgb255Channels": [
+        204,
+        142,
+        105
+      ],
+      "rgb01": "0.800, 0.557, 0.412",
+      "rgb01Channels": [
+        0.8,
+        0.557,
+        0.412
+      ],
+      "sortOrder": 9
+    },
+    {
+      "name": "Bright red",
+      "slug": "bright-red",
+      "number": 21,
+      "hex": "#C4281C",
+      "rgb255": "196, 40, 28",
+      "rgb255Channels": [
+        196,
+        40,
+        28
+      ],
+      "rgb01": "0.769, 0.157, 0.110",
+      "rgb01Channels": [
+        0.769,
+        0.157,
+        0.11
+      ],
+      "sortOrder": 10
+    },
+    {
+      "name": "Med. reddish violet",
+      "slug": "med-reddish-violet",
+      "number": 22,
+      "hex": "#C470A0",
+      "rgb255": "196, 112, 160",
+      "rgb255Channels": [
+        196,
+        112,
+        160
+      ],
+      "rgb01": "0.769, 0.440, 0.628",
+      "rgb01Channels": [
+        0.769,
+        0.44,
+        0.628
+      ],
+      "sortOrder": 11
+    },
+    {
+      "name": "Bright blue",
+      "slug": "bright-blue",
+      "number": 23,
+      "hex": "#0D69AC",
+      "rgb255": "13, 105, 172",
+      "rgb255Channels": [
+        13,
+        105,
+        172
+      ],
+      "rgb01": "0.051, 0.412, 0.675",
+      "rgb01Channels": [
+        0.051,
+        0.412,
+        0.675
+      ],
+      "sortOrder": 12
+    },
+    {
+      "name": "Bright yellow",
+      "slug": "bright-yellow",
+      "number": 24,
+      "hex": "#F5CD30",
+      "rgb255": "245, 205, 48",
+      "rgb255Channels": [
+        245,
+        205,
+        48
+      ],
+      "rgb01": "0.961, 0.804, 0.189",
+      "rgb01Channels": [
+        0.961,
+        0.804,
+        0.189
+      ],
+      "sortOrder": 13
+    },
+    {
+      "name": "Earth orange",
+      "slug": "earth-orange",
+      "number": 25,
+      "hex": "#624732",
+      "rgb255": "98, 71, 50",
+      "rgb255Channels": [
+        98,
+        71,
+        50
+      ],
+      "rgb01": "0.385, 0.279, 0.197",
+      "rgb01Channels": [
+        0.385,
+        0.279,
+        0.197
+      ],
+      "sortOrder": 14
+    },
+    {
+      "name": "Black",
+      "slug": "black",
+      "number": 26,
+      "hex": "#1B2A35",
+      "rgb255": "27, 42, 53",
+      "rgb255Channels": [
+        27,
+        42,
+        53
+      ],
+      "rgb01": "0.106, 0.165, 0.208",
+      "rgb01Channels": [
+        0.106,
+        0.165,
+        0.208
+      ],
+      "sortOrder": 15
+    },
+    {
+      "name": "Dark grey",
+      "slug": "dark-grey",
+      "number": 27,
+      "hex": "#6D6E6C",
+      "rgb255": "109, 110, 108",
+      "rgb255Channels": [
+        109,
+        110,
+        108
+      ],
+      "rgb01": "0.428, 0.432, 0.424",
+      "rgb01Channels": [
+        0.428,
+        0.432,
+        0.424
+      ],
+      "sortOrder": 16
+    },
+    {
+      "name": "Dark green",
+      "slug": "dark-green",
+      "number": 28,
+      "hex": "#287F47",
+      "rgb255": "40, 127, 71",
+      "rgb255Channels": [
+        40,
+        127,
+        71
+      ],
+      "rgb01": "0.157, 0.499, 0.279",
+      "rgb01Channels": [
+        0.157,
+        0.499,
+        0.279
+      ],
+      "sortOrder": 17
+    },
+    {
+      "name": "Medium green",
+      "slug": "medium-green",
+      "number": 29,
+      "hex": "#A1C48C",
+      "rgb255": "161, 196, 140",
+      "rgb255Channels": [
+        161,
+        196,
+        140
+      ],
+      "rgb01": "0.632, 0.769, 0.550",
+      "rgb01Channels": [
+        0.632,
+        0.769,
+        0.55
+      ],
+      "sortOrder": 18
+    },
+    {
+      "name": "Lig. Yellowich orange",
+      "slug": "lig-yellowich-orange",
+      "number": 36,
+      "hex": "#F3CF9B",
+      "rgb255": "243, 207, 155",
+      "rgb255Channels": [
+        243,
+        207,
+        155
+      ],
+      "rgb01": "0.953, 0.812, 0.608",
+      "rgb01Channels": [
+        0.953,
+        0.812,
+        0.608
+      ],
+      "sortOrder": 19
+    },
+    {
+      "name": "Bright green",
+      "slug": "bright-green",
+      "number": 37,
+      "hex": "#4B974B",
+      "rgb255": "75, 151, 75",
+      "rgb255Channels": [
+        75,
+        151,
+        75
+      ],
+      "rgb01": "0.295, 0.593, 0.295",
+      "rgb01Channels": [
+        0.295,
+        0.593,
+        0.295
+      ],
+      "sortOrder": 20
+    },
+    {
+      "name": "Dark orange",
+      "slug": "dark-orange",
+      "number": 38,
+      "hex": "#A05F35",
+      "rgb255": "160, 95, 53",
+      "rgb255Channels": [
+        160,
+        95,
+        53
+      ],
+      "rgb01": "0.628, 0.373, 0.208",
+      "rgb01Channels": [
+        0.628,
+        0.373,
+        0.208
+      ],
+      "sortOrder": 21
+    },
+    {
+      "name": "Light bluish violet",
+      "slug": "light-bluish-violet",
+      "number": 39,
+      "hex": "#C1CADE",
+      "rgb255": "193, 202, 222",
+      "rgb255Channels": [
+        193,
+        202,
+        222
+      ],
+      "rgb01": "0.757, 0.793, 0.871",
+      "rgb01Channels": [
+        0.757,
+        0.793,
+        0.871
+      ],
+      "sortOrder": 22
+    },
+    {
+      "name": "Transparent",
+      "slug": "transparent",
+      "number": 40,
+      "hex": "#ECECEC",
+      "rgb255": "236, 236, 236",
+      "rgb255Channels": [
+        236,
+        236,
+        236
+      ],
+      "rgb01": "0.926, 0.926, 0.926",
+      "rgb01Channels": [
+        0.926,
+        0.926,
+        0.926
+      ],
+      "sortOrder": 23
+    },
+    {
+      "name": "Tr. Red",
+      "slug": "tr-red",
+      "number": 41,
+      "hex": "#CD544B",
+      "rgb255": "205, 84, 75",
+      "rgb255Channels": [
+        205,
+        84,
+        75
+      ],
+      "rgb01": "0.804, 0.330, 0.295",
+      "rgb01Channels": [
+        0.804,
+        0.33,
+        0.295
+      ],
+      "sortOrder": 24
+    },
+    {
+      "name": "Tr. Lg blue",
+      "slug": "tr-lg-blue",
+      "number": 42,
+      "hex": "#C1DFF0",
+      "rgb255": "193, 223, 240",
+      "rgb255Channels": [
+        193,
+        223,
+        240
+      ],
+      "rgb01": "0.757, 0.875, 0.942",
+      "rgb01Channels": [
+        0.757,
+        0.875,
+        0.942
+      ],
+      "sortOrder": 25
+    },
+    {
+      "name": "Tr. Blue",
+      "slug": "tr-blue",
+      "number": 43,
+      "hex": "#7BB6E8",
+      "rgb255": "123, 182, 232",
+      "rgb255Channels": [
+        123,
+        182,
+        232
+      ],
+      "rgb01": "0.483, 0.714, 0.910",
+      "rgb01Channels": [
+        0.483,
+        0.714,
+        0.91
+      ],
+      "sortOrder": 26
+    },
+    {
+      "name": "Tr. Yellow",
+      "slug": "tr-yellow",
+      "number": 44,
+      "hex": "#F7F18D",
+      "rgb255": "247, 241, 141",
+      "rgb255Channels": [
+        247,
+        241,
+        141
+      ],
+      "rgb01": "0.969, 0.946, 0.553",
+      "rgb01Channels": [
+        0.969,
+        0.946,
+        0.553
+      ],
+      "sortOrder": 27
+    },
+    {
+      "name": "Light blue",
+      "slug": "light-blue",
+      "number": 45,
+      "hex": "#B4D2E4",
+      "rgb255": "180, 210, 228",
+      "rgb255Channels": [
+        180,
+        210,
+        228
+      ],
+      "rgb01": "0.706, 0.824, 0.895",
+      "rgb01Channels": [
+        0.706,
+        0.824,
+        0.895
+      ],
+      "sortOrder": 28
+    },
+    {
+      "name": "Tr. Flu. Reddish orange",
+      "slug": "tr-flu-reddish-orange",
+      "number": 47,
+      "hex": "#D9856C",
+      "rgb255": "217, 133, 108",
+      "rgb255Channels": [
+        217,
+        133,
+        108
+      ],
+      "rgb01": "0.851, 0.522, 0.424",
+      "rgb01Channels": [
+        0.851,
+        0.522,
+        0.424
+      ],
+      "sortOrder": 29
+    },
+    {
+      "name": "Tr. Green",
+      "slug": "tr-green",
+      "number": 48,
+      "hex": "#84B68D",
+      "rgb255": "132, 182, 141",
+      "rgb255Channels": [
+        132,
+        182,
+        141
+      ],
+      "rgb01": "0.518, 0.714, 0.553",
+      "rgb01Channels": [
+        0.518,
+        0.714,
+        0.553
+      ],
+      "sortOrder": 30
+    },
+    {
+      "name": "Tr. Flu. Green",
+      "slug": "tr-flu-green",
+      "number": 49,
+      "hex": "#F8F184",
+      "rgb255": "248, 241, 132",
+      "rgb255Channels": [
+        248,
+        241,
+        132
+      ],
+      "rgb01": "0.973, 0.946, 0.518",
+      "rgb01Channels": [
+        0.973,
+        0.946,
+        0.518
+      ],
+      "sortOrder": 31
+    },
+    {
+      "name": "Phosph. White",
+      "slug": "phosph-white",
+      "number": 50,
+      "hex": "#ECE8DE",
+      "rgb255": "236, 232, 222",
+      "rgb255Channels": [
+        236,
+        232,
+        222
+      ],
+      "rgb01": "0.926, 0.910, 0.871",
+      "rgb01Channels": [
+        0.926,
+        0.91,
+        0.871
+      ],
+      "sortOrder": 32
+    },
+    {
+      "name": "Light red",
+      "slug": "light-red",
+      "number": 100,
+      "hex": "#EEC4B6",
+      "rgb255": "238, 196, 182",
+      "rgb255Channels": [
+        238,
+        196,
+        182
+      ],
+      "rgb01": "0.934, 0.769, 0.714",
+      "rgb01Channels": [
+        0.934,
+        0.769,
+        0.714
+      ],
+      "sortOrder": 33
+    },
+    {
+      "name": "Medium red",
+      "slug": "medium-red",
+      "number": 101,
+      "hex": "#DA867A",
+      "rgb255": "218, 134, 122",
+      "rgb255Channels": [
+        218,
+        134,
+        122
+      ],
+      "rgb01": "0.855, 0.526, 0.479",
+      "rgb01Channels": [
+        0.855,
+        0.526,
+        0.479
+      ],
+      "sortOrder": 34
+    },
+    {
+      "name": "Medium blue",
+      "slug": "medium-blue",
+      "number": 102,
+      "hex": "#6E99CA",
+      "rgb255": "110, 153, 202",
+      "rgb255Channels": [
+        110,
+        153,
+        202
+      ],
+      "rgb01": "0.432, 0.600, 0.793",
+      "rgb01Channels": [
+        0.432,
+        0.6,
+        0.793
+      ],
+      "sortOrder": 35
+    },
+    {
+      "name": "Light grey",
+      "slug": "light-grey",
+      "number": 103,
+      "hex": "#C7C1B7",
+      "rgb255": "199, 193, 183",
+      "rgb255Channels": [
+        199,
+        193,
+        183
+      ],
+      "rgb01": "0.781, 0.757, 0.718",
+      "rgb01Channels": [
+        0.781,
+        0.757,
+        0.718
+      ],
+      "sortOrder": 36
+    },
+    {
+      "name": "Bright violet",
+      "slug": "bright-violet",
+      "number": 104,
+      "hex": "#6B327C",
+      "rgb255": "107, 50, 124",
+      "rgb255Channels": [
+        107,
+        50,
+        124
+      ],
+      "rgb01": "0.420, 0.197, 0.487",
+      "rgb01Channels": [
+        0.42,
+        0.197,
+        0.487
+      ],
+      "sortOrder": 37
+    },
+    {
+      "name": "Br. yellowish orange",
+      "slug": "br-yellowish-orange",
+      "number": 105,
+      "hex": "#E29B40",
+      "rgb255": "226, 155, 64",
+      "rgb255Channels": [
+        226,
+        155,
+        64
+      ],
+      "rgb01": "0.887, 0.608, 0.251",
+      "rgb01Channels": [
+        0.887,
+        0.608,
+        0.251
+      ],
+      "sortOrder": 38
+    },
+    {
+      "name": "Bright orange",
+      "slug": "bright-orange",
+      "number": 106,
+      "hex": "#DA8541",
+      "rgb255": "218, 133, 65",
+      "rgb255Channels": [
+        218,
+        133,
+        65
+      ],
+      "rgb01": "0.855, 0.522, 0.255",
+      "rgb01Channels": [
+        0.855,
+        0.522,
+        0.255
+      ],
+      "sortOrder": 39
+    },
+    {
+      "name": "Bright bluish green",
+      "slug": "bright-bluish-green",
+      "number": 107,
+      "hex": "#008F9C",
+      "rgb255": "0, 143, 156",
+      "rgb255Channels": [
+        0,
+        143,
+        156
+      ],
+      "rgb01": "0.000, 0.561, 0.612",
+      "rgb01Channels": [
+        0,
+        0.561,
+        0.612
+      ],
+      "sortOrder": 40
+    },
+    {
+      "name": "Earth yellow",
+      "slug": "earth-yellow",
+      "number": 108,
+      "hex": "#685C43",
+      "rgb255": "104, 92, 67",
+      "rgb255Channels": [
+        104,
+        92,
+        67
+      ],
+      "rgb01": "0.408, 0.361, 0.263",
+      "rgb01Channels": [
+        0.408,
+        0.361,
+        0.263
+      ],
+      "sortOrder": 41
+    },
+    {
+      "name": "Bright bluish violet",
+      "slug": "bright-bluish-violet",
+      "number": 110,
+      "hex": "#435493",
+      "rgb255": "67, 84, 147",
+      "rgb255Channels": [
+        67,
+        84,
+        147
+      ],
+      "rgb01": "0.263, 0.330, 0.577",
+      "rgb01Channels": [
+        0.263,
+        0.33,
+        0.577
+      ],
+      "sortOrder": 42
+    },
+    {
+      "name": "Tr. Brown",
+      "slug": "tr-brown",
+      "number": 111,
+      "hex": "#BFB7B1",
+      "rgb255": "191, 183, 177",
+      "rgb255Channels": [
+        191,
+        183,
+        177
+      ],
+      "rgb01": "0.750, 0.718, 0.695",
+      "rgb01Channels": [
+        0.75,
+        0.718,
+        0.695
+      ],
+      "sortOrder": 43
+    },
+    {
+      "name": "Medium bluish violet",
+      "slug": "medium-bluish-violet",
+      "number": 112,
+      "hex": "#6874AC",
+      "rgb255": "104, 116, 172",
+      "rgb255Channels": [
+        104,
+        116,
+        172
+      ],
+      "rgb01": "0.408, 0.455, 0.675",
+      "rgb01Channels": [
+        0.408,
+        0.455,
+        0.675
+      ],
+      "sortOrder": 44
+    },
+    {
+      "name": "Tr. Medi. reddish violet",
+      "slug": "tr-medi-reddish-violet",
+      "number": 113,
+      "hex": "#E5ADC8",
+      "rgb255": "229, 173, 200",
+      "rgb255Channels": [
+        229,
+        173,
+        200
+      ],
+      "rgb01": "0.899, 0.679, 0.785",
+      "rgb01Channels": [
+        0.899,
+        0.679,
+        0.785
+      ],
+      "sortOrder": 45
+    },
+    {
+      "name": "Med. yellowish green",
+      "slug": "med-yellowish-green",
+      "number": 115,
+      "hex": "#C7D23C",
+      "rgb255": "199, 210, 60",
+      "rgb255Channels": [
+        199,
+        210,
+        60
+      ],
+      "rgb01": "0.781, 0.824, 0.236",
+      "rgb01Channels": [
+        0.781,
+        0.824,
+        0.236
+      ],
+      "sortOrder": 46
+    },
+    {
+      "name": "Med. bluish green",
+      "slug": "med-bluish-green",
+      "number": 116,
+      "hex": "#55A5AF",
+      "rgb255": "85, 165, 175",
+      "rgb255Channels": [
+        85,
+        165,
+        175
+      ],
+      "rgb01": "0.334, 0.648, 0.687",
+      "rgb01Channels": [
+        0.334,
+        0.648,
+        0.687
+      ],
+      "sortOrder": 47
+    },
+    {
+      "name": "Light bluish green",
+      "slug": "light-bluish-green",
+      "number": 118,
+      "hex": "#B7D7D5",
+      "rgb255": "183, 215, 213",
+      "rgb255Channels": [
+        183,
+        215,
+        213
+      ],
+      "rgb01": "0.718, 0.844, 0.836",
+      "rgb01Channels": [
+        0.718,
+        0.844,
+        0.836
+      ],
+      "sortOrder": 48
+    },
+    {
+      "name": "Br. yellowish green",
+      "slug": "br-yellowish-green",
+      "number": 119,
+      "hex": "#A4BD47",
+      "rgb255": "164, 189, 71",
+      "rgb255Channels": [
+        164,
+        189,
+        71
+      ],
+      "rgb01": "0.644, 0.742, 0.279",
+      "rgb01Channels": [
+        0.644,
+        0.742,
+        0.279
+      ],
+      "sortOrder": 49
+    },
+    {
+      "name": "Lig. yellowish green",
+      "slug": "lig-yellowish-green",
+      "number": 120,
+      "hex": "#D9E4A7",
+      "rgb255": "217, 228, 167",
+      "rgb255Channels": [
+        217,
+        228,
+        167
+      ],
+      "rgb01": "0.851, 0.895, 0.655",
+      "rgb01Channels": [
+        0.851,
+        0.895,
+        0.655
+      ],
+      "sortOrder": 50
+    },
+    {
+      "name": "Med. yellowish orange",
+      "slug": "med-yellowish-orange",
+      "number": 121,
+      "hex": "#E7AC58",
+      "rgb255": "231, 172, 88",
+      "rgb255Channels": [
+        231,
+        172,
+        88
+      ],
+      "rgb01": "0.906, 0.675, 0.346",
+      "rgb01Channels": [
+        0.906,
+        0.675,
+        0.346
+      ],
+      "sortOrder": 51
+    },
+    {
+      "name": "Br. reddish orange",
+      "slug": "br-reddish-orange",
+      "number": 123,
+      "hex": "#D36F4C",
+      "rgb255": "211, 111, 76",
+      "rgb255Channels": [
+        211,
+        111,
+        76
+      ],
+      "rgb01": "0.828, 0.436, 0.299",
+      "rgb01Channels": [
+        0.828,
+        0.436,
+        0.299
+      ],
+      "sortOrder": 52
+    },
+    {
+      "name": "Bright reddish violet",
+      "slug": "bright-reddish-violet",
+      "number": 124,
+      "hex": "#923978",
+      "rgb255": "146, 57, 120",
+      "rgb255Channels": [
+        146,
+        57,
+        120
+      ],
+      "rgb01": "0.573, 0.224, 0.471",
+      "rgb01Channels": [
+        0.573,
+        0.224,
+        0.471
+      ],
+      "sortOrder": 53
+    },
+    {
+      "name": "Light orange",
+      "slug": "light-orange",
+      "number": 125,
+      "hex": "#EAB892",
+      "rgb255": "234, 184, 146",
+      "rgb255Channels": [
+        234,
+        184,
+        146
+      ],
+      "rgb01": "0.918, 0.722, 0.573",
+      "rgb01Channels": [
+        0.918,
+        0.722,
+        0.573
+      ],
+      "sortOrder": 54
+    },
+    {
+      "name": "Tr. Bright bluish violet",
+      "slug": "tr-bright-bluish-violet",
+      "number": 126,
+      "hex": "#A5A5CB",
+      "rgb255": "165, 165, 203",
+      "rgb255Channels": [
+        165,
+        165,
+        203
+      ],
+      "rgb01": "0.648, 0.648, 0.797",
+      "rgb01Channels": [
+        0.648,
+        0.648,
+        0.797
+      ],
+      "sortOrder": 55
+    },
+    {
+      "name": "Gold",
+      "slug": "gold",
+      "number": 127,
+      "hex": "#DCBC81",
+      "rgb255": "220, 188, 129",
+      "rgb255Channels": [
+        220,
+        188,
+        129
+      ],
+      "rgb01": "0.863, 0.738, 0.506",
+      "rgb01Channels": [
+        0.863,
+        0.738,
+        0.506
+      ],
+      "sortOrder": 56
+    },
+    {
+      "name": "Dark nougat",
+      "slug": "dark-nougat",
+      "number": 128,
+      "hex": "#AE7A59",
+      "rgb255": "174, 122, 89",
+      "rgb255Channels": [
+        174,
+        122,
+        89
+      ],
+      "rgb01": "0.683, 0.479, 0.350",
+      "rgb01Channels": [
+        0.683,
+        0.479,
+        0.35
+      ],
+      "sortOrder": 57
+    },
+    {
+      "name": "Silver",
+      "slug": "silver",
+      "number": 131,
+      "hex": "#9CA3A8",
+      "rgb255": "156, 163, 168",
+      "rgb255Channels": [
+        156,
+        163,
+        168
+      ],
+      "rgb01": "0.612, 0.640, 0.659",
+      "rgb01Channels": [
+        0.612,
+        0.64,
+        0.659
+      ],
+      "sortOrder": 58
+    },
+    {
+      "name": "Neon orange",
+      "slug": "neon-orange",
+      "number": 133,
+      "hex": "#D5733D",
+      "rgb255": "213, 115, 61",
+      "rgb255Channels": [
+        213,
+        115,
+        61
+      ],
+      "rgb01": "0.836, 0.451, 0.240",
+      "rgb01Channels": [
+        0.836,
+        0.451,
+        0.24
+      ],
+      "sortOrder": 59
+    },
+    {
+      "name": "Neon green",
+      "slug": "neon-green",
+      "number": 134,
+      "hex": "#D8DD56",
+      "rgb255": "216, 221, 86",
+      "rgb255Channels": [
+        216,
+        221,
+        86
+      ],
+      "rgb01": "0.848, 0.867, 0.338",
+      "rgb01Channels": [
+        0.848,
+        0.867,
+        0.338
+      ],
+      "sortOrder": 60
+    },
+    {
+      "name": "Sand blue",
+      "slug": "sand-blue",
+      "number": 135,
+      "hex": "#74869D",
+      "rgb255": "116, 134, 157",
+      "rgb255Channels": [
+        116,
+        134,
+        157
+      ],
+      "rgb01": "0.455, 0.526, 0.616",
+      "rgb01Channels": [
+        0.455,
+        0.526,
+        0.616
+      ],
+      "sortOrder": 61
+    },
+    {
+      "name": "Sand violet",
+      "slug": "sand-violet",
+      "number": 136,
+      "hex": "#877C90",
+      "rgb255": "135, 124, 144",
+      "rgb255Channels": [
+        135,
+        124,
+        144
+      ],
+      "rgb01": "0.530, 0.487, 0.565",
+      "rgb01Channels": [
+        0.53,
+        0.487,
+        0.565
+      ],
+      "sortOrder": 62
+    },
+    {
+      "name": "Medium orange",
+      "slug": "medium-orange",
+      "number": 137,
+      "hex": "#E09864",
+      "rgb255": "224, 152, 100",
+      "rgb255Channels": [
+        224,
+        152,
+        100
+      ],
+      "rgb01": "0.879, 0.597, 0.393",
+      "rgb01Channels": [
+        0.879,
+        0.597,
+        0.393
+      ],
+      "sortOrder": 63
+    },
+    {
+      "name": "Sand yellow",
+      "slug": "sand-yellow",
+      "number": 138,
+      "hex": "#958A73",
+      "rgb255": "149, 138, 115",
+      "rgb255Channels": [
+        149,
+        138,
+        115
+      ],
+      "rgb01": "0.585, 0.542, 0.451",
+      "rgb01Channels": [
+        0.585,
+        0.542,
+        0.451
+      ],
+      "sortOrder": 64
+    },
+    {
+      "name": "Earth blue",
+      "slug": "earth-blue",
+      "number": 140,
+      "hex": "#203A56",
+      "rgb255": "32, 58, 86",
+      "rgb255Channels": [
+        32,
+        58,
+        86
+      ],
+      "rgb01": "0.126, 0.228, 0.338",
+      "rgb01Channels": [
+        0.126,
+        0.228,
+        0.338
+      ],
+      "sortOrder": 65
+    },
+    {
+      "name": "Earth green",
+      "slug": "earth-green",
+      "number": 141,
+      "hex": "#27462D",
+      "rgb255": "39, 70, 45",
+      "rgb255Channels": [
+        39,
+        70,
+        45
+      ],
+      "rgb01": "0.153, 0.275, 0.177",
+      "rgb01Channels": [
+        0.153,
+        0.275,
+        0.177
+      ],
+      "sortOrder": 66
+    },
+    {
+      "name": "Tr. Flu. Blue",
+      "slug": "tr-flu-blue",
+      "number": 143,
+      "hex": "#CFE2F7",
+      "rgb255": "207, 226, 247",
+      "rgb255Channels": [
+        207,
+        226,
+        247
+      ],
+      "rgb01": "0.812, 0.887, 0.969",
+      "rgb01Channels": [
+        0.812,
+        0.887,
+        0.969
+      ],
+      "sortOrder": 67
+    },
+    {
+      "name": "Sand blue metallic",
+      "slug": "sand-blue-metallic",
+      "number": 145,
+      "hex": "#7988A1",
+      "rgb255": "121, 136, 161",
+      "rgb255Channels": [
+        121,
+        136,
+        161
+      ],
+      "rgb01": "0.475, 0.534, 0.632",
+      "rgb01Channels": [
+        0.475,
+        0.534,
+        0.632
+      ],
+      "sortOrder": 68
+    },
+    {
+      "name": "Sand violet metallic",
+      "slug": "sand-violet-metallic",
+      "number": 146,
+      "hex": "#958EA3",
+      "rgb255": "149, 142, 163",
+      "rgb255Channels": [
+        149,
+        142,
+        163
+      ],
+      "rgb01": "0.585, 0.557, 0.640",
+      "rgb01Channels": [
+        0.585,
+        0.557,
+        0.64
+      ],
+      "sortOrder": 69
+    },
+    {
+      "name": "Sand yellow metallic",
+      "slug": "sand-yellow-metallic",
+      "number": 147,
+      "hex": "#938767",
+      "rgb255": "147, 135, 103",
+      "rgb255Channels": [
+        147,
+        135,
+        103
+      ],
+      "rgb01": "0.577, 0.530, 0.404",
+      "rgb01Channels": [
+        0.577,
+        0.53,
+        0.404
+      ],
+      "sortOrder": 70
+    },
+    {
+      "name": "Dark grey metallic",
+      "slug": "dark-grey-metallic",
+      "number": 148,
+      "hex": "#575857",
+      "rgb255": "87, 88, 87",
+      "rgb255Channels": [
+        87,
+        88,
+        87
+      ],
+      "rgb01": "0.342, 0.346, 0.342",
+      "rgb01Channels": [
+        0.342,
+        0.346,
+        0.342
+      ],
+      "sortOrder": 71
+    },
+    {
+      "name": "Black metallic",
+      "slug": "black-metallic",
+      "number": 149,
+      "hex": "#161D32",
+      "rgb255": "22, 29, 50",
+      "rgb255Channels": [
+        22,
+        29,
+        50
+      ],
+      "rgb01": "0.087, 0.114, 0.197",
+      "rgb01Channels": [
+        0.087,
+        0.114,
+        0.197
+      ],
+      "sortOrder": 72
+    },
+    {
+      "name": "Light grey metallic",
+      "slug": "light-grey-metallic",
+      "number": 150,
+      "hex": "#ABADAC",
+      "rgb255": "171, 173, 172",
+      "rgb255Channels": [
+        171,
+        173,
+        172
+      ],
+      "rgb01": "0.671, 0.679, 0.675",
+      "rgb01Channels": [
+        0.671,
+        0.679,
+        0.675
+      ],
+      "sortOrder": 73
+    },
+    {
+      "name": "Sand green",
+      "slug": "sand-green",
+      "number": 151,
+      "hex": "#789082",
+      "rgb255": "120, 144, 130",
+      "rgb255Channels": [
+        120,
+        144,
+        130
+      ],
+      "rgb01": "0.471, 0.565, 0.510",
+      "rgb01Channels": [
+        0.471,
+        0.565,
+        0.51
+      ],
+      "sortOrder": 74
+    },
+    {
+      "name": "Sand red",
+      "slug": "sand-red",
+      "number": 153,
+      "hex": "#957977",
+      "rgb255": "149, 121, 119",
+      "rgb255Channels": [
+        149,
+        121,
+        119
+      ],
+      "rgb01": "0.585, 0.475, 0.467",
+      "rgb01Channels": [
+        0.585,
+        0.475,
+        0.467
+      ],
+      "sortOrder": 75
+    },
+    {
+      "name": "Dark red",
+      "slug": "dark-red",
+      "number": 154,
+      "hex": "#7B2E2F",
+      "rgb255": "123, 46, 47",
+      "rgb255Channels": [
+        123,
+        46,
+        47
+      ],
+      "rgb01": "0.483, 0.181, 0.185",
+      "rgb01Channels": [
+        0.483,
+        0.181,
+        0.185
+      ],
+      "sortOrder": 76
+    },
+    {
+      "name": "Tr. Flu. Yellow",
+      "slug": "tr-flu-yellow",
+      "number": 157,
+      "hex": "#FFF67B",
+      "rgb255": "255, 246, 123",
+      "rgb255Channels": [
+        255,
+        246,
+        123
+      ],
+      "rgb01": "1.000, 0.965, 0.483",
+      "rgb01Channels": [
+        1,
+        0.965,
+        0.483
+      ],
+      "sortOrder": 77
+    },
+    {
+      "name": "Tr. Flu. Red",
+      "slug": "tr-flu-red",
+      "number": 158,
+      "hex": "#E1A4C2",
+      "rgb255": "225, 164, 194",
+      "rgb255Channels": [
+        225,
+        164,
+        194
+      ],
+      "rgb01": "0.883, 0.644, 0.761",
+      "rgb01Channels": [
+        0.883,
+        0.644,
+        0.761
+      ],
+      "sortOrder": 78
+    },
+    {
+      "name": "Gun metallic",
+      "slug": "gun-metallic",
+      "number": 168,
+      "hex": "#756C62",
+      "rgb255": "117, 108, 98",
+      "rgb255Channels": [
+        117,
+        108,
+        98
+      ],
+      "rgb01": "0.459, 0.424, 0.385",
+      "rgb01Channels": [
+        0.459,
+        0.424,
+        0.385
+      ],
+      "sortOrder": 79
+    },
+    {
+      "name": "Red flip/flop",
+      "slug": "red-flip-flop",
+      "number": 176,
+      "hex": "#97695B",
+      "rgb255": "151, 105, 91",
+      "rgb255Channels": [
+        151,
+        105,
+        91
+      ],
+      "rgb01": "0.593, 0.412, 0.357",
+      "rgb01Channels": [
+        0.593,
+        0.412,
+        0.357
+      ],
+      "sortOrder": 80
+    },
+    {
+      "name": "Yellow flip/flop",
+      "slug": "yellow-flip-flop",
+      "number": 178,
+      "hex": "#B48455",
+      "rgb255": "180, 132, 85",
+      "rgb255Channels": [
+        180,
+        132,
+        85
+      ],
+      "rgb01": "0.706, 0.518, 0.334",
+      "rgb01Channels": [
+        0.706,
+        0.518,
+        0.334
+      ],
+      "sortOrder": 81
+    },
+    {
+      "name": "Silver flip/flop",
+      "slug": "silver-flip-flop",
+      "number": 179,
+      "hex": "#898788",
+      "rgb255": "137, 135, 136",
+      "rgb255Channels": [
+        137,
+        135,
+        136
+      ],
+      "rgb01": "0.538, 0.530, 0.534",
+      "rgb01Channels": [
+        0.538,
+        0.53,
+        0.534
+      ],
+      "sortOrder": 82
+    },
+    {
+      "name": "Curry",
+      "slug": "curry",
+      "number": 180,
+      "hex": "#D7A94B",
+      "rgb255": "215, 169, 75",
+      "rgb255Channels": [
+        215,
+        169,
+        75
+      ],
+      "rgb01": "0.844, 0.663, 0.295",
+      "rgb01Channels": [
+        0.844,
+        0.663,
+        0.295
+      ],
+      "sortOrder": 83
+    },
+    {
+      "name": "Fire Yellow",
+      "slug": "fire-yellow",
+      "number": 190,
+      "hex": "#F9D62E",
+      "rgb255": "249, 214, 46",
+      "rgb255Channels": [
+        249,
+        214,
+        46
+      ],
+      "rgb01": "0.977, 0.840, 0.181",
+      "rgb01Channels": [
+        0.977,
+        0.84,
+        0.181
+      ],
+      "sortOrder": 84
+    },
+    {
+      "name": "Flame yellowish orange",
+      "slug": "flame-yellowish-orange",
+      "number": 191,
+      "hex": "#E8AB2D",
+      "rgb255": "232, 171, 45",
+      "rgb255Channels": [
+        232,
+        171,
+        45
+      ],
+      "rgb01": "0.910, 0.671, 0.177",
+      "rgb01Channels": [
+        0.91,
+        0.671,
+        0.177
+      ],
+      "sortOrder": 85
+    },
+    {
+      "name": "Reddish brown",
+      "slug": "reddish-brown",
+      "number": 192,
+      "hex": "#694028",
+      "rgb255": "105, 64, 40",
+      "rgb255Channels": [
+        105,
+        64,
+        40
+      ],
+      "rgb01": "0.412, 0.251, 0.157",
+      "rgb01Channels": [
+        0.412,
+        0.251,
+        0.157
+      ],
+      "sortOrder": 86
+    },
+    {
+      "name": "Flame reddish orange",
+      "slug": "flame-reddish-orange",
+      "number": 193,
+      "hex": "#CF6024",
+      "rgb255": "207, 96, 36",
+      "rgb255Channels": [
+        207,
+        96,
+        36
+      ],
+      "rgb01": "0.812, 0.377, 0.142",
+      "rgb01Channels": [
+        0.812,
+        0.377,
+        0.142
+      ],
+      "sortOrder": 87
+    },
+    {
+      "name": "Medium stone grey",
+      "slug": "medium-stone-grey",
+      "number": 194,
+      "hex": "#A3A2A5",
+      "rgb255": "163, 162, 165",
+      "rgb255Channels": [
+        163,
+        162,
+        165
+      ],
+      "rgb01": "0.640, 0.636, 0.648",
+      "rgb01Channels": [
+        0.64,
+        0.636,
+        0.648
+      ],
+      "sortOrder": 88
+    },
+    {
+      "name": "Royal blue",
+      "slug": "royal-blue",
+      "number": 195,
+      "hex": "#4667A4",
+      "rgb255": "70, 103, 164",
+      "rgb255Channels": [
+        70,
+        103,
+        164
+      ],
+      "rgb01": "0.275, 0.404, 0.644",
+      "rgb01Channels": [
+        0.275,
+        0.404,
+        0.644
+      ],
+      "sortOrder": 89
+    },
+    {
+      "name": "Dark Royal blue",
+      "slug": "dark-royal-blue",
+      "number": 196,
+      "hex": "#23478B",
+      "rgb255": "35, 71, 139",
+      "rgb255Channels": [
+        35,
+        71,
+        139
+      ],
+      "rgb01": "0.138, 0.279, 0.546",
+      "rgb01Channels": [
+        0.138,
+        0.279,
+        0.546
+      ],
+      "sortOrder": 90
+    },
+    {
+      "name": "Bright reddish lilac",
+      "slug": "bright-reddish-lilac",
+      "number": 198,
+      "hex": "#8E4285",
+      "rgb255": "142, 66, 133",
+      "rgb255Channels": [
+        142,
+        66,
+        133
+      ],
+      "rgb01": "0.557, 0.259, 0.522",
+      "rgb01Channels": [
+        0.557,
+        0.259,
+        0.522
+      ],
+      "sortOrder": 91
+    },
+    {
+      "name": "Dark stone grey",
+      "slug": "dark-stone-grey",
+      "number": 199,
+      "hex": "#635F62",
+      "rgb255": "99, 95, 98",
+      "rgb255Channels": [
+        99,
+        95,
+        98
+      ],
+      "rgb01": "0.389, 0.373, 0.385",
+      "rgb01Channels": [
+        0.389,
+        0.373,
+        0.385
+      ],
+      "sortOrder": 92
+    },
+    {
+      "name": "Lemon metalic",
+      "slug": "lemon-metalic",
+      "number": 200,
+      "hex": "#828A5D",
+      "rgb255": "130, 138, 93",
+      "rgb255Channels": [
+        130,
+        138,
+        93
+      ],
+      "rgb01": "0.510, 0.542, 0.365",
+      "rgb01Channels": [
+        0.51,
+        0.542,
+        0.365
+      ],
+      "sortOrder": 93
+    },
+    {
+      "name": "Light stone grey",
+      "slug": "light-stone-grey",
+      "number": 208,
+      "hex": "#E5E4DF",
+      "rgb255": "229, 228, 223",
+      "rgb255Channels": [
+        229,
+        228,
+        223
+      ],
+      "rgb01": "0.899, 0.895, 0.875",
+      "rgb01Channels": [
+        0.899,
+        0.895,
+        0.875
+      ],
+      "sortOrder": 94
+    },
+    {
+      "name": "Dark Curry",
+      "slug": "dark-curry",
+      "number": 209,
+      "hex": "#B08E44",
+      "rgb255": "176, 142, 68",
+      "rgb255Channels": [
+        176,
+        142,
+        68
+      ],
+      "rgb01": "0.691, 0.557, 0.267",
+      "rgb01Channels": [
+        0.691,
+        0.557,
+        0.267
+      ],
+      "sortOrder": 95
+    },
+    {
+      "name": "Faded green",
+      "slug": "faded-green",
+      "number": 210,
+      "hex": "#709578",
+      "rgb255": "112, 149, 120",
+      "rgb255Channels": [
+        112,
+        149,
+        120
+      ],
+      "rgb01": "0.440, 0.585, 0.471",
+      "rgb01Channels": [
+        0.44,
+        0.585,
+        0.471
+      ],
+      "sortOrder": 96
+    },
+    {
+      "name": "Turquoise",
+      "slug": "turquoise",
+      "number": 211,
+      "hex": "#79B5B5",
+      "rgb255": "121, 181, 181",
+      "rgb255Channels": [
+        121,
+        181,
+        181
+      ],
+      "rgb01": "0.475, 0.710, 0.710",
+      "rgb01Channels": [
+        0.475,
+        0.71,
+        0.71
+      ],
+      "sortOrder": 97
+    },
+    {
+      "name": "Light Royal blue",
+      "slug": "light-royal-blue",
+      "number": 212,
+      "hex": "#9FC3E9",
+      "rgb255": "159, 195, 233",
+      "rgb255Channels": [
+        159,
+        195,
+        233
+      ],
+      "rgb01": "0.624, 0.765, 0.914",
+      "rgb01Channels": [
+        0.624,
+        0.765,
+        0.914
+      ],
+      "sortOrder": 98
+    },
+    {
+      "name": "Medium Royal blue",
+      "slug": "medium-royal-blue",
+      "number": 213,
+      "hex": "#6C81B7",
+      "rgb255": "108, 129, 183",
+      "rgb255Channels": [
+        108,
+        129,
+        183
+      ],
+      "rgb01": "0.424, 0.506, 0.718",
+      "rgb01Channels": [
+        0.424,
+        0.506,
+        0.718
+      ],
+      "sortOrder": 99
+    },
+    {
+      "name": "Rust",
+      "slug": "rust",
+      "number": 216,
+      "hex": "#904C2A",
+      "rgb255": "144, 76, 42",
+      "rgb255Channels": [
+        144,
+        76,
+        42
+      ],
+      "rgb01": "0.565, 0.299, 0.165",
+      "rgb01Channels": [
+        0.565,
+        0.299,
+        0.165
+      ],
+      "sortOrder": 100
+    },
+    {
+      "name": "Brown",
+      "slug": "brown",
+      "number": 217,
+      "hex": "#7C5C46",
+      "rgb255": "124, 92, 70",
+      "rgb255Channels": [
+        124,
+        92,
+        70
+      ],
+      "rgb01": "0.487, 0.361, 0.275",
+      "rgb01Channels": [
+        0.487,
+        0.361,
+        0.275
+      ],
+      "sortOrder": 101
+    },
+    {
+      "name": "Reddish lilac",
+      "slug": "reddish-lilac",
+      "number": 218,
+      "hex": "#96709F",
+      "rgb255": "150, 112, 159",
+      "rgb255Channels": [
+        150,
+        112,
+        159
+      ],
+      "rgb01": "0.589, 0.440, 0.624",
+      "rgb01Channels": [
+        0.589,
+        0.44,
+        0.624
+      ],
+      "sortOrder": 102
+    },
+    {
+      "name": "Lilac",
+      "slug": "lilac",
+      "number": 219,
+      "hex": "#6B629B",
+      "rgb255": "107, 98, 155",
+      "rgb255Channels": [
+        107,
+        98,
+        155
+      ],
+      "rgb01": "0.420, 0.385, 0.608",
+      "rgb01Channels": [
+        0.42,
+        0.385,
+        0.608
+      ],
+      "sortOrder": 103
+    },
+    {
+      "name": "Light lilac",
+      "slug": "light-lilac",
+      "number": 220,
+      "hex": "#A7A9CE",
+      "rgb255": "167, 169, 206",
+      "rgb255Channels": [
+        167,
+        169,
+        206
+      ],
+      "rgb01": "0.655, 0.663, 0.808",
+      "rgb01Channels": [
+        0.655,
+        0.663,
+        0.808
+      ],
+      "sortOrder": 104
+    },
+    {
+      "name": "Bright purple",
+      "slug": "bright-purple",
+      "number": 221,
+      "hex": "#CD6298",
+      "rgb255": "205, 98, 152",
+      "rgb255Channels": [
+        205,
+        98,
+        152
+      ],
+      "rgb01": "0.804, 0.385, 0.597",
+      "rgb01Channels": [
+        0.804,
+        0.385,
+        0.597
+      ],
+      "sortOrder": 105
+    },
+    {
+      "name": "Light purple",
+      "slug": "light-purple",
+      "number": 222,
+      "hex": "#E4ADC8",
+      "rgb255": "228, 173, 200",
+      "rgb255Channels": [
+        228,
+        173,
+        200
+      ],
+      "rgb01": "0.895, 0.679, 0.785",
+      "rgb01Channels": [
+        0.895,
+        0.679,
+        0.785
+      ],
+      "sortOrder": 106
+    },
+    {
+      "name": "Light pink",
+      "slug": "light-pink",
+      "number": 223,
+      "hex": "#DC9095",
+      "rgb255": "220, 144, 149",
+      "rgb255Channels": [
+        220,
+        144,
+        149
+      ],
+      "rgb01": "0.863, 0.565, 0.585",
+      "rgb01Channels": [
+        0.863,
+        0.565,
+        0.585
+      ],
+      "sortOrder": 107
+    },
+    {
+      "name": "Light brick yellow",
+      "slug": "light-brick-yellow",
+      "number": 224,
+      "hex": "#F0D5A0",
+      "rgb255": "240, 213, 160",
+      "rgb255Channels": [
+        240,
+        213,
+        160
+      ],
+      "rgb01": "0.942, 0.836, 0.628",
+      "rgb01Channels": [
+        0.942,
+        0.836,
+        0.628
+      ],
+      "sortOrder": 108
+    },
+    {
+      "name": "Warm yellowish orange",
+      "slug": "warm-yellowish-orange",
+      "number": 225,
+      "hex": "#EBB87F",
+      "rgb255": "235, 184, 127",
+      "rgb255Channels": [
+        235,
+        184,
+        127
+      ],
+      "rgb01": "0.922, 0.722, 0.499",
+      "rgb01Channels": [
+        0.922,
+        0.722,
+        0.499
+      ],
+      "sortOrder": 109
+    },
+    {
+      "name": "Cool yellow",
+      "slug": "cool-yellow",
+      "number": 226,
+      "hex": "#FDEA8D",
+      "rgb255": "253, 234, 141",
+      "rgb255Channels": [
+        253,
+        234,
+        141
+      ],
+      "rgb01": "0.993, 0.918, 0.553",
+      "rgb01Channels": [
+        0.993,
+        0.918,
+        0.553
+      ],
+      "sortOrder": 110
+    },
+    {
+      "name": "Dove blue",
+      "slug": "dove-blue",
+      "number": 232,
+      "hex": "#7DBBDD",
+      "rgb255": "125, 187, 221",
+      "rgb255Channels": [
+        125,
+        187,
+        221
+      ],
+      "rgb01": "0.491, 0.734, 0.867",
+      "rgb01Channels": [
+        0.491,
+        0.734,
+        0.867
+      ],
+      "sortOrder": 111
+    },
+    {
+      "name": "Medium lilac",
+      "slug": "medium-lilac",
+      "number": 268,
+      "hex": "#342B75",
+      "rgb255": "52, 43, 117",
+      "rgb255Channels": [
+        52,
+        43,
+        117
+      ],
+      "rgb01": "0.204, 0.169, 0.459",
+      "rgb01Channels": [
+        0.204,
+        0.169,
+        0.459
+      ],
+      "sortOrder": 112
+    },
+    {
+      "name": "Slime green",
+      "slug": "slime-green",
+      "number": 301,
+      "hex": "#506D54",
+      "rgb255": "80, 109, 84",
+      "rgb255Channels": [
+        80,
+        109,
+        84
+      ],
+      "rgb01": "0.314, 0.428, 0.330",
+      "rgb01Channels": [
+        0.314,
+        0.428,
+        0.33
+      ],
+      "sortOrder": 113
+    },
+    {
+      "name": "Smoky grey",
+      "slug": "smoky-grey",
+      "number": 302,
+      "hex": "#5B5D69",
+      "rgb255": "91, 93, 105",
+      "rgb255Channels": [
+        91,
+        93,
+        105
+      ],
+      "rgb01": "0.357, 0.365, 0.412",
+      "rgb01Channels": [
+        0.357,
+        0.365,
+        0.412
+      ],
+      "sortOrder": 114
+    },
+    {
+      "name": "Dark blue",
+      "slug": "dark-blue",
+      "number": 303,
+      "hex": "#0010B0",
+      "rgb255": "0, 16, 176",
+      "rgb255Channels": [
+        0,
+        16,
+        176
+      ],
+      "rgb01": "0.000, 0.063, 0.691",
+      "rgb01Channels": [
+        0,
+        0.063,
+        0.691
+      ],
+      "sortOrder": 115
+    },
+    {
+      "name": "Parsley green",
+      "slug": "parsley-green",
+      "number": 304,
+      "hex": "#2C651D",
+      "rgb255": "44, 101, 29",
+      "rgb255Channels": [
+        44,
+        101,
+        29
+      ],
+      "rgb01": "0.173, 0.397, 0.114",
+      "rgb01Channels": [
+        0.173,
+        0.397,
+        0.114
+      ],
+      "sortOrder": 116
+    },
+    {
+      "name": "Steel blue",
+      "slug": "steel-blue",
+      "number": 305,
+      "hex": "#527CAE",
+      "rgb255": "82, 124, 174",
+      "rgb255Channels": [
+        82,
+        124,
+        174
+      ],
+      "rgb01": "0.322, 0.487, 0.683",
+      "rgb01Channels": [
+        0.322,
+        0.487,
+        0.683
+      ],
+      "sortOrder": 117
+    },
+    {
+      "name": "Storm blue",
+      "slug": "storm-blue",
+      "number": 306,
+      "hex": "#335882",
+      "rgb255": "51, 88, 130",
+      "rgb255Channels": [
+        51,
+        88,
+        130
+      ],
+      "rgb01": "0.200, 0.346, 0.510",
+      "rgb01Channels": [
+        0.2,
+        0.346,
+        0.51
+      ],
+      "sortOrder": 118
+    },
+    {
+      "name": "Lapis",
+      "slug": "lapis",
+      "number": 307,
+      "hex": "#102ADC",
+      "rgb255": "16, 42, 220",
+      "rgb255Channels": [
+        16,
+        42,
+        220
+      ],
+      "rgb01": "0.063, 0.165, 0.863",
+      "rgb01Channels": [
+        0.063,
+        0.165,
+        0.863
+      ],
+      "sortOrder": 119
+    },
+    {
+      "name": "Dark indigo",
+      "slug": "dark-indigo",
+      "number": 308,
+      "hex": "#3D1585",
+      "rgb255": "61, 21, 133",
+      "rgb255Channels": [
+        61,
+        21,
+        133
+      ],
+      "rgb01": "0.240, 0.083, 0.522",
+      "rgb01Channels": [
+        0.24,
+        0.083,
+        0.522
+      ],
+      "sortOrder": 120
+    },
+    {
+      "name": "Sea green",
+      "slug": "sea-green",
+      "number": 309,
+      "hex": "#348E40",
+      "rgb255": "52, 142, 64",
+      "rgb255Channels": [
+        52,
+        142,
+        64
+      ],
+      "rgb01": "0.204, 0.557, 0.251",
+      "rgb01Channels": [
+        0.204,
+        0.557,
+        0.251
+      ],
+      "sortOrder": 121
+    },
+    {
+      "name": "Shamrock",
+      "slug": "shamrock",
+      "number": 310,
+      "hex": "#5B9A4C",
+      "rgb255": "91, 154, 76",
+      "rgb255Channels": [
+        91,
+        154,
+        76
+      ],
+      "rgb01": "0.357, 0.604, 0.299",
+      "rgb01Channels": [
+        0.357,
+        0.604,
+        0.299
+      ],
+      "sortOrder": 122
+    },
+    {
+      "name": "Fossil",
+      "slug": "fossil",
+      "number": 311,
+      "hex": "#9FA1AC",
+      "rgb255": "159, 161, 172",
+      "rgb255Channels": [
+        159,
+        161,
+        172
+      ],
+      "rgb01": "0.624, 0.632, 0.675",
+      "rgb01Channels": [
+        0.624,
+        0.632,
+        0.675
+      ],
+      "sortOrder": 123
+    },
+    {
+      "name": "Mulberry",
+      "slug": "mulberry",
+      "number": 312,
+      "hex": "#592259",
+      "rgb255": "89, 34, 89",
+      "rgb255Channels": [
+        89,
+        34,
+        89
+      ],
+      "rgb01": "0.350, 0.134, 0.350",
+      "rgb01Channels": [
+        0.35,
+        0.134,
+        0.35
+      ],
+      "sortOrder": 124
+    },
+    {
+      "name": "Forest green",
+      "slug": "forest-green",
+      "number": 313,
+      "hex": "#1F801D",
+      "rgb255": "31, 128, 29",
+      "rgb255Channels": [
+        31,
+        128,
+        29
+      ],
+      "rgb01": "0.122, 0.502, 0.114",
+      "rgb01Channels": [
+        0.122,
+        0.502,
+        0.114
+      ],
+      "sortOrder": 125
+    },
+    {
+      "name": "Cadet blue",
+      "slug": "cadet-blue",
+      "number": 314,
+      "hex": "#9FADC0",
+      "rgb255": "159, 173, 192",
+      "rgb255Channels": [
+        159,
+        173,
+        192
+      ],
+      "rgb01": "0.624, 0.679, 0.753",
+      "rgb01Channels": [
+        0.624,
+        0.679,
+        0.753
+      ],
+      "sortOrder": 126
+    },
+    {
+      "name": "Electric blue",
+      "slug": "electric-blue",
+      "number": 315,
+      "hex": "#0989CF",
+      "rgb255": "9, 137, 207",
+      "rgb255Channels": [
+        9,
+        137,
+        207
+      ],
+      "rgb01": "0.036, 0.538, 0.812",
+      "rgb01Channels": [
+        0.036,
+        0.538,
+        0.812
+      ],
+      "sortOrder": 127
+    },
+    {
+      "name": "Eggplant",
+      "slug": "eggplant",
+      "number": 316,
+      "hex": "#7B007B",
+      "rgb255": "123, 0, 123",
+      "rgb255Channels": [
+        123,
+        0,
+        123
+      ],
+      "rgb01": "0.483, 0.000, 0.483",
+      "rgb01Channels": [
+        0.483,
+        0,
+        0.483
+      ],
+      "sortOrder": 128
+    },
+    {
+      "name": "Moss",
+      "slug": "moss",
+      "number": 317,
+      "hex": "#7C9C6B",
+      "rgb255": "124, 156, 107",
+      "rgb255Channels": [
+        124,
+        156,
+        107
+      ],
+      "rgb01": "0.487, 0.612, 0.420",
+      "rgb01Channels": [
+        0.487,
+        0.612,
+        0.42
+      ],
+      "sortOrder": 129
+    },
+    {
+      "name": "Artichoke",
+      "slug": "artichoke",
+      "number": 318,
+      "hex": "#8AAB85",
+      "rgb255": "138, 171, 133",
+      "rgb255Channels": [
+        138,
+        171,
+        133
+      ],
+      "rgb01": "0.542, 0.671, 0.522",
+      "rgb01Channels": [
+        0.542,
+        0.671,
+        0.522
+      ],
+      "sortOrder": 130
+    },
+    {
+      "name": "Sage green",
+      "slug": "sage-green",
+      "number": 319,
+      "hex": "#B9C4B1",
+      "rgb255": "185, 196, 177",
+      "rgb255Channels": [
+        185,
+        196,
+        177
+      ],
+      "rgb01": "0.726, 0.769, 0.695",
+      "rgb01Channels": [
+        0.726,
+        0.769,
+        0.695
+      ],
+      "sortOrder": 131
+    },
+    {
+      "name": "Ghost grey",
+      "slug": "ghost-grey",
+      "number": 320,
+      "hex": "#CACBD1",
+      "rgb255": "202, 203, 209",
+      "rgb255Channels": [
+        202,
+        203,
+        209
+      ],
+      "rgb01": "0.793, 0.797, 0.820",
+      "rgb01Channels": [
+        0.793,
+        0.797,
+        0.82
+      ],
+      "sortOrder": 132
+    },
+    {
+      "name": "Lilac",
+      "slug": "lilac",
+      "number": 321,
+      "hex": "#A75E9B",
+      "rgb255": "167, 94, 155",
+      "rgb255Channels": [
+        167,
+        94,
+        155
+      ],
+      "rgb01": "0.655, 0.369, 0.608",
+      "rgb01Channels": [
+        0.655,
+        0.369,
+        0.608
+      ],
+      "sortOrder": 133
+    },
+    {
+      "name": "Plum",
+      "slug": "plum",
+      "number": 322,
+      "hex": "#7B2F7B",
+      "rgb255": "123, 47, 123",
+      "rgb255Channels": [
+        123,
+        47,
+        123
+      ],
+      "rgb01": "0.483, 0.185, 0.483",
+      "rgb01Channels": [
+        0.483,
+        0.185,
+        0.483
+      ],
+      "sortOrder": 134
+    },
+    {
+      "name": "Olivine",
+      "slug": "olivine",
+      "number": 323,
+      "hex": "#94BE81",
+      "rgb255": "148, 190, 129",
+      "rgb255Channels": [
+        148,
+        190,
+        129
+      ],
+      "rgb01": "0.581, 0.746, 0.506",
+      "rgb01Channels": [
+        0.581,
+        0.746,
+        0.506
+      ],
+      "sortOrder": 135
+    },
+    {
+      "name": "Laurel green",
+      "slug": "laurel-green",
+      "number": 324,
+      "hex": "#A8BD99",
+      "rgb255": "168, 189, 153",
+      "rgb255Channels": [
+        168,
+        189,
+        153
+      ],
+      "rgb01": "0.659, 0.742, 0.600",
+      "rgb01Channels": [
+        0.659,
+        0.742,
+        0.6
+      ],
+      "sortOrder": 136
+    },
+    {
+      "name": "Quill grey",
+      "slug": "quill-grey",
+      "number": 325,
+      "hex": "#DFDFDE",
+      "rgb255": "223, 223, 222",
+      "rgb255Channels": [
+        223,
+        223,
+        222
+      ],
+      "rgb01": "0.875, 0.875, 0.871",
+      "rgb01Channels": [
+        0.875,
+        0.875,
+        0.871
+      ],
+      "sortOrder": 137
+    },
+    {
+      "name": "Crimson",
+      "slug": "crimson",
+      "number": 327,
+      "hex": "#970000",
+      "rgb255": "151, 0, 0",
+      "rgb255Channels": [
+        151,
+        0,
+        0
+      ],
+      "rgb01": "0.593, 0.000, 0.000",
+      "rgb01Channels": [
+        0.593,
+        0,
+        0
+      ],
+      "sortOrder": 138
+    },
+    {
+      "name": "Mint",
+      "slug": "mint",
+      "number": 328,
+      "hex": "#B1E5A6",
+      "rgb255": "177, 229, 166",
+      "rgb255Channels": [
+        177,
+        229,
+        166
+      ],
+      "rgb01": "0.695, 0.899, 0.651",
+      "rgb01Channels": [
+        0.695,
+        0.899,
+        0.651
+      ],
+      "sortOrder": 139
+    },
+    {
+      "name": "Baby blue",
+      "slug": "baby-blue",
+      "number": 329,
+      "hex": "#98C2DB",
+      "rgb255": "152, 194, 219",
+      "rgb255Channels": [
+        152,
+        194,
+        219
+      ],
+      "rgb01": "0.597, 0.761, 0.859",
+      "rgb01Channels": [
+        0.597,
+        0.761,
+        0.859
+      ],
+      "sortOrder": 140
+    },
+    {
+      "name": "Carnation pink",
+      "slug": "carnation-pink",
+      "number": 330,
+      "hex": "#FF98DC",
+      "rgb255": "255, 152, 220",
+      "rgb255Channels": [
+        255,
+        152,
+        220
+      ],
+      "rgb01": "1.000, 0.597, 0.863",
+      "rgb01Channels": [
+        1,
+        0.597,
+        0.863
+      ],
+      "sortOrder": 141
+    },
+    {
+      "name": "Persimmon",
+      "slug": "persimmon",
+      "number": 331,
+      "hex": "#FF5959",
+      "rgb255": "255, 89, 89",
+      "rgb255Channels": [
+        255,
+        89,
+        89
+      ],
+      "rgb01": "1.000, 0.350, 0.350",
+      "rgb01Channels": [
+        1,
+        0.35,
+        0.35
+      ],
+      "sortOrder": 142
+    },
+    {
+      "name": "Maroon",
+      "slug": "maroon",
+      "number": 332,
+      "hex": "#750000",
+      "rgb255": "117, 0, 0",
+      "rgb255Channels": [
+        117,
+        0,
+        0
+      ],
+      "rgb01": "0.459, 0.000, 0.000",
+      "rgb01Channels": [
+        0.459,
+        0,
+        0
+      ],
+      "sortOrder": 143
+    },
+    {
+      "name": "Gold",
+      "slug": "gold",
+      "number": 333,
+      "hex": "#EFB838",
+      "rgb255": "239, 184, 56",
+      "rgb255Channels": [
+        239,
+        184,
+        56
+      ],
+      "rgb01": "0.938, 0.722, 0.220",
+      "rgb01Channels": [
+        0.938,
+        0.722,
+        0.22
+      ],
+      "sortOrder": 144
+    },
+    {
+      "name": "Daisy orange",
+      "slug": "daisy-orange",
+      "number": 334,
+      "hex": "#F8D96D",
+      "rgb255": "248, 217, 109",
+      "rgb255Channels": [
+        248,
+        217,
+        109
+      ],
+      "rgb01": "0.973, 0.851, 0.428",
+      "rgb01Channels": [
+        0.973,
+        0.851,
+        0.428
+      ],
+      "sortOrder": 145
+    },
+    {
+      "name": "Pearl",
+      "slug": "pearl",
+      "number": 335,
+      "hex": "#E7E7EC",
+      "rgb255": "231, 231, 236",
+      "rgb255Channels": [
+        231,
+        231,
+        236
+      ],
+      "rgb01": "0.906, 0.906, 0.926",
+      "rgb01Channels": [
+        0.906,
+        0.906,
+        0.926
+      ],
+      "sortOrder": 146
+    },
+    {
+      "name": "Fog",
+      "slug": "fog",
+      "number": 336,
+      "hex": "#C7D4E4",
+      "rgb255": "199, 212, 228",
+      "rgb255Channels": [
+        199,
+        212,
+        228
+      ],
+      "rgb01": "0.781, 0.832, 0.895",
+      "rgb01Channels": [
+        0.781,
+        0.832,
+        0.895
+      ],
+      "sortOrder": 147
+    },
+    {
+      "name": "Salmon",
+      "slug": "salmon",
+      "number": 337,
+      "hex": "#FF9494",
+      "rgb255": "255, 148, 148",
+      "rgb255Channels": [
+        255,
+        148,
+        148
+      ],
+      "rgb01": "1.000, 0.581, 0.581",
+      "rgb01Channels": [
+        1,
+        0.581,
+        0.581
+      ],
+      "sortOrder": 148
+    },
+    {
+      "name": "Terra Cotta",
+      "slug": "terra-cotta",
+      "number": 338,
+      "hex": "#BE6862",
+      "rgb255": "190, 104, 98",
+      "rgb255Channels": [
+        190,
+        104,
+        98
+      ],
+      "rgb01": "0.746, 0.408, 0.385",
+      "rgb01Channels": [
+        0.746,
+        0.408,
+        0.385
+      ],
+      "sortOrder": 149
+    },
+    {
+      "name": "Cocoa",
+      "slug": "cocoa",
+      "number": 339,
+      "hex": "#562424",
+      "rgb255": "86, 36, 36",
+      "rgb255Channels": [
+        86,
+        36,
+        36
+      ],
+      "rgb01": "0.338, 0.142, 0.142",
+      "rgb01Channels": [
+        0.338,
+        0.142,
+        0.142
+      ],
+      "sortOrder": 150
+    },
+    {
+      "name": "Wheat",
+      "slug": "wheat",
+      "number": 340,
+      "hex": "#F1E7C7",
+      "rgb255": "241, 231, 199",
+      "rgb255Channels": [
+        241,
+        231,
+        199
+      ],
+      "rgb01": "0.946, 0.906, 0.781",
+      "rgb01Channels": [
+        0.946,
+        0.906,
+        0.781
+      ],
+      "sortOrder": 151
+    },
+    {
+      "name": "Buttermilk",
+      "slug": "buttermilk",
+      "number": 341,
+      "hex": "#FEF3BB",
+      "rgb255": "254, 243, 187",
+      "rgb255Channels": [
+        254,
+        243,
+        187
+      ],
+      "rgb01": "0.997, 0.953, 0.734",
+      "rgb01Channels": [
+        0.997,
+        0.953,
+        0.734
+      ],
+      "sortOrder": 152
+    },
+    {
+      "name": "Mauve",
+      "slug": "mauve",
+      "number": 342,
+      "hex": "#E0B2D0",
+      "rgb255": "224, 178, 208",
+      "rgb255Channels": [
+        224,
+        178,
+        208
+      ],
+      "rgb01": "0.879, 0.699, 0.816",
+      "rgb01Channels": [
+        0.879,
+        0.699,
+        0.816
+      ],
+      "sortOrder": 153
+    },
+    {
+      "name": "Sunrise",
+      "slug": "sunrise",
+      "number": 343,
+      "hex": "#D490BD",
+      "rgb255": "212, 144, 189",
+      "rgb255Channels": [
+        212,
+        144,
+        189
+      ],
+      "rgb01": "0.832, 0.565, 0.742",
+      "rgb01Channels": [
+        0.832,
+        0.565,
+        0.742
+      ],
+      "sortOrder": 154
+    },
+    {
+      "name": "Tawny",
+      "slug": "tawny",
+      "number": 344,
+      "hex": "#965555",
+      "rgb255": "150, 85, 85",
+      "rgb255Channels": [
+        150,
+        85,
+        85
+      ],
+      "rgb01": "0.589, 0.334, 0.334",
+      "rgb01Channels": [
+        0.589,
+        0.334,
+        0.334
+      ],
+      "sortOrder": 155
+    },
+    {
+      "name": "Rust",
+      "slug": "rust",
+      "number": 345,
+      "hex": "#8F4C2A",
+      "rgb255": "143, 76, 42",
+      "rgb255Channels": [
+        143,
+        76,
+        42
+      ],
+      "rgb01": "0.561, 0.299, 0.165",
+      "rgb01Channels": [
+        0.561,
+        0.299,
+        0.165
+      ],
+      "sortOrder": 156
+    },
+    {
+      "name": "Cashmere",
+      "slug": "cashmere",
+      "number": 346,
+      "hex": "#D3BE96",
+      "rgb255": "211, 190, 150",
+      "rgb255Channels": [
+        211,
+        190,
+        150
+      ],
+      "rgb01": "0.828, 0.746, 0.589",
+      "rgb01Channels": [
+        0.828,
+        0.746,
+        0.589
+      ],
+      "sortOrder": 157
+    },
+    {
+      "name": "Khaki",
+      "slug": "khaki",
+      "number": 347,
+      "hex": "#E2DCBC",
+      "rgb255": "226, 220, 188",
+      "rgb255Channels": [
+        226,
+        220,
+        188
+      ],
+      "rgb01": "0.887, 0.863, 0.738",
+      "rgb01Channels": [
+        0.887,
+        0.863,
+        0.738
+      ],
+      "sortOrder": 158
+    },
+    {
+      "name": "Lily white",
+      "slug": "lily-white",
+      "number": 348,
+      "hex": "#EDEAEA",
+      "rgb255": "237, 234, 234",
+      "rgb255Channels": [
+        237,
+        234,
+        234
+      ],
+      "rgb01": "0.930, 0.918, 0.918",
+      "rgb01Channels": [
+        0.93,
+        0.918,
+        0.918
+      ],
+      "sortOrder": 159
+    },
+    {
+      "name": "Seashell",
+      "slug": "seashell",
+      "number": 349,
+      "hex": "#E9DADA",
+      "rgb255": "233, 218, 218",
+      "rgb255Channels": [
+        233,
+        218,
+        218
+      ],
+      "rgb01": "0.914, 0.855, 0.855",
+      "rgb01Channels": [
+        0.914,
+        0.855,
+        0.855
+      ],
+      "sortOrder": 160
+    },
+    {
+      "name": "Burgundy",
+      "slug": "burgundy",
+      "number": 350,
+      "hex": "#883E3E",
+      "rgb255": "136, 62, 62",
+      "rgb255Channels": [
+        136,
+        62,
+        62
+      ],
+      "rgb01": "0.534, 0.244, 0.244",
+      "rgb01Channels": [
+        0.534,
+        0.244,
+        0.244
+      ],
+      "sortOrder": 161
+    },
+    {
+      "name": "Cork",
+      "slug": "cork",
+      "number": 351,
+      "hex": "#BC9B5D",
+      "rgb255": "188, 155, 93",
+      "rgb255Channels": [
+        188,
+        155,
+        93
+      ],
+      "rgb01": "0.738, 0.608, 0.365",
+      "rgb01Channels": [
+        0.738,
+        0.608,
+        0.365
+      ],
+      "sortOrder": 162
+    },
+    {
+      "name": "Burlap",
+      "slug": "burlap",
+      "number": 352,
+      "hex": "#C7AC78",
+      "rgb255": "199, 172, 120",
+      "rgb255Channels": [
+        199,
+        172,
+        120
+      ],
+      "rgb01": "0.781, 0.675, 0.471",
+      "rgb01Channels": [
+        0.781,
+        0.675,
+        0.471
+      ],
+      "sortOrder": 163
+    },
+    {
+      "name": "Beige",
+      "slug": "beige",
+      "number": 353,
+      "hex": "#CABFA3",
+      "rgb255": "202, 191, 163",
+      "rgb255Channels": [
+        202,
+        191,
+        163
+      ],
+      "rgb01": "0.793, 0.750, 0.640",
+      "rgb01Channels": [
+        0.793,
+        0.75,
+        0.64
+      ],
+      "sortOrder": 164
+    },
+    {
+      "name": "Oyster",
+      "slug": "oyster",
+      "number": 354,
+      "hex": "#BBB3B2",
+      "rgb255": "187, 179, 178",
+      "rgb255Channels": [
+        187,
+        179,
+        178
+      ],
+      "rgb01": "0.734, 0.702, 0.699",
+      "rgb01Channels": [
+        0.734,
+        0.702,
+        0.699
+      ],
+      "sortOrder": 165
+    },
+    {
+      "name": "Pine Cone",
+      "slug": "pine-cone",
+      "number": 355,
+      "hex": "#6C584B",
+      "rgb255": "108, 88, 75",
+      "rgb255Channels": [
+        108,
+        88,
+        75
+      ],
+      "rgb01": "0.424, 0.346, 0.295",
+      "rgb01Channels": [
+        0.424,
+        0.346,
+        0.295
+      ],
+      "sortOrder": 166
+    },
+    {
+      "name": "Fawn brown",
+      "slug": "fawn-brown",
+      "number": 356,
+      "hex": "#A0844F",
+      "rgb255": "160, 132, 79",
+      "rgb255Channels": [
+        160,
+        132,
+        79
+      ],
+      "rgb01": "0.628, 0.518, 0.310",
+      "rgb01Channels": [
+        0.628,
+        0.518,
+        0.31
+      ],
+      "sortOrder": 167
+    },
+    {
+      "name": "Hurricane grey",
+      "slug": "hurricane-grey",
+      "number": 357,
+      "hex": "#958988",
+      "rgb255": "149, 137, 136",
+      "rgb255Channels": [
+        149,
+        137,
+        136
+      ],
+      "rgb01": "0.585, 0.538, 0.534",
+      "rgb01Channels": [
+        0.585,
+        0.538,
+        0.534
+      ],
+      "sortOrder": 168
+    },
+    {
+      "name": "Cloudy grey",
+      "slug": "cloudy-grey",
+      "number": 358,
+      "hex": "#ABA89E",
+      "rgb255": "171, 168, 158",
+      "rgb255Channels": [
+        171,
+        168,
+        158
+      ],
+      "rgb01": "0.671, 0.659, 0.620",
+      "rgb01Channels": [
+        0.671,
+        0.659,
+        0.62
+      ],
+      "sortOrder": 169
+    },
+    {
+      "name": "Linen",
+      "slug": "linen",
+      "number": 359,
+      "hex": "#AF9483",
+      "rgb255": "175, 148, 131",
+      "rgb255Channels": [
+        175,
+        148,
+        131
+      ],
+      "rgb01": "0.687, 0.581, 0.514",
+      "rgb01Channels": [
+        0.687,
+        0.581,
+        0.514
+      ],
+      "sortOrder": 170
+    },
+    {
+      "name": "Copper",
+      "slug": "copper",
+      "number": 360,
+      "hex": "#966766",
+      "rgb255": "150, 103, 102",
+      "rgb255Channels": [
+        150,
+        103,
+        102
+      ],
+      "rgb01": "0.589, 0.404, 0.400",
+      "rgb01Channels": [
+        0.589,
+        0.404,
+        0.4
+      ],
+      "sortOrder": 171
+    },
+    {
+      "name": "Medium brown",
+      "slug": "medium-brown",
+      "number": 361,
+      "hex": "#564236",
+      "rgb255": "86, 66, 54",
+      "rgb255Channels": [
+        86,
+        66,
+        54
+      ],
+      "rgb01": "0.338, 0.259, 0.212",
+      "rgb01Channels": [
+        0.338,
+        0.259,
+        0.212
+      ],
+      "sortOrder": 172
+    },
+    {
+      "name": "Bronze",
+      "slug": "bronze",
+      "number": 362,
+      "hex": "#7E683F",
+      "rgb255": "126, 104, 63",
+      "rgb255Channels": [
+        126,
+        104,
+        63
+      ],
+      "rgb01": "0.495, 0.408, 0.248",
+      "rgb01Channels": [
+        0.495,
+        0.408,
+        0.248
+      ],
+      "sortOrder": 173
+    },
+    {
+      "name": "Flint",
+      "slug": "flint",
+      "number": 363,
+      "hex": "#69665C",
+      "rgb255": "105, 102, 92",
+      "rgb255Channels": [
+        105,
+        102,
+        92
+      ],
+      "rgb01": "0.412, 0.400, 0.361",
+      "rgb01Channels": [
+        0.412,
+        0.4,
+        0.361
+      ],
+      "sortOrder": 174
+    },
+    {
+      "name": "Dark taupe",
+      "slug": "dark-taupe",
+      "number": 364,
+      "hex": "#5A4C42",
+      "rgb255": "90, 76, 66",
+      "rgb255Channels": [
+        90,
+        76,
+        66
+      ],
+      "rgb01": "0.353, 0.299, 0.259",
+      "rgb01Channels": [
+        0.353,
+        0.299,
+        0.259
+      ],
+      "sortOrder": 175
+    },
+    {
+      "name": "Burnt Sienna",
+      "slug": "burnt-sienna",
+      "number": 365,
+      "hex": "#6A3909",
+      "rgb255": "106, 57, 9",
+      "rgb255Channels": [
+        106,
+        57,
+        9
+      ],
+      "rgb01": "0.416, 0.224, 0.036",
+      "rgb01Channels": [
+        0.416,
+        0.224,
+        0.036
+      ],
+      "sortOrder": 176
+    },
+    {
+      "name": "Institutional white",
+      "slug": "institutional-white",
+      "number": 1001,
+      "hex": "#F8F8F8",
+      "rgb255": "248, 248, 248",
+      "rgb255Channels": [
+        248,
+        248,
+        248
+      ],
+      "rgb01": "0.973, 0.973, 0.973",
+      "rgb01Channels": [
+        0.973,
+        0.973,
+        0.973
+      ],
+      "sortOrder": 177
+    },
+    {
+      "name": "Mid gray",
+      "slug": "mid-gray",
+      "number": 1002,
+      "hex": "#CDCDCD",
+      "rgb255": "205, 205, 205",
+      "rgb255Channels": [
+        205,
+        205,
+        205
+      ],
+      "rgb01": "0.804, 0.804, 0.804",
+      "rgb01Channels": [
+        0.804,
+        0.804,
+        0.804
+      ],
+      "sortOrder": 178
+    },
+    {
+      "name": "Really black",
+      "slug": "really-black",
+      "number": 1003,
+      "hex": "#111111",
+      "rgb255": "17, 17, 17",
+      "rgb255Channels": [
+        17,
+        17,
+        17
+      ],
+      "rgb01": "0.067, 0.067, 0.067",
+      "rgb01Channels": [
+        0.067,
+        0.067,
+        0.067
+      ],
+      "sortOrder": 179
+    },
+    {
+      "name": "Really red",
+      "slug": "really-red",
+      "number": 1004,
+      "hex": "#FF0000",
+      "rgb255": "255, 0, 0",
+      "rgb255Channels": [
+        255,
+        0,
+        0
+      ],
+      "rgb01": "1.000, 0.000, 0.000",
+      "rgb01Channels": [
+        1,
+        0,
+        0
+      ],
+      "sortOrder": 180
+    },
+    {
+      "name": "Deep orange",
+      "slug": "deep-orange",
+      "number": 1005,
+      "hex": "#FFB000",
+      "rgb255": "255, 176, 0",
+      "rgb255Channels": [
+        255,
+        176,
+        0
+      ],
+      "rgb01": "1.000, 0.691, 0.000",
+      "rgb01Channels": [
+        1,
+        0.691,
+        0
+      ],
+      "sortOrder": 181
+    },
+    {
+      "name": "Alder",
+      "slug": "alder",
+      "number": 1006,
+      "hex": "#B480FF",
+      "rgb255": "180, 128, 255",
+      "rgb255Channels": [
+        180,
+        128,
+        255
+      ],
+      "rgb01": "0.706, 0.502, 1.000",
+      "rgb01Channels": [
+        0.706,
+        0.502,
+        1
+      ],
+      "sortOrder": 182
+    },
+    {
+      "name": "Dusty Rose",
+      "slug": "dusty-rose",
+      "number": 1007,
+      "hex": "#A34B4B",
+      "rgb255": "163, 75, 75",
+      "rgb255Channels": [
+        163,
+        75,
+        75
+      ],
+      "rgb01": "0.640, 0.295, 0.295",
+      "rgb01Channels": [
+        0.64,
+        0.295,
+        0.295
+      ],
+      "sortOrder": 183
+    },
+    {
+      "name": "Olive",
+      "slug": "olive",
+      "number": 1008,
+      "hex": "#C1BE42",
+      "rgb255": "193, 190, 66",
+      "rgb255Channels": [
+        193,
+        190,
+        66
+      ],
+      "rgb01": "0.757, 0.746, 0.259",
+      "rgb01Channels": [
+        0.757,
+        0.746,
+        0.259
+      ],
+      "sortOrder": 184
+    },
+    {
+      "name": "New Yeller",
+      "slug": "new-yeller",
+      "number": 1009,
+      "hex": "#FFFF00",
+      "rgb255": "255, 255, 0",
+      "rgb255Channels": [
+        255,
+        255,
+        0
+      ],
+      "rgb01": "1.000, 1.000, 0.000",
+      "rgb01Channels": [
+        1,
+        1,
+        0
+      ],
+      "sortOrder": 185
+    },
+    {
+      "name": "Really blue",
+      "slug": "really-blue",
+      "number": 1010,
+      "hex": "#0000FF",
+      "rgb255": "0, 0, 255",
+      "rgb255Channels": [
+        0,
+        0,
+        255
+      ],
+      "rgb01": "0.000, 0.000, 1.000",
+      "rgb01Channels": [
+        0,
+        0,
+        1
+      ],
+      "sortOrder": 186
+    },
+    {
+      "name": "Navy blue",
+      "slug": "navy-blue",
+      "number": 1011,
+      "hex": "#002060",
+      "rgb255": "0, 32, 96",
+      "rgb255Channels": [
+        0,
+        32,
+        96
+      ],
+      "rgb01": "0.000, 0.126, 0.377",
+      "rgb01Channels": [
+        0,
+        0.126,
+        0.377
+      ],
+      "sortOrder": 187
+    },
+    {
+      "name": "Deep blue",
+      "slug": "deep-blue",
+      "number": 1012,
+      "hex": "#2154B9",
+      "rgb255": "33, 84, 185",
+      "rgb255Channels": [
+        33,
+        84,
+        185
+      ],
+      "rgb01": "0.130, 0.330, 0.726",
+      "rgb01Channels": [
+        0.13,
+        0.33,
+        0.726
+      ],
+      "sortOrder": 188
+    },
+    {
+      "name": "Cyan",
+      "slug": "cyan",
+      "number": 1013,
+      "hex": "#04AFEC",
+      "rgb255": "4, 175, 236",
+      "rgb255Channels": [
+        4,
+        175,
+        236
+      ],
+      "rgb01": "0.016, 0.687, 0.926",
+      "rgb01Channels": [
+        0.016,
+        0.687,
+        0.926
+      ],
+      "sortOrder": 189
+    },
+    {
+      "name": "CGA brown",
+      "slug": "cga-brown",
+      "number": 1014,
+      "hex": "#AA5500",
+      "rgb255": "170, 85, 0",
+      "rgb255Channels": [
+        170,
+        85,
+        0
+      ],
+      "rgb01": "0.667, 0.334, 0.000",
+      "rgb01Channels": [
+        0.667,
+        0.334,
+        0
+      ],
+      "sortOrder": 190
+    },
+    {
+      "name": "Magenta",
+      "slug": "magenta",
+      "number": 1015,
+      "hex": "#AA00AA",
+      "rgb255": "170, 0, 170",
+      "rgb255Channels": [
+        170,
+        0,
+        170
+      ],
+      "rgb01": "0.667, 0.000, 0.667",
+      "rgb01Channels": [
+        0.667,
+        0,
+        0.667
+      ],
+      "sortOrder": 191
+    },
+    {
+      "name": "Pink",
+      "slug": "pink",
+      "number": 1016,
+      "hex": "#FF66CC",
+      "rgb255": "255, 102, 204",
+      "rgb255Channels": [
+        255,
+        102,
+        204
+      ],
+      "rgb01": "1.000, 0.400, 0.800",
+      "rgb01Channels": [
+        1,
+        0.4,
+        0.8
+      ],
+      "sortOrder": 192
+    },
+    {
+      "name": "Deep orange",
+      "slug": "deep-orange",
+      "number": 1017,
+      "hex": "#FFAF00",
+      "rgb255": "255, 175, 0",
+      "rgb255Channels": [
+        255,
+        175,
+        0
+      ],
+      "rgb01": "1.000, 0.687, 0.000",
+      "rgb01Channels": [
+        1,
+        0.687,
+        0
+      ],
+      "sortOrder": 193
+    },
+    {
+      "name": "Teal",
+      "slug": "teal",
+      "number": 1018,
+      "hex": "#12EED4",
+      "rgb255": "18, 238, 212",
+      "rgb255Channels": [
+        18,
+        238,
+        212
+      ],
+      "rgb01": "0.071, 0.934, 0.832",
+      "rgb01Channels": [
+        0.071,
+        0.934,
+        0.832
+      ],
+      "sortOrder": 194
+    },
+    {
+      "name": "Toothpaste",
+      "slug": "toothpaste",
+      "number": 1019,
+      "hex": "#00FFFF",
+      "rgb255": "0, 255, 255",
+      "rgb255Channels": [
+        0,
+        255,
+        255
+      ],
+      "rgb01": "0.000, 1.000, 1.000",
+      "rgb01Channels": [
+        0,
+        1,
+        1
+      ],
+      "sortOrder": 195
+    },
+    {
+      "name": "Lime green",
+      "slug": "lime-green",
+      "number": 1020,
+      "hex": "#00FF00",
+      "rgb255": "0, 255, 0",
+      "rgb255Channels": [
+        0,
+        255,
+        0
+      ],
+      "rgb01": "0.000, 1.000, 0.000",
+      "rgb01Channels": [
+        0,
+        1,
+        0
+      ],
+      "sortOrder": 196
+    },
+    {
+      "name": "Camo",
+      "slug": "camo",
+      "number": 1021,
+      "hex": "#3A7D15",
+      "rgb255": "58, 125, 21",
+      "rgb255Channels": [
+        58,
+        125,
+        21
+      ],
+      "rgb01": "0.228, 0.491, 0.083",
+      "rgb01Channels": [
+        0.228,
+        0.491,
+        0.083
+      ],
+      "sortOrder": 197
+    },
+    {
+      "name": "Grime",
+      "slug": "grime",
+      "number": 1022,
+      "hex": "#7F8E64",
+      "rgb255": "127, 142, 100",
+      "rgb255Channels": [
+        127,
+        142,
+        100
+      ],
+      "rgb01": "0.499, 0.557, 0.393",
+      "rgb01Channels": [
+        0.499,
+        0.557,
+        0.393
+      ],
+      "sortOrder": 198
+    },
+    {
+      "name": "Lavender",
+      "slug": "lavender",
+      "number": 1023,
+      "hex": "#8C5B9F",
+      "rgb255": "140, 91, 159",
+      "rgb255Channels": [
+        140,
+        91,
+        159
+      ],
+      "rgb01": "0.550, 0.357, 0.624",
+      "rgb01Channels": [
+        0.55,
+        0.357,
+        0.624
+      ],
+      "sortOrder": 199
+    },
+    {
+      "name": "Pastel light blue",
+      "slug": "pastel-light-blue",
+      "number": 1024,
+      "hex": "#AFDDFF",
+      "rgb255": "175, 221, 255",
+      "rgb255Channels": [
+        175,
+        221,
+        255
+      ],
+      "rgb01": "0.687, 0.867, 1.000",
+      "rgb01Channels": [
+        0.687,
+        0.867,
+        1
+      ],
+      "sortOrder": 200
+    },
+    {
+      "name": "Pastel orange",
+      "slug": "pastel-orange",
+      "number": 1025,
+      "hex": "#FFC9C9",
+      "rgb255": "255, 201, 201",
+      "rgb255Channels": [
+        255,
+        201,
+        201
+      ],
+      "rgb01": "1.000, 0.789, 0.789",
+      "rgb01Channels": [
+        1,
+        0.789,
+        0.789
+      ],
+      "sortOrder": 201
+    },
+    {
+      "name": "Pastel violet",
+      "slug": "pastel-violet",
+      "number": 1026,
+      "hex": "#B1A7FF",
+      "rgb255": "177, 167, 255",
+      "rgb255Channels": [
+        177,
+        167,
+        255
+      ],
+      "rgb01": "0.695, 0.655, 1.000",
+      "rgb01Channels": [
+        0.695,
+        0.655,
+        1
+      ],
+      "sortOrder": 202
+    },
+    {
+      "name": "Pastel blue-green",
+      "slug": "pastel-blue-green",
+      "number": 1027,
+      "hex": "#9FF3E9",
+      "rgb255": "159, 243, 233",
+      "rgb255Channels": [
+        159,
+        243,
+        233
+      ],
+      "rgb01": "0.624, 0.953, 0.914",
+      "rgb01Channels": [
+        0.624,
+        0.953,
+        0.914
+      ],
+      "sortOrder": 203
+    },
+    {
+      "name": "Pastel green",
+      "slug": "pastel-green",
+      "number": 1028,
+      "hex": "#CCFFCC",
+      "rgb255": "204, 255, 204",
+      "rgb255Channels": [
+        204,
+        255,
+        204
+      ],
+      "rgb01": "0.800, 1.000, 0.800",
+      "rgb01Channels": [
+        0.8,
+        1,
+        0.8
+      ],
+      "sortOrder": 204
+    },
+    {
+      "name": "Pastel yellow",
+      "slug": "pastel-yellow",
+      "number": 1029,
+      "hex": "#FFFFCC",
+      "rgb255": "255, 255, 204",
+      "rgb255Channels": [
+        255,
+        255,
+        204
+      ],
+      "rgb01": "1.000, 1.000, 0.800",
+      "rgb01Channels": [
+        1,
+        1,
+        0.8
+      ],
+      "sortOrder": 205
+    },
+    {
+      "name": "Pastel brown",
+      "slug": "pastel-brown",
+      "number": 1030,
+      "hex": "#FFCC99",
+      "rgb255": "255, 204, 153",
+      "rgb255Channels": [
+        255,
+        204,
+        153
+      ],
+      "rgb01": "1.000, 0.800, 0.600",
+      "rgb01Channels": [
+        1,
+        0.8,
+        0.6
+      ],
+      "sortOrder": 206
+    },
+    {
+      "name": "Royal purple",
+      "slug": "royal-purple",
+      "number": 1031,
+      "hex": "#6225D1",
+      "rgb255": "98, 37, 209",
+      "rgb255Channels": [
+        98,
+        37,
+        209
+      ],
+      "rgb01": "0.385, 0.146, 0.820",
+      "rgb01Channels": [
+        0.385,
+        0.146,
+        0.82
+      ],
+      "sortOrder": 207
+    },
+    {
+      "name": "Hot pink",
+      "slug": "hot-pink",
+      "number": 1032,
+      "hex": "#FF00BF",
+      "rgb255": "255, 0, 191",
+      "rgb255Channels": [
+        255,
+        0,
+        191
+      ],
+      "rgb01": "1.000, 0.000, 0.750",
+      "rgb01Channels": [
+        1,
+        0,
+        0.75
+      ],
+      "sortOrder": 208
+    }
+  ]
+}

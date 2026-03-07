@@ -10,8 +10,8 @@ export type CatalogPageContent = {
   title: string;
   seo_title: string;
   meta_description: string;
-  intro_md: string;
-  how_it_works_md: string;
+  intro_md: string | null;
+  how_it_works_md: string | null;
   description_json: Record<string, string>;
   faq_json: CatalogFaqEntry[];
   cta_label?: string | null;

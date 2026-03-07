@@ -107,6 +107,20 @@ async function loadAdminCommandsStats(): Promise<CatalogStats> {
   }
 }
 
+async function loadColorCodesStats(): Promise<CatalogStats> {
+  try {
+    const { loadRobloxColorCodesPageData } = await import("./roblox-color-codes/page-data");
+    const data = await loadRobloxColorCodesPageData();
+    return {
+      count: data.items.length,
+      updatedAt: data.meta.updatedAt ?? null
+    };
+  } catch (error) {
+    console.error("Failed to load Roblox color codes stats", error);
+    return { count: 0, updatedAt: null };
+  }
+}
+
 const CATALOG_ENTRIES: CatalogEntry[] = [
   {
     id: "music-ids",
@@ -118,6 +132,17 @@ const CATALOG_ENTRIES: CatalogEntry[] = [
     tileLabel: "IDs",
     tone: "indigo",
     loadStats: loadMusicIdsStats
+  },
+  {
+    id: "color-codes",
+    href: "/catalog/roblox-color-codes",
+    title: "Roblox color codes",
+    description: "Browse every official Roblox BrickColor with copyable names, numbers, RGB values, and hex codes.",
+    category: "Design",
+    metricLabel: "color codes",
+    tileLabel: "Color",
+    tone: "amber",
+    loadStats: loadColorCodesStats
   },
   {
     id: "admin-commands",

@@ -12,7 +12,7 @@ import { CommentsSection } from "@/components/comments/CommentsSection";
 import { splitPathToSlug } from "@/lib/static-params";
 
 export const revalidate = 86400;
-const RESERVED_CATALOG_PREFIXES = ["admin-commands", "roblox-decal-ids", "roblox-free-items", "roblox-music-ids", "the-forge"];
+const RESERVED_CATALOG_PREFIXES = ["admin-commands", "roblox-color-codes", "roblox-decal-ids", "roblox-free-items", "roblox-music-ids", "the-forge"];
 
 type PageProps = {
   params: Promise<{ slug: string[] }>;
