@@ -21,7 +21,7 @@ const DEFAULT_KEYWORDS = [..."abcdefghijklmnopqrstuvwxyz", ..."0123456789"];
 const DEFAULT_KEYWORD_SORT_TYPES: string[] = [];
 const ALLOWED_LIMITS = [10, 28, 30, 50, 60, 100, 120];
 
-const CATEGORY = "Accessories";
+const CATEGORY = "Body";
 const SUBCATEGORIES_RAW = process.env.ROBLOX_CATALOG_SUBCATEGORIES;
 const SORT_TYPES_RAW = process.env.ROBLOX_CATALOG_SORT_TYPES;
 const KEYWORDS_RAW = process.env.ROBLOX_CATALOG_KEYWORDS;

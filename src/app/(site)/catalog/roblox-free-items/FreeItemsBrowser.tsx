@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
-import { CopyCodeButton } from "@/components/CopyCodeButton";
 import { PagePagination } from "@/components/PagePagination";
+import { RobloxCatalogItemCard } from "@/components/RobloxCatalogItemCard";
 import {
   DEFAULT_SORT,
   SORT_OPTIONS,
@@ -16,14 +15,17 @@ import {
 
 type FreeItem = {
   asset_id: number;
-  name: string | null;
+  name: string;
   description: string | null;
-  category: string | null;
-  subcategory: string | null;
-  creator_name: string | null;
+  category: string;
+  subcategory: string;
+  creator_name: string;
   creator_id: number | null;
   creator_type: string | null;
-  favorite_count: number | null;
+  favorite_count: number;
+  price_robux: number;
+  asset_type_id: number | null;
+  last_seen_at: string;
   created_at: string;
 };
 
@@ -42,21 +44,6 @@ type Props = {
   category?: string;
   subcategory?: string;
 };
-
-function buildThumbnailUrl(assetId: number): string {
-  return `https://www.roblox.com/asset-thumbnail/image?assetId=${assetId}&width=420&height=420&format=png`;
-}
-
-function buildRobloxUrl(assetId: number): string {
-  return `https://www.roblox.com/catalog/${assetId}`;
-}
-
-function formatCount(value: number | string | null | undefined): string | null {
-  if (value === null || value === undefined) return null;
-  const numeric = typeof value === "number" ? value : Number(value);
-  if (!Number.isFinite(numeric) || numeric <= 0) return null;
-  return numeric.toLocaleString("en-US");
-}
 
 export function FreeItemsBrowser({
   initialItems,
@@ -211,107 +198,10 @@ export function FreeItemsBrowser({
           No free items match those filters right now.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((item) => {
-            const favorites = formatCount(item.favorite_count);
-            const hasMeta = Boolean(item.creator_name || item.category || item.subcategory);
-            return (
-              <article
-                key={item.asset_id}
-                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-xl"
-              >
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-background/60">
-                  <Image
-                    src={buildThumbnailUrl(item.asset_id)}
-                    alt={item.name ?? `Roblox item ${item.asset_id}`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                    className="object-cover transition duration-500 group-hover:scale-105"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
-                  <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white shadow-lg">
-                      Free
-                    </span>
-                    {item.category ? (
-                      <span className="rounded-full border border-white/20 bg-black/50 px-3 py-1 text-[11px] font-semibold text-white">
-                        {item.category}
-                      </span>
-                    ) : null}
-                  </div>
-                  {favorites ? (
-                    <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-[11px] font-semibold text-white">
-                      <span className="uppercase tracking-wide text-white/70">Favorites</span>
-                      <span>{favorites}</span>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="flex flex-1 flex-col gap-3 p-4">
-                  <div className="space-y-1">
-                    <h2 className="text-lg font-semibold leading-snug text-foreground line-clamp-2">
-                      {item.name ?? `Roblox item ${item.asset_id}`}
-                    </h2>
-                  </div>
-
-                  {hasMeta ? (
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                      {item.creator_name ? (
-                        <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1">
-                          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">Creator</span>
-                          <span className="font-semibold text-foreground line-clamp-1">{item.creator_name}</span>
-                        </span>
-                      ) : null}
-                      {item.category ? (
-                        <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1">
-                          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">Category</span>
-                          <span className="font-semibold text-foreground">{item.category}</span>
-                        </span>
-                      ) : null}
-                      {item.subcategory ? (
-                        <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1">
-                          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">Subcategory</span>
-                          <span className="font-semibold text-foreground">{item.subcategory}</span>
-                        </span>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <div className="flex items-center gap-1.5 rounded-full border border-border/50 bg-background px-3 py-1.5 text-xs font-semibold text-foreground">
-                      <span>Item ID</span>
-                      <span className="font-mono text-[0.82rem]">{item.asset_id}</span>
-                      <CopyCodeButton
-                        code={String(item.asset_id)}
-                        tone="surface"
-                        size="sm"
-                        analytics={{
-                          event: "free_item_copy",
-                          params: {
-                            asset_id: item.asset_id,
-                            category: item.category ?? "",
-                            subcategory: item.subcategory ?? ""
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-auto">
-                    <a
-                      href={buildRobloxUrl(item.asset_id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-accent-dark dark:bg-accent-dark dark:hover:bg-accent"
-                    >
-                      View on Roblox
-                    </a>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {items.map((item) => (
+            <RobloxCatalogItemCard key={item.asset_id} item={item} />
+          ))}
         </div>
       )}
 

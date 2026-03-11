@@ -10,7 +10,7 @@ export type FreeItemsSearchState = {
   sort: FreeItemsSortKey;
 };
 
-export const DEFAULT_SORT: FreeItemsSortKey = "newest";
+export const DEFAULT_SORT: FreeItemsSortKey = "popular";
 
 export const SORT_OPTIONS: FreeItemsSortOption[] = [
   { value: "newest", label: "Newest first" },

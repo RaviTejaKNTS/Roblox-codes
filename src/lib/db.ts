@@ -1683,15 +1683,16 @@ export async function listCodesForGame(gameId: string): Promise<Code[]> {
 
 export type FreeItem = {
   asset_id: number;
-  name: string | null;
+  name: string;
   description: string | null;
-  category: string | null;
-  subcategory: string | null;
-  creator_name: string | null;
+  category: string;
+  subcategory: string;
+  creator_name: string;
   creator_id: number | null;
   creator_type: string | null;
   asset_type_id: number | null;
-  favorite_count: number | null;
+  favorite_count: number;
+  price_robux: number;
   last_seen_at: string;
   created_at: string;
 };
@@ -1719,10 +1720,14 @@ async function fetchFreeItems(
 
   let query = sb
     .from('roblox_catalog_items')
-    .select('asset_id, name, description, category, subcategory, creator_name, creator_id, creator_type, asset_type_id, favorite_count, last_seen_at, created_at', { count: 'exact' })
+    .select('asset_id, name, description, category, subcategory, creator_name, creator_id, creator_type, asset_type_id, favorite_count, price_robux, last_seen_at, created_at', { count: 'exact' })
     .eq('price_robux', 0)
     .eq('is_deleted', false)
-    .not('name', 'is', null);
+    .not('name', 'is', null)
+    .not('category', 'is', null)
+    .not('subcategory', 'is', null)
+    .not('creator_name', 'is', null)
+    .not('favorite_count', 'is', null);
 
   if (filters.category) {
     query = query.eq('category', filters.category);
@@ -1748,15 +1753,15 @@ async function fetchFreeItems(
 
   // Apply sorting
   switch (filters.sort) {
-    case 'popular':
-      query = query.order('favorite_count', { ascending: false, nullsFirst: false });
-      break;
     case 'updated':
       query = query.order('last_seen_at', { ascending: false });
       break;
     case 'newest':
-    default:
       query = query.order('created_at', { ascending: false });
+      break;
+    case 'popular':
+    default:
+      query = query.order('favorite_count', { ascending: false, nullsFirst: false });
       break;
   }
 
@@ -1801,7 +1806,11 @@ export async function getFreeItemsCount(filters: FreeItemsFilters = {}): Promise
         .select('asset_id', { count: 'exact', head: true })
         .eq('price_robux', 0)
         .eq('is_deleted', false)
-        .not('name', 'is', null);
+        .not('name', 'is', null)
+        .not('category', 'is', null)
+        .not('subcategory', 'is', null)
+        .not('creator_name', 'is', null)
+        .not('favorite_count', 'is', null);
 
       if (filters.category) {
         query = query.eq('category', filters.category);
@@ -1849,6 +1858,9 @@ export async function getFreeItemCategories(): Promise<Array<{ category: string;
         .eq('price_robux', 0)
         .eq('is_deleted', false)
         .not('name', 'is', null)
+        .not('subcategory', 'is', null)
+        .not('creator_name', 'is', null)
+        .not('favorite_count', 'is', null)
         .not('category', 'is', null);
 
       if (error) throw error;
@@ -1885,6 +1897,9 @@ export async function getFreeItemSubcategories(category?: string): Promise<Array
         .eq('price_robux', 0)
         .eq('is_deleted', false)
         .not('name', 'is', null)
+        .not('category', 'is', null)
+        .not('creator_name', 'is', null)
+        .not('favorite_count', 'is', null)
         .not('subcategory', 'is', null);
 
       if (category) {
