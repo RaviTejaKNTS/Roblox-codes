@@ -1683,6 +1683,7 @@ export async function listCodesForGame(gameId: string): Promise<Code[]> {
 
 export type FreeItem = {
   asset_id: number;
+  item_type: string;
   name: string;
   description: string | null;
   category: string;
@@ -1695,13 +1696,15 @@ export type FreeItem = {
   price_robux: number;
   last_seen_at: string;
   created_at: string;
+  roblox_url: string;
+  thumbnail_url: string | null;
 };
 
 export type FreeItemsFilters = {
   category?: string;
   subcategory?: string;
   search?: string;
-  sort?: 'newest' | 'popular' | 'updated';
+  sort?: 'featured' | 'newest' | 'popular' | 'updated';
 };
 
 function buildFreeItemsSearchPattern(value: string): string {
@@ -1710,31 +1713,96 @@ function buildFreeItemsSearchPattern(value: string): string {
   return `%${pattern}%`;
 }
 
-async function fetchFreeItems(
-  page: number,
-  limit: number,
-  filters: FreeItemsFilters = {}
-): Promise<{ items: FreeItem[]; total: number }> {
-  const sb = supabaseAdmin();
-  const offset = Math.max(0, (page - 1) * limit);
+type FreeItemRow = Omit<FreeItem, "thumbnail_url" | "roblox_url"> & {
+  raw_economy_json: Record<string, unknown> | null;
+};
+type FeaturedFreeItemBucket = "accessories" | "clothing" | "body" | "animations" | "other";
 
-  let query = sb
-    .from('roblox_catalog_items')
-    .select('asset_id, name, description, category, subcategory, creator_name, creator_id, creator_type, asset_type_id, favorite_count, price_robux, last_seen_at, created_at', { count: 'exact' })
+type FreeItemThumbnailRow = {
+  asset_id: number;
+  size: string | null;
+  format: string | null;
+  state: string | null;
+  image_url: string | null;
+};
+
+const FREE_ITEM_THUMBNAIL_SIZE = "420x420";
+const FREE_ITEM_THUMBNAIL_FORMAT = "Png";
+const FREE_ITEMS_SELECT_FIELDS =
+  'asset_id, item_type, name, description, category, subcategory, creator_name, creator_id, creator_type, asset_type_id, favorite_count, price_robux, last_seen_at, created_at, raw_economy_json';
+const FEATURED_FREE_ITEMS_BATCH_SIZE = 1000;
+const FEATURED_FREE_ITEM_PATTERN: FeaturedFreeItemBucket[] = [
+  "accessories",
+  "accessories",
+  "clothing",
+  "body",
+  "accessories",
+  "clothing",
+  "body",
+  "animations",
+  "other"
+];
+const FEATURED_FREE_ITEM_BUCKET_ORDER: FeaturedFreeItemBucket[] = [
+  "accessories",
+  "clothing",
+  "body",
+  "animations",
+  "other"
+];
+
+function getFreeItemThumbnailPriority(row: FreeItemThumbnailRow): number {
+  let score = 0;
+  if (row.image_url) score += 100;
+  if (row.state === "Completed") score += 40;
+  if (row.size === FREE_ITEM_THUMBNAIL_SIZE) score += 20;
+  if (row.format === FREE_ITEM_THUMBNAIL_FORMAT) score += 10;
+  return score;
+}
+
+function extractFreeItemRobloxUrl(row: { asset_id: number; item_type?: string | null; raw_economy_json?: Record<string, unknown> | null }) {
+  const explicitUrl = row.raw_economy_json?.roblox_url;
+  if (typeof explicitUrl === "string" && explicitUrl.length > 0) {
+    return explicitUrl;
+  }
+
+  if (row.item_type === "Bundle" && Number.isFinite(row.asset_id)) {
+    const bundleId = Math.abs(Math.trunc(row.asset_id));
+    return `https://www.roblox.com/bundles/${bundleId}`;
+  }
+
+  return `https://www.roblox.com/catalog/${row.asset_id}`;
+}
+
+function applyFreeItemLibraryFilters<TQuery extends { eq: Function; not: Function; contains: Function }>(query: TQuery): TQuery {
+  return query
     .eq('price_robux', 0)
     .eq('is_deleted', false)
+    .contains('raw_economy_json', { free_item_source: 'robloxden' })
+    .eq('has_resellers', false)
+    .eq('lowest_resale_price_robux', 0)
     .not('name', 'is', null)
     .not('category', 'is', null)
     .not('subcategory', 'is', null)
-    .not('creator_name', 'is', null)
     .not('favorite_count', 'is', null);
+}
+
+function createFreeItemsBaseQuery(sb: ReturnType<typeof supabaseAdmin>, includeCount = false) {
+  const query = includeCount
+    ? sb.from('roblox_catalog_items').select(FREE_ITEMS_SELECT_FIELDS, { count: 'exact' })
+    : sb.from('roblox_catalog_items').select(FREE_ITEMS_SELECT_FIELDS);
+
+  return applyFreeItemLibraryFilters(query);
+}
+
+function applyFreeItemsFilters(query: any, filters: FreeItemsFilters = {}) {
+  let nextQuery = query;
 
   if (filters.category) {
-    query = query.eq('category', filters.category);
+    nextQuery = nextQuery.eq('category', filters.category);
   }
 
   if (filters.subcategory) {
-    query = query.eq('subcategory', filters.subcategory);
+    nextQuery = nextQuery.eq('subcategory', filters.subcategory);
   }
 
   const searchTerm = (filters.search ?? "").trim();
@@ -1748,11 +1816,194 @@ async function fetchFreeItems(
     if (/^\d+$/.test(searchTerm)) {
       orParts.unshift(`asset_id.eq.${searchTerm}`);
     }
-    query = query.or(orParts.join(","));
+    nextQuery = nextQuery.or(orParts.join(","));
   }
 
+  return nextQuery;
+}
+
+function resolveFeaturedFreeItemBucket(category: string | null | undefined): FeaturedFreeItemBucket {
+  const normalizedCategory = (category ?? "").trim().toLowerCase();
+  if (normalizedCategory === "accessories") return "accessories";
+  if (normalizedCategory === "clothing") return "clothing";
+  if (normalizedCategory === "body") return "body";
+  if (normalizedCategory === "avataranimations" || normalizedCategory === "animations") return "animations";
+  return "other";
+}
+
+function wouldCreateFeaturedTriple(items: FreeItemRow[], candidate: FreeItemRow): boolean {
+  if (items.length < 2) return false;
+
+  const candidateBucket = resolveFeaturedFreeItemBucket(candidate.category);
+  const lastBucket = resolveFeaturedFreeItemBucket(items[items.length - 1]?.category);
+  const previousBucket = resolveFeaturedFreeItemBucket(items[items.length - 2]?.category);
+
+  return candidateBucket === lastBucket && candidateBucket === previousBucket;
+}
+
+function pickFeaturedFallbackBucket(
+  queues: Map<FeaturedFreeItemBucket, FreeItemRow[]>,
+  items: FreeItemRow[]
+): FeaturedFreeItemBucket | null {
+  const availableBuckets = FEATURED_FREE_ITEM_BUCKET_ORDER.filter((bucket) => (queues.get(bucket)?.length ?? 0) > 0);
+  if (!availableBuckets.length) return null;
+
+  const validBuckets = availableBuckets.filter((bucket) => {
+    const queue = queues.get(bucket);
+    return queue?.[0] ? !wouldCreateFeaturedTriple(items, queue[0]) : false;
+  });
+
+  const candidateBuckets = validBuckets.length ? validBuckets : availableBuckets;
+  return candidateBuckets.sort((left, right) => {
+    const leftTopFavorite = queues.get(left)?.[0]?.favorite_count ?? 0;
+    const rightTopFavorite = queues.get(right)?.[0]?.favorite_count ?? 0;
+    if (leftTopFavorite !== rightTopFavorite) {
+      return rightTopFavorite - leftTopFavorite;
+    }
+    return FEATURED_FREE_ITEM_BUCKET_ORDER.indexOf(left) - FEATURED_FREE_ITEM_BUCKET_ORDER.indexOf(right);
+  })[0] ?? null;
+}
+
+function mixFeaturedFreeItems(items: FreeItemRow[]): FreeItemRow[] {
+  const queues = new Map<FeaturedFreeItemBucket, FreeItemRow[]>(
+    FEATURED_FREE_ITEM_BUCKET_ORDER.map((bucket) => [bucket, []])
+  );
+
+  for (const item of items) {
+    const bucket = resolveFeaturedFreeItemBucket(item.category);
+    queues.get(bucket)?.push(item);
+  }
+
+  const mixedItems: FreeItemRow[] = [];
+  let patternIndex = 0;
+
+  while (mixedItems.length < items.length) {
+    let selectedBucket: FeaturedFreeItemBucket | null = null;
+
+    for (let offset = 0; offset < FEATURED_FREE_ITEM_PATTERN.length; offset += 1) {
+      const bucket = FEATURED_FREE_ITEM_PATTERN[(patternIndex + offset) % FEATURED_FREE_ITEM_PATTERN.length];
+      const candidate = queues.get(bucket)?.[0];
+      if (!candidate || wouldCreateFeaturedTriple(mixedItems, candidate)) {
+        continue;
+      }
+      selectedBucket = bucket;
+      patternIndex = (patternIndex + offset + 1) % FEATURED_FREE_ITEM_PATTERN.length;
+      break;
+    }
+
+    if (!selectedBucket) {
+      selectedBucket = pickFeaturedFallbackBucket(queues, mixedItems);
+      if (!selectedBucket) break;
+    }
+
+    const nextItem = queues.get(selectedBucket)?.shift();
+    if (!nextItem) break;
+    mixedItems.push(nextItem);
+  }
+
+  return mixedItems;
+}
+
+async function fetchFeaturedFreeItemRows(filters: FreeItemsFilters = {}): Promise<FreeItemRow[]> {
+  const sb = supabaseAdmin();
+  const rows: FreeItemRow[] = [];
+
+  for (let offset = 0; ; offset += FEATURED_FREE_ITEMS_BATCH_SIZE) {
+    let query = createFreeItemsBaseQuery(sb);
+    query = applyFreeItemsFilters(query, filters);
+    query = query
+      .order('favorite_count', { ascending: false, nullsFirst: false })
+      .range(offset, offset + FEATURED_FREE_ITEMS_BATCH_SIZE - 1);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const batchRows = (data ?? []) as FreeItemRow[];
+    if (!batchRows.length) break;
+
+    rows.push(...batchRows);
+    if (batchRows.length < FEATURED_FREE_ITEMS_BATCH_SIZE) break;
+  }
+
+  return rows;
+}
+
+async function loadFreeItemThumbnailUrls(assetIds: number[]): Promise<Map<number, string>> {
+  const normalizedAssetIds = Array.from(
+    new Set(
+      assetIds
+        .filter((assetId) => Number.isFinite(assetId))
+        .filter((assetId) => assetId !== 0)
+        .map((assetId) => Math.trunc(assetId))
+    )
+  );
+
+  if (!normalizedAssetIds.length) {
+    return new Map();
+  }
+
+  const sb = supabaseAdmin();
+  const bestThumbnailRows = new Map<number, FreeItemThumbnailRow>();
+  const { data, error } = await sb
+    .from("roblox_catalog_item_images")
+    .select("asset_id, size, format, state, image_url")
+    .in("asset_id", normalizedAssetIds)
+    .not("image_url", "is", null);
+
+  if (error) {
+    console.error("Failed to load cached free item thumbnails", error);
+  } else {
+    for (const row of (data ?? []) as FreeItemThumbnailRow[]) {
+      if (typeof row.asset_id !== "number" || typeof row.image_url !== "string" || row.image_url.length === 0) {
+        continue;
+      }
+
+      const existingRow = bestThumbnailRows.get(row.asset_id);
+      if (!existingRow || getFreeItemThumbnailPriority(row) > getFreeItemThumbnailPriority(existingRow)) {
+        bestThumbnailRows.set(row.asset_id, row);
+      }
+    }
+  }
+
+  const thumbnailMap = new Map<number, string>();
+  for (const [assetId, row] of bestThumbnailRows.entries()) {
+    if (row.image_url) {
+      thumbnailMap.set(assetId, row.image_url);
+    }
+  }
+
+  return thumbnailMap;
+}
+
+async function fetchFreeItems(
+  page: number,
+  limit: number,
+  filters: FreeItemsFilters = {}
+): Promise<{ items: FreeItem[]; total: number }> {
+  const offset = Math.max(0, (page - 1) * limit);
+  const effectiveSort = filters.sort ?? 'featured';
+
+  if (effectiveSort === 'featured') {
+    const featuredRows = mixFeaturedFreeItems(await fetchFeaturedFreeItemRows(filters));
+    const pageRows = featuredRows.slice(offset, offset + limit);
+    const thumbnailMap = await loadFreeItemThumbnailUrls(pageRows.map((item) => item.asset_id));
+
+    return {
+      items: pageRows.map(({ raw_economy_json, ...item }) => ({
+        ...item,
+        roblox_url: extractFreeItemRobloxUrl({ ...item, raw_economy_json }),
+        thumbnail_url: thumbnailMap.get(item.asset_id) ?? null
+      })),
+      total: featuredRows.length
+    };
+  }
+
+  const sb = supabaseAdmin();
+  let query = createFreeItemsBaseQuery(sb, true);
+  query = applyFreeItemsFilters(query, filters);
+
   // Apply sorting
-  switch (filters.sort) {
+  switch (effectiveSort) {
     case 'updated':
       query = query.order('last_seen_at', { ascending: false });
       break;
@@ -1771,8 +2022,15 @@ async function fetchFreeItems(
 
   if (error) throw error;
 
+  const items = (data ?? []) as FreeItemRow[];
+  const thumbnailMap = await loadFreeItemThumbnailUrls(items.map((item) => item.asset_id));
+
   return {
-    items: (data ?? []) as FreeItem[],
+    items: items.map(({ raw_economy_json, ...item }) => ({
+      ...item,
+      roblox_url: extractFreeItemRobloxUrl({ ...item, raw_economy_json }),
+      thumbnail_url: thumbnailMap.get(item.asset_id) ?? null
+    })),
     total: count ?? 0
   };
 }
@@ -1787,7 +2045,7 @@ export async function listFreeItems(
 
   const cached = unstable_cache(
     () => fetchFreeItems(safePage, safeLimit, filters),
-    [`listFreeItems:${safePage}:${safeLimit}:${JSON.stringify(filters)}`],
+    [`listFreeItems:v6:${safePage}:${safeLimit}:${JSON.stringify(filters)}`],
     {
       revalidate: 3600, // 1 hour
       tags: ['free-items-catalog']
@@ -1801,16 +2059,11 @@ export async function getFreeItemsCount(filters: FreeItemsFilters = {}): Promise
   const cached = unstable_cache(
     async () => {
       const sb = supabaseAdmin();
-      let query = sb
+      let query = applyFreeItemLibraryFilters(
+        sb
         .from('roblox_catalog_items')
         .select('asset_id', { count: 'exact', head: true })
-        .eq('price_robux', 0)
-        .eq('is_deleted', false)
-        .not('name', 'is', null)
-        .not('category', 'is', null)
-        .not('subcategory', 'is', null)
-        .not('creator_name', 'is', null)
-        .not('favorite_count', 'is', null);
+      );
 
       if (filters.category) {
         query = query.eq('category', filters.category);
@@ -1838,7 +2091,7 @@ export async function getFreeItemsCount(filters: FreeItemsFilters = {}): Promise
       if (error) throw error;
       return count ?? 0;
     },
-    [`getFreeItemsCount:${JSON.stringify(filters)}`],
+    [`getFreeItemsCount:v3:${JSON.stringify(filters)}`],
     {
       revalidate: 3600, // 1 hour
       tags: ['free-items-catalog']
@@ -1848,22 +2101,44 @@ export async function getFreeItemsCount(filters: FreeItemsFilters = {}): Promise
   return cached();
 }
 
+const FREE_ITEM_FACET_BATCH_SIZE = 1000;
+
+async function fetchAllFreeItemFacetRows(
+  field: 'category' | 'subcategory',
+  category?: string
+): Promise<Array<{ category?: string | null; subcategory?: string | null }>> {
+  const sb = supabaseAdmin();
+  const rows: Array<{ category?: string | null; subcategory?: string | null }> = [];
+
+  for (let offset = 0; ; offset += FREE_ITEM_FACET_BATCH_SIZE) {
+    let query = applyFreeItemLibraryFilters(
+      sb
+      .from('roblox_catalog_items')
+      .select(field)
+      .range(offset, offset + FREE_ITEM_FACET_BATCH_SIZE - 1)
+    );
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const batchRows = (data ?? []) as Array<{ category?: string | null; subcategory?: string | null }>;
+    if (!batchRows.length) break;
+
+    rows.push(...batchRows);
+    if (batchRows.length < FREE_ITEM_FACET_BATCH_SIZE) break;
+  }
+
+  return rows;
+}
+
 export async function getFreeItemCategories(): Promise<Array<{ category: string; count: number }>> {
   const cached = unstable_cache(
     async () => {
-      const sb = supabaseAdmin();
-      const { data, error } = await sb
-        .from('roblox_catalog_items')
-        .select('category')
-        .eq('price_robux', 0)
-        .eq('is_deleted', false)
-        .not('name', 'is', null)
-        .not('subcategory', 'is', null)
-        .not('creator_name', 'is', null)
-        .not('favorite_count', 'is', null)
-        .not('category', 'is', null);
-
-      if (error) throw error;
+      const data = await fetchAllFreeItemFacetRows('category');
 
       // Count occurrences
       const counts = new Map<string, number>();
@@ -1877,7 +2152,7 @@ export async function getFreeItemCategories(): Promise<Array<{ category: string;
         .map(([category, count]) => ({ category, count }))
         .sort((a, b) => b.count - a.count);
     },
-    ['getFreeItemCategories'],
+    ['getFreeItemCategories:v4'],
     {
       revalidate: 7200, // 2 hours
       tags: ['free-items-catalog']
@@ -1890,24 +2165,7 @@ export async function getFreeItemCategories(): Promise<Array<{ category: string;
 export async function getFreeItemSubcategories(category?: string): Promise<Array<{ subcategory: string; count: number }>> {
   const cached = unstable_cache(
     async () => {
-      const sb = supabaseAdmin();
-      let query = sb
-        .from('roblox_catalog_items')
-        .select('subcategory')
-        .eq('price_robux', 0)
-        .eq('is_deleted', false)
-        .not('name', 'is', null)
-        .not('category', 'is', null)
-        .not('creator_name', 'is', null)
-        .not('favorite_count', 'is', null)
-        .not('subcategory', 'is', null);
-
-      if (category) {
-        query = query.eq('category', category);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
+      const data = await fetchAllFreeItemFacetRows('subcategory', category);
 
       // Count occurrences
       const counts = new Map<string, number>();
@@ -1921,7 +2179,7 @@ export async function getFreeItemSubcategories(category?: string): Promise<Array
         .map(([subcategory, count]) => ({ subcategory, count }))
         .sort((a, b) => b.count - a.count);
     },
-    [`getFreeItemSubcategories:${category ?? 'all'}`],
+    [`getFreeItemSubcategories:v4:${category ?? 'all'}`],
     {
       revalidate: 7200, // 2 hours
       tags: ['free-items-catalog']

@@ -1,65 +1,32 @@
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
+const {
+  publicProductionDirectives,
+  secureProductionDirectives,
+  developmentDirectives
+} = require("./src/config/csp-directives.json");
 
 const isProduction = process.env.NODE_ENV === "production";
-const isCspTemporarilyDisabled = true;
+const configuredCspMode = (process.env.CSP_MODE || (isProduction ? "enforce" : "off")).trim().toLowerCase();
+const cspMode =
+  configuredCspMode === "off" || configuredCspMode === "report-only" || configuredCspMode === "enforce"
+    ? configuredCspMode
+    : isProduction
+      ? "enforce"
+      : "off";
 
-const productionDirectives = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'self'",
-  "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' https: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.gstatic.com https://scripts.scriptwrapper.com https://scripts.journeymv.com https://exchange.journeymv.com https://securepubads.g.doubleclick.net https://eu-us.consentmanager.net https://eu-us-cdn.consentmanager.net https://scripts.grow.me https://metrics.rapidedge.io https://va.vercel-scripts.com",
-  "script-src-attr 'none'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data: https://fonts.gstatic.com https:",
-  "connect-src 'self' https: https://*.supabase.co https://*.google-analytics.com https://www.googletagmanager.com https://*.google.com https://scripts.journeymv.com https://keywords.journeymv.com https://exchange.journeymv.com https://eu-us.consentmanager.net https://eu-us-cdn.consentmanager.net https://metrics.rapidedge.io https://*.axiom.co https://va.vercel-scripts.com https://vitals.vercel-insights.com",
-  "frame-src 'self' https: https://www.youtube.com https://www.youtube-nocookie.com https://*.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net",
-  "worker-src 'self' blob:",
-  "manifest-src 'self'",
-  "media-src 'self' data: blob: https:",
-  "upgrade-insecure-requests"
-];
-
-const developmentDirectives = [
-  "default-src 'self' http: https: data: blob:",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'self'",
-  "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https: blob:",
-  "script-src-attr 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob: http: https:",
-  "font-src 'self' data: https://fonts.gstatic.com http: https:",
-  "connect-src 'self' http: https: ws: wss:",
-  "frame-src 'self' http: https:",
-  "worker-src 'self' blob:",
-  "manifest-src 'self'",
-  "media-src 'self' data: blob: http: https:"
-];
-
-const contentSecurityPolicy = (isProduction ? productionDirectives : developmentDirectives).join("; ");
+const publicCsp = (isProduction ? publicProductionDirectives : developmentDirectives).join("; ");
+const secureCsp = (isProduction ? secureProductionDirectives : developmentDirectives).join("; ");
+if (cspMode !== "off" && (!publicCsp || !secureCsp)) {
+  throw new Error("CSP directives must not be empty.");
+}
 
 const nextConfig = {
   poweredByHeader: false,
   staticPageGenerationTimeout: 120,
   async headers() {
     return [
-      {
-        source: "/:path*",
-        headers: [
-          ...(isCspTemporarilyDisabled
-            ? []
-            : [{ key: "Content-Security-Policy", value: contentSecurityPolicy }]),
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" }
-        ]
-      },
       {
         source: "/_next/static/:path*",
         headers: [

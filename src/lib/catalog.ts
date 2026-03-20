@@ -59,24 +59,38 @@ function pickFirstByCodeOrder<T extends { code: string }>(rows: T[], codes: stri
   return rows[0] ?? null;
 }
 
-async function fetchCatalogContent(codes: string[]): Promise<CatalogPageContent | null> {
+async function fetchCatalogContent(
+  codes: string[],
+  options?: { includeUnpublished?: boolean }
+): Promise<CatalogPageContent | null> {
   if (!codes.length) return null;
+  const includeUnpublished = options?.includeUnpublished === true;
   const supabase = supabaseAdmin();
-  const { data, error } = await supabase
+  let viewQuery = supabase
     .from("catalog_pages_view")
     .select(CATALOG_SELECT_FIELDS_VIEW)
-    .in("code", codes)
-    .eq("is_published", true);
+    .in("code", codes);
+
+  if (!includeUnpublished) {
+    viewQuery = viewQuery.eq("is_published", true);
+  }
+
+  const { data, error } = await viewQuery;
 
   if (!error && data?.length) {
     return pickFirstByCodeOrder(data as CatalogPageContent[], codes);
   }
 
-  const { data: fallback, error: fallbackError } = await supabase
+  let fallbackQuery = supabase
     .from("catalog_pages")
     .select(CATALOG_SELECT_FIELDS_BASE)
-    .in("code", codes)
-    .eq("is_published", true);
+    .in("code", codes);
+
+  if (!includeUnpublished) {
+    fallbackQuery = fallbackQuery.eq("is_published", true);
+  }
+
+  const { data: fallback, error: fallbackError } = await fallbackQuery;
 
   if (fallbackError) {
     console.error("Error fetching catalog page content", fallbackError);
@@ -93,7 +107,25 @@ export async function getCatalogPageContentByCodes(codes: string[]): Promise<Cat
 
   const cachedCatalogContent = unstable_cache(
     async (requestedCodes: string[]) => fetchCatalogContent(requestedCodes),
-    ["catalog-page-content", ...normalizedCodes],
+    ["catalog-page-content-v4", ...normalizedCodes],
+    {
+      revalidate: CATALOG_REVALIDATE_SECONDS,
+      tags: buildCatalogTags(normalizedCodes)
+    }
+  );
+
+  return cachedCatalogContent(normalizedCodes);
+}
+
+export async function getCatalogPageContentByCodesIncludingDrafts(
+  codes: string[]
+): Promise<CatalogPageContent | null> {
+  const normalizedCodes = normalizeCatalogCodes(codes);
+  if (!normalizedCodes.length) return null;
+
+  const cachedCatalogContent = unstable_cache(
+    async (requestedCodes: string[]) => fetchCatalogContent(requestedCodes, { includeUnpublished: true }),
+    ["catalog-page-content-drafts-v2", ...normalizedCodes],
     {
       revalidate: CATALOG_REVALIDATE_SECONDS,
       tags: buildCatalogTags(normalizedCodes)

@@ -15,6 +15,7 @@ type Payload =
   | { type: "quiz"; slug: string };
 
 const MUSIC_CATALOG_CODES = new Set(["roblox-music-ids"]);
+const FREE_ITEMS_CATALOG_PREFIX = "roblox-free-items";
 const MUSIC_INDEXNOW_PATHS = [
   "/catalog",
   "/catalog/roblox-music-ids",
@@ -167,6 +168,22 @@ function revalidateForMusic() {
   revalidatePath("/sitemap.xml");
 }
 
+function isFreeItemsCatalogSlug(slug: string) {
+  return slug === FREE_ITEMS_CATALOG_PREFIX || slug.startsWith(`${FREE_ITEMS_CATALOG_PREFIX}/`);
+}
+
+function revalidateForFreeItems() {
+  revalidatePath("/catalog");
+  revalidatePath("/catalog/roblox-free-items");
+  revalidatePath("/catalog/roblox-free-items/page/[page]");
+  revalidatePath("/catalog/roblox-free-items/[category]");
+  revalidatePath("/catalog/roblox-free-items/[category]/page/[page]");
+  revalidatePath("/catalog/roblox-free-items/[category]/[subcategory]");
+  revalidatePath("/catalog/roblox-free-items/[category]/[subcategory]/page/[page]");
+  revalidatePath("/sitemap.xml");
+  revalidateTag("free-items-catalog", { expire: 0 });
+}
+
 export async function POST(request: Request) {
   const authError = assertSecret(request);
   if (authError) {
@@ -217,6 +234,9 @@ export async function POST(request: Request) {
     case "catalog":
       if (MUSIC_CATALOG_CODES.has(slug)) {
         revalidateForMusic();
+      }
+      if (isFreeItemsCatalogSlug(slug)) {
+        revalidateForFreeItems();
       }
       revalidateForCatalog(slug);
       break;

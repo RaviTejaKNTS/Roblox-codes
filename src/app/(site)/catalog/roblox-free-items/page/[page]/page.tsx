@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "@/styles/article-content.css";
-import { getCatalogPageContentByCodes } from "@/lib/catalog";
+import { getCatalogPageContentByCodesIncludingDrafts } from "@/lib/catalog";
 import { CATALOG_DESCRIPTION, SITE_NAME, SITE_URL, resolveSeoTitle, buildAlternates } from "@/lib/seo";
-import { BASE_PATH, loadFreeItemsPageData, renderRobloxFreeItemsPage } from "../../page-data";
+import { appendItemCountToSeoTitle, BASE_PATH, loadFreeItemsPageData, renderRobloxFreeItemsPage } from "../../page-data";
 import { buildPageParams } from "@/lib/static-params";
 
 export const revalidate = 2592000;
@@ -25,9 +25,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const pageNumber = Number.parseInt(page, 10);
   const safePageNumber = Number.isFinite(pageNumber) && pageNumber > 0 ? pageNumber : 1;
 
-  const catalog = await getCatalogPageContentByCodes(CATALOG_CODE_CANDIDATES);
+  const [{ total }, catalog] = await Promise.all([
+    loadFreeItemsPageData(safePageNumber),
+    getCatalogPageContentByCodesIncludingDrafts(CATALOG_CODE_CANDIDATES)
+  ]);
   const baseTitle = catalog?.title ?? "Roblox free items";
-  const title = `${resolveSeoTitle(catalog?.seo_title) ?? baseTitle} - Page ${safePageNumber}`;
+  const title = `${appendItemCountToSeoTitle(resolveSeoTitle(catalog?.seo_title) ?? baseTitle, total)} - Page ${safePageNumber}`;
   const description = catalog?.meta_description ?? CATALOG_DESCRIPTION;
   const image = catalog?.thumb_url || FALLBACK_IMAGE;
   const canonicalUrl = `${SITE_URL.replace(/\/$/, "")}${BASE_PATH}/page/${safePageNumber}`;
@@ -69,7 +72,7 @@ export default async function RobloxFreeItemsPaginatedPage({ params }: PageProps
 
   const [pageData, catalog] = await Promise.all([
     loadFreeItemsPageData(safePageNumber),
-    getCatalogPageContentByCodes(CATALOG_CODE_CANDIDATES)
+    getCatalogPageContentByCodesIncludingDrafts(CATALOG_CODE_CANDIDATES)
   ]);
   const { items, total, totalPages } = pageData;
 

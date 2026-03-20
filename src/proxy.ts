@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import legacySlugs from "@/data/slug_oldslugs.json";
+import { buildSecurityHeaders } from "@/lib/security/csp";
 
 const GDPR_COUNTRIES = new Set([
   "AT",
@@ -100,6 +101,14 @@ function applyConsentState(res: NextResponse, requiresConsent: boolean, attachSt
   return res;
 }
 
+function applySecurityHeaders(res: NextResponse, pathname: string) {
+  for (const { key, value } of buildSecurityHeaders(pathname)) {
+    res.headers.set(key, value);
+  }
+
+  return res;
+}
+
 function shouldAttachConsentState(pathname: string) {
   if (pathname === "/robots.txt") return false;
   if (pathname === "/sitemap.xml") return false;
@@ -195,14 +204,20 @@ export function proxy(req: NextRequest) {
     if (legacyPath) {
       redirectUrl.pathname = legacyPath;
     }
-    return applyConsentState(redirectWithStatus(redirectUrl, 301), requiresConsent, attachConsentState);
+    return applySecurityHeaders(
+      applyConsentState(redirectWithStatus(redirectUrl, 301), requiresConsent, attachConsentState),
+      redirectUrl.pathname
+    );
   }
 
   // Pass a header downstream so layouts can decide whether to show consent UI.
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set(CONSENT_HEADER, requiresConsent ? "1" : "0");
 
-  return applyConsentState(NextResponse.next({ request: { headers: requestHeaders } }), requiresConsent, attachConsentState);
+  return applySecurityHeaders(
+    applyConsentState(NextResponse.next({ request: { headers: requestHeaders } }), requiresConsent, attachConsentState),
+    url.pathname
+  );
 }
 
 export const config = {

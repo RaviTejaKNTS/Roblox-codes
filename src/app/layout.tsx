@@ -1,9 +1,7 @@
 import "./globals.css";
 import { ReactNode } from "react";
-import { GoogleAnalytics } from "@/components/GoogleAnalytics";
-import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { LayoutGlobalSearch } from "@/components/LayoutClient";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, organizationJsonLd, siteJsonLd } from "@/lib/seo";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { THEME_COOKIE } from "@/lib/theme";
 
 const themeScript = `(() => {
@@ -22,12 +20,6 @@ const themeScript = `(() => {
   }
 })();`;
 
-const structuredData = JSON.stringify({
-  "@context": "https://schema.org",
-  "@graph": [siteJsonLd({ siteUrl: SITE_URL }), organizationJsonLd({ siteUrl: SITE_URL })]
-});
-const googleAnalyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
-const isProduction = process.env.NODE_ENV === "production";
 const alternatesTypes = { "application/rss+xml": `${SITE_URL}/feed.xml` };
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -114,19 +106,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning className="dark" data-theme="dark">
       <body className="min-h-screen bg-background text-foreground transition-colors duration-300">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
-        {isProduction ? (
-          <script
-            type="text/javascript"
-            async={true}
-            data-noptimize="1"
-            data-cfasync="false"
-            src="https://scripts.scriptwrapper.com/tags/75d9ab7d-268c-4e03-bb6c-180ca4b8d5ed.js"
-          />
-        ) : null}
         <>
-          <GoogleAnalytics measurementId={googleAnalyticsId} />
-          <AnalyticsTracker />
           <LayoutGlobalSearch />
           {children}
         </>

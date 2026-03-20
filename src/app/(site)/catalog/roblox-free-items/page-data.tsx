@@ -3,7 +3,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CatalogAdSlot } from "@/components/CatalogAdSlot";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import type { CatalogPageContent } from "@/lib/catalog";
 import { getFreeItemCategories, getFreeItemSubcategories, listFreeItems, type FreeItem } from "@/lib/db";
+import { renderMarkdown } from "@/lib/markdown";
 import { breadcrumbJsonLd, SITE_URL, webPageJsonLd } from "@/lib/seo";
 import { Suspense } from "react";
 import { FreeItemsBrowser } from "./FreeItemsBrowser";
@@ -14,6 +16,10 @@ const PAGE_SIZE = 24;
 
 export const BASE_PATH = "/catalog/roblox-free-items";
 export const CANONICAL = `${SITE_URL.replace(/\/$/, "")}${BASE_PATH}`;
+
+export function buildFreeItemCategoryPath(categorySlug: string, subcategorySlug?: string): string {
+  return subcategorySlug ? `${BASE_PATH}/${categorySlug}/${subcategorySlug}` : `${BASE_PATH}/${categorySlug}`;
+}
 
 export type CatalogContentHtml = {
   id?: string | null;
@@ -29,6 +35,17 @@ export type CatalogContentHtml = {
 
 function renderCatalogNodes(html: string, keyPrefix: string): ReactNode[] {
   return renderHtmlAsReactNodes(processHtmlLinks(html).__html, { keyPrefix });
+}
+
+function sortDescriptionEntries(description: Record<string, string> | null | undefined) {
+  return Object.entries(description ?? {}).sort((a, b) => {
+    const left = Number.parseInt(a[0], 10);
+    const right = Number.parseInt(b[0], 10);
+    if (Number.isNaN(left) && Number.isNaN(right)) return a[0].localeCompare(b[0]);
+    if (Number.isNaN(left)) return 1;
+    if (Number.isNaN(right)) return -1;
+    return left - right;
+  });
 }
 
 type PageData = {
@@ -54,29 +71,12 @@ export type BreadcrumbItem = {
   href?: string | null;
 };
 
-export type FreeItemsNavKey = "all" | "categories";
-
 type FreeItemsPageFilters = {
   category?: string;
   subcategory?: string;
   search?: string;
-  sort?: "newest" | "popular" | "updated";
+  sort?: "featured" | "newest" | "popular" | "updated";
 };
-
-const FREE_ITEMS_NAV_ITEMS: Array<{ id: FreeItemsNavKey; title: string; description: string; href: string }> = [
-  {
-    id: "all",
-    title: "All Free Items",
-    description: "Every free Roblox catalog item we track.",
-    href: BASE_PATH
-  },
-  {
-    id: "categories",
-    title: "Categories",
-    description: "Browse free items by category and subcategory.",
-    href: `${BASE_PATH}/categories`
-  }
-];
 
 function normalizeKey(value: string): string {
   return value
@@ -91,16 +91,81 @@ function slugify(value: string): string {
   return normalized.replace(/\s+/g, "-");
 }
 
-function buildThumbnailUrl(assetId: number): string {
-  return `https://www.roblox.com/asset-thumbnail/image?assetId=${assetId}&width=420&height=420&format=png`;
-}
+function buildRobloxUrl(item: Pick<FreeItem, "asset_id" | "item_type" | "roblox_url">): string {
+  if (item.roblox_url) {
+    return item.roblox_url;
+  }
 
-function buildRobloxUrl(assetId: number): string {
-  return `https://www.roblox.com/catalog/${assetId}`;
+  if (item.item_type === "Bundle") {
+    return `https://www.roblox.com/bundles/${Math.abs(Math.trunc(item.asset_id))}`;
+  }
+
+  return `https://www.roblox.com/catalog/${item.asset_id}`;
 }
 
 function formatCount(value: number): string {
   return value.toLocaleString("en-US");
+}
+
+export function appendItemCountToSeoTitle(title: string, count: number): string {
+  return `${title} (${formatCount(count)} items)`;
+}
+
+export function resolveFreeItemsDescription(
+  description: string | null | undefined,
+  fallback: string
+): string {
+  const trimmed = description?.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+
+  if (/^draft page for\b/i.test(trimmed)) {
+    return fallback;
+  }
+
+  return trimmed;
+}
+
+export async function buildFreeItemsCatalogContentHtml(
+  catalog: CatalogPageContent | null
+): Promise<CatalogContentHtml | null> {
+  if (!catalog) {
+    return null;
+  }
+
+  const introHtml = catalog.intro_md ? await renderMarkdown(catalog.intro_md, { paragraphizeLineBreaks: true }) : "";
+  const howHtml = catalog.how_it_works_md
+    ? await renderMarkdown(catalog.how_it_works_md, { paragraphizeLineBreaks: true })
+    : "";
+
+  const descriptionEntries = sortDescriptionEntries(catalog.description_json ?? {});
+  const descriptionHtml = await Promise.all(
+    descriptionEntries.map(async ([key, value]) => ({
+      key,
+      html: await renderMarkdown(value ?? "", { paragraphizeLineBreaks: true })
+    }))
+  );
+
+  const faqEntries = Array.isArray(catalog.faq_json) ? catalog.faq_json : [];
+  const faqHtml = await Promise.all(
+    faqEntries.map(async (entry) => ({
+      q: entry.q,
+      a: await renderMarkdown(entry.a ?? "", { paragraphizeLineBreaks: true })
+    }))
+  );
+
+  return {
+    id: catalog.id ?? null,
+    title: catalog.title ?? null,
+    introHtml,
+    howHtml,
+    descriptionHtml,
+    faqHtml,
+    updatedAt: catalog.content_updated_at ?? catalog.updated_at ?? catalog.published_at ?? catalog.created_at ?? null,
+    ctaLabel: catalog.cta_label ?? null,
+    ctaUrl: catalog.cta_url ?? null
+  };
 }
 
 export async function loadFreeItemsPageData(
@@ -159,10 +224,27 @@ export async function loadFreeItemSubcategoryBySlug(
   return subcategories.find((entry) => entry.slug === slug) ?? null;
 }
 
-export function FreeItemsNav({ active }: { active: FreeItemsNavKey }) {
+export function FreeItemsNav({ active, categories }: { active: string; categories: CategoryOption[] }) {
+  const navItems = [
+    {
+      id: "all",
+      title: "All Free Items",
+      description: "Every free Roblox catalog item we track.",
+      href: BASE_PATH,
+      count: null
+    },
+    ...categories.map((category) => ({
+      id: category.slug,
+      title: category.label,
+      description: `${formatCount(category.count)} items`,
+      href: buildFreeItemCategoryPath(category.slug),
+      count: category.count
+    }))
+  ];
+
   return (
-    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {FREE_ITEMS_NAV_ITEMS.map((item) => {
+    <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      {navItems.map((item) => {
         const isActive = item.id === active;
         const cardClasses = `group relative overflow-hidden rounded-2xl border px-5 py-4 transition ${
           isActive
@@ -245,16 +327,28 @@ export function buildFreeItemsItemListSchema({
   total: number;
   startIndex: number;
 }) {
-  const itemListElement = items.map((item, index) => ({
-    "@type": "ListItem",
-    position: startIndex + index + 1,
-    item: {
+  const itemListElement = items.map((item, index) => {
+    const schemaItem: {
+      "@type": "Thing";
+      name: string;
+      url: string;
+      image?: string;
+    } = {
       "@type": "Thing",
       name: item.name ?? `Roblox item ${item.asset_id}`,
-      url: buildRobloxUrl(item.asset_id),
-      image: buildThumbnailUrl(item.asset_id)
+      url: buildRobloxUrl(item)
+    };
+
+    if (item.thumbnail_url) {
+      schemaItem.image = item.thumbnail_url;
     }
-  }));
+
+    return {
+      "@type": "ListItem",
+      position: startIndex + index + 1,
+      item: schemaItem
+    };
+  });
 
   return JSON.stringify({
     "@context": "https://schema.org",
@@ -315,7 +409,7 @@ export function buildCategoryCards(categories: CategoryOption[]) {
       {categories.map((category) => (
         <Link
           key={category.slug}
-          href={`${BASE_PATH}/categories/${category.slug}`}
+          href={buildFreeItemCategoryPath(category.slug)}
           className="group block h-full"
         >
           <article className="relative h-full overflow-hidden rounded-2xl border border-border/60 bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-accent/70">
@@ -338,7 +432,7 @@ export function buildCategoryCards(categories: CategoryOption[]) {
   );
 }
 
-export function renderRobloxFreeItemsPage({
+export async function renderRobloxFreeItemsPage({
   items,
   total,
   totalPages,
@@ -365,12 +459,13 @@ export function renderRobloxFreeItemsPage({
   description: string;
   breadcrumbItems: BreadcrumbItem[];
   basePath?: string;
-  navActive?: FreeItemsNavKey;
+  navActive?: string;
   categorySlug?: string;
   categoryLabel?: string;
   subcategories?: SubcategoryOption[];
   activeSubcategorySlug?: string;
 }) {
+  const navCategories = await loadFreeItemCategories();
   const introHtml = contentHtml?.introHtml?.trim() ? contentHtml.introHtml : "";
   const descriptionHtml = contentHtml?.descriptionHtml ?? [];
   const howHtml = contentHtml?.howHtml?.trim() ? contentHtml.howHtml : "";
@@ -431,19 +526,12 @@ export function renderRobloxFreeItemsPage({
         <header className="space-y-4">
           <FreeItemsBreadcrumb items={breadcrumbItems} />
           <h1 className="text-4xl font-semibold leading-tight text-foreground md:text-5xl">{pageTitle}</h1>
-          <p className="max-w-2xl text-base text-muted md:text-lg">{description}</p>
           {formattedUpdated ? (
             <p className="text-sm text-foreground/80">
               Updated on <span className="font-semibold text-foreground">{formattedUpdated}</span>
               {updatedRelativeLabel ? <span>{' '}({updatedRelativeLabel})</span> : null}
             </p>
           ) : null}
-          <div className="flex flex-wrap items-center gap-4 text-xs text-muted md:text-sm">
-            <span className="rounded-full bg-accent/10 px-4 py-1 font-semibold uppercase tracking-wide text-accent">
-              {formatCount(total)} free items
-            </span>
-            <span className="rounded-full bg-surface-muted px-4 py-1 font-semibold text-muted">24 per page</span>
-          </div>
         </header>
       ) : (
         <header className="space-y-2">
@@ -460,12 +548,12 @@ export function renderRobloxFreeItemsPage({
 
         <CatalogAdSlot />
 
-        <FreeItemsNav active={navActive} />
+        <FreeItemsNav active={navActive} categories={navCategories} />
 
         {subcategories?.length && categorySlug ? (
           <section className="flex flex-wrap gap-2">
             <Link
-              href={`${BASE_PATH}/categories/${categorySlug}`}
+              href={buildFreeItemCategoryPath(categorySlug)}
               className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
                 activeSubcategorySlug
                   ? "border-border/70 bg-background/70 text-muted hover:border-accent/70 hover:text-accent"
@@ -479,7 +567,7 @@ export function renderRobloxFreeItemsPage({
               return (
                 <Link
                   key={subcategory.slug}
-                  href={`${BASE_PATH}/categories/${categorySlug}/${subcategory.slug}`}
+                  href={buildFreeItemCategoryPath(categorySlug, subcategory.slug)}
                   className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
                     isActive
                       ? "border-accent/70 bg-accent/10 text-accent"
@@ -570,4 +658,4 @@ export function renderRobloxFreeItemsPage({
   );
 }
 
-export { buildThumbnailUrl, buildRobloxUrl };
+export { buildRobloxUrl };

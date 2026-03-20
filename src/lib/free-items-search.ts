@@ -1,4 +1,4 @@
-export type FreeItemsSortKey = "newest" | "popular" | "updated";
+export type FreeItemsSortKey = "featured" | "newest" | "popular" | "updated";
 
 export type FreeItemsSortOption = {
   value: FreeItemsSortKey;
@@ -10,11 +10,12 @@ export type FreeItemsSearchState = {
   sort: FreeItemsSortKey;
 };
 
-export const DEFAULT_SORT: FreeItemsSortKey = "popular";
+export const DEFAULT_SORT: FreeItemsSortKey = "featured";
 
 export const SORT_OPTIONS: FreeItemsSortOption[] = [
-  { value: "newest", label: "Newest first" },
+  { value: "featured", label: "Recommended mix" },
   { value: "popular", label: "Most favorited" },
+  { value: "newest", label: "Newest first" },
   { value: "updated", label: "Recently updated" }
 ];
 

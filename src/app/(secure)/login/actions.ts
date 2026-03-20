@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revokeCurrentAppSession } from "@/lib/auth/app-session";
+
 const AUTH_PATH = "/login";
 
 function buildRedirect(status: "success" | "error", message: string, nextPath?: string) {

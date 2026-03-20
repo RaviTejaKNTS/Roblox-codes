@@ -15,6 +15,7 @@ import {
 
 type FreeItem = {
   asset_id: number;
+  item_type: string;
   name: string;
   description: string | null;
   category: string;
@@ -27,6 +28,8 @@ type FreeItem = {
   asset_type_id: number | null;
   last_seen_at: string;
   created_at: string;
+  roblox_url: string;
+  thumbnail_url: string | null;
 };
 
 type ApiResponse = {
@@ -67,6 +70,10 @@ export function FreeItemsBrowser({
   const urlSort = normalizeSortKey(searchParams.get("sort"));
   const searchQueryString = buildSearchQueryString({ query: urlQuery, sort: urlSort });
   const hasFilters = urlQuery.length > 0 || urlSort !== DEFAULT_SORT;
+  const missingInitialThumbnails = initialItems.some((item) => !item.thumbnail_url);
+  const hasInvalidBundleUrls = initialItems.some(
+    (item) => item.item_type === "Bundle" && (!item.roblox_url || !item.roblox_url.includes("/bundles/"))
+  );
 
   useEffect(() => {
     setQueryInput(urlQuery);
@@ -74,7 +81,7 @@ export function FreeItemsBrowser({
   }, [urlQuery, urlSort]);
 
   useEffect(() => {
-    const shouldFetch = hasFetchedRef.current || hasFilters;
+    const shouldFetch = hasFetchedRef.current || hasFilters || missingInitialThumbnails || hasInvalidBundleUrls;
     if (!shouldFetch) {
       setItems(initialItems);
       setTotalPages(initialTotalPages);
@@ -120,7 +127,18 @@ export function FreeItemsBrowser({
       });
 
     return () => controller.abort();
-  }, [category, currentPage, hasFilters, initialItems, initialTotalPages, subcategory, urlQuery, urlSort]);
+  }, [
+    category,
+    currentPage,
+    hasFilters,
+    hasInvalidBundleUrls,
+    initialItems,
+    initialTotalPages,
+    missingInitialThumbnails,
+    subcategory,
+    urlQuery,
+    urlSort
+  ]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -198,7 +216,7 @@ export function FreeItemsBrowser({
           No free items match those filters right now.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((item) => (
             <RobloxCatalogItemCard key={item.asset_id} item={item} />
           ))}
