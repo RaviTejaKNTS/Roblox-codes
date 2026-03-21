@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { formatDistanceToNow } from "date-fns";
 import { CatalogCard } from "@/components/CatalogCard";
 import { CATALOG_DESCRIPTION, SITE_NAME, SITE_URL, buildAlternates } from "@/lib/seo";
-import { supabaseAdmin } from "@/lib/supabase";
-import { loadAdminCommandSummary } from "@/lib/admin-commands";
+import { listPublishedTopLevelCatalogPages } from "@/lib/catalog";
 
 export const revalidate = 3600;
 
@@ -25,23 +24,7 @@ export const metadata: Metadata = {
   }
 };
 
-type CatalogStats = {
-  count: number | null;
-  updatedAt: string | null;
-};
-
-type CatalogEntry = {
-  id: string;
-  href: string;
-  title: string;
-  description: string;
-  category: string;
-  metricLabel: string;
-  tileLabel?: string | null;
-  coverImage?: string | null;
-  tone?: "indigo" | "emerald" | "amber";
-  loadStats: () => Promise<CatalogStats>;
-};
+const CATALOG_CARD_TONES = ["indigo", "amber", "emerald"] as const;
 
 function parseDate(value: string | null): number | null {
   if (!value) return null;
@@ -69,107 +52,30 @@ function formatUpdatedLabel(value: string | null) {
   }
 }
 
-async function loadMusicIdsStats(): Promise<CatalogStats> {
-  try {
-    const sb = supabaseAdmin();
-    const { data, error, count } = await sb
-      .from("roblox_music_ids")
-      .select("asset_id, last_seen_at", { count: "exact" })
-      .order("last_seen_at", { ascending: false, nullsFirst: false })
-      .range(0, 0);
-
-    if (error) {
-      console.error("Failed to load Roblox music IDs stats", error);
-      return { count: 0, updatedAt: null };
-    }
-
-    const updatedAt = data?.[0]?.last_seen_at ?? null;
-    return {
-      count: count ?? data?.length ?? 0,
-      updatedAt
-    };
-  } catch (error) {
-    console.error("Failed to load Roblox music IDs stats", error);
-    return { count: 0, updatedAt: null };
-  }
+function summarizeCatalogDescription(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : "Open this Roblox catalog hub for the latest published content.";
 }
-
-async function loadAdminCommandsStats(): Promise<CatalogStats> {
-  try {
-    const summary = await loadAdminCommandSummary();
-    return {
-      count: summary.totalCommands,
-      updatedAt: summary.latestUpdatedOn
-    };
-  } catch (error) {
-    console.error("Failed to load admin commands stats", error);
-    return { count: 0, updatedAt: null };
-  }
-}
-
-async function loadColorCodesStats(): Promise<CatalogStats> {
-  try {
-    const { loadRobloxColorCodesPageData } = await import("./roblox-color-codes/page-data");
-    const data = await loadRobloxColorCodesPageData();
-    return {
-      count: data.items.length,
-      updatedAt: data.meta.updatedAt ?? null
-    };
-  } catch (error) {
-    console.error("Failed to load Roblox color codes stats", error);
-    return { count: 0, updatedAt: null };
-  }
-}
-
-const CATALOG_ENTRIES: CatalogEntry[] = [
-  {
-    id: "music-ids",
-    href: "/catalog/roblox-music-ids",
-    title: "Roblox music IDs",
-    description: "Search Roblox music IDs with album art, artists, genres, and direct play links.",
-    category: "Audio",
-    metricLabel: "music IDs",
-    tileLabel: "IDs",
-    tone: "indigo",
-    loadStats: loadMusicIdsStats
-  },
-  {
-    id: "color-codes",
-    href: "/catalog/roblox-color-codes",
-    title: "Roblox color codes",
-    description: "Browse every official Roblox BrickColor with copyable names, numbers, RGB values, and hex codes.",
-    category: "Design",
-    metricLabel: "color codes",
-    tileLabel: "Color",
-    tone: "amber",
-    loadStats: loadColorCodesStats
-  },
-  {
-    id: "admin-commands",
-    href: "/catalog/admin-commands",
-    title: "Roblox admin commands",
-    description: "Compare popular admin systems and browse full Roblox command lists.",
-    category: "Moderation",
-    metricLabel: "command entries",
-    tileLabel: "Admin",
-    tone: "emerald",
-    loadStats: loadAdminCommandsStats
-  }
-];
 
 async function buildCatalogCards() {
-  const results = await Promise.all(
-    CATALOG_ENTRIES.map(async (entry) => {
-      const { loadStats, ...cardBase } = entry;
-      const stats = await loadStats();
-      return {
-        ...cardBase,
-        metricValue: stats.count ?? 0,
-        updatedLabel: formatUpdatedLabel(stats.updatedAt),
-        updatedAt: stats.updatedAt
-      };
-    })
-  );
+  const pages = await listPublishedTopLevelCatalogPages();
+  const results = pages.map((entry, index) => {
+    const updatedAt = entry.content_updated_at ?? entry.updated_at ?? entry.published_at ?? entry.created_at ?? null;
+    return {
+      id: entry.code,
+      href: `/catalog/${entry.code}`,
+      title: entry.title,
+      description: summarizeCatalogDescription(entry.meta_description),
+      category: "Catalog",
+      metricLabel: null,
+      metricValue: null,
+      tileLabel: entry.title,
+      coverImage: entry.thumb_url ?? null,
+      tone: CATALOG_CARD_TONES[index % CATALOG_CARD_TONES.length],
+      updatedLabel: formatUpdatedLabel(updatedAt),
+      updatedAt
+    };
+  });
 
   const latestUpdated = latestTimestamp(results.map((entry) => parseDate(entry.updatedAt)));
   return {

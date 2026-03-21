@@ -30,6 +30,11 @@ export type CatalogListEntry = Pick<
   "id" | "code" | "title" | "meta_description" | "thumb_url" | "universe_id" | "published_at" | "created_at" | "updated_at" | "content_updated_at"
 >;
 
+export type CatalogIndexEntry = Pick<
+  CatalogPageContent,
+  "id" | "code" | "title" | "meta_description" | "intro_md" | "thumb_url" | "published_at" | "created_at" | "updated_at" | "content_updated_at"
+>;
+
 const CATALOG_SELECT_FIELDS_VIEW =
   "id, universe_id, code, title, seo_title, meta_description, intro_md, how_it_works_md, description_json, faq_json, cta_label, cta_url, schema_ld_json, thumb_url, is_published, published_at, created_at, updated_at, content_updated_at";
 const CATALOG_SELECT_FIELDS_BASE =
@@ -49,6 +54,17 @@ function normalizeCatalogCodes(codes: string[]): string[] {
 function buildCatalogTags(codes: string[]): string[] {
   const normalized = Array.from(new Set(codes.map((code) => code.toLowerCase())));
   return ["catalog-index", ...normalized.map((code) => `catalog:${code}`)];
+}
+
+function getCatalogIndexEntryTimestamp(entry: CatalogIndexEntry): number {
+  const candidate = entry.content_updated_at ?? entry.updated_at ?? entry.published_at ?? entry.created_at ?? null;
+  if (!candidate) return 0;
+  const timestamp = Date.parse(candidate);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function sortCatalogIndexEntries(entries: CatalogIndexEntry[]): CatalogIndexEntry[] {
+  return [...entries].sort((a, b) => getCatalogIndexEntryTimestamp(b) - getCatalogIndexEntryTimestamp(a));
 }
 
 function pickFirstByCodeOrder<T extends { code: string }>(rows: T[], codes: string[]): T | null {
@@ -151,6 +167,55 @@ export async function listPublishedCatalogCodes(): Promise<string[]> {
         .filter((code): code is string => typeof code === "string" && code.length > 0);
     },
     ["listPublishedCatalogCodes"],
+    {
+      revalidate: CATALOG_REVALIDATE_SECONDS,
+      tags: ["catalog-index"]
+    }
+  );
+
+  return cached();
+}
+
+export async function listPublishedTopLevelCatalogPages(): Promise<CatalogIndexEntry[]> {
+  const cached = unstable_cache(
+    async () => {
+      const supabase = supabaseAdmin();
+      const { data, error } = await supabase
+        .from("catalog_pages_view")
+        .select("id, code, title, meta_description, intro_md, thumb_url, published_at, created_at, updated_at, content_updated_at")
+        .eq("is_published", true)
+        .order("content_updated_at", { ascending: false });
+
+      if (!error && data) {
+        return sortCatalogIndexEntries(
+          ((data ?? [])
+          .filter((row) => {
+            const code = (row as { code?: string | null }).code;
+            return typeof code === "string" && code.length > 0 && !code.includes("/");
+          }) as CatalogIndexEntry[])
+        );
+      }
+
+      const { data: fallback, error: fallbackError } = await supabase
+        .from("catalog_pages")
+        .select("id, code, title, meta_description, intro_md, thumb_url, published_at, created_at, updated_at")
+        .eq("is_published", true)
+        .order("updated_at", { ascending: false });
+
+      if (fallbackError) {
+        console.error("Error fetching top-level catalog pages", fallbackError);
+        return [];
+      }
+
+      return sortCatalogIndexEntries(
+        ((fallback ?? [])
+        .filter((row) => {
+          const code = (row as { code?: string | null }).code;
+          return typeof code === "string" && code.length > 0 && !code.includes("/");
+        }) as CatalogIndexEntry[])
+      );
+    },
+    ["listPublishedTopLevelCatalogPages"],
     {
       revalidate: CATALOG_REVALIDATE_SECONDS,
       tags: ["catalog-index"]

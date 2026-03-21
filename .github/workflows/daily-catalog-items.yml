@@ -1,0 +1,45 @@
+name: Daily Roblox Catalog Collection
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * *"
+
+concurrency:
+  group: daily-catalog-items
+  cancel-in-progress: false
+
+jobs:
+  collect-catalog-items:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+      ROBLOX_CATALOG_LOG_LEVEL: info
+      ROBLOX_CATALOG_ENQUEUE_REFRESH: "true"
+      ROBLOX_CATALOG_SYNC_TAXONOMY: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Collect accessory items
+        run: npm run collect:accessory-items
+
+      - name: Collect body items
+        run: npm run collect:body-items
+
+      - name: Collect clothing items
+        run: npm run collect:clothing-items
+
+      - name: Collect avatar animation items
+        run: npm run collect:avatar-animation-items

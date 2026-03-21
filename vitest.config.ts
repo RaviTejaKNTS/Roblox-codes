@@ -9,9 +9,6 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: [
-      "src/lib/forge/__tests__/**/*.test.ts",
-      "src/lib/security/__tests__/**/*.test.ts"
-    ]
+    include: ["src/lib/**/__tests__/**/*.test.ts"]
   }
 });

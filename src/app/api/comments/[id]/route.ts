@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session-user";
 import { supabaseAdmin } from "@/lib/supabase";
+import { moderateCommentBody } from "@/lib/comment-moderation";
 import { getCommentsTag, toCommentEntry, type CommentRow } from "@/lib/comments";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { getRequestIp, isTrustedMutationOrigin } from "@/lib/security/request";
@@ -15,85 +16,8 @@ const COMMENT_EDIT_RATE_LIMIT = {
   windowMs: 10 * 60 * 1000
 };
 
-type ModerationResult = {
-  flagged?: boolean;
-  categories?: Record<string, boolean>;
-  category_scores?: Record<string, number>;
-};
-
-type ModerationResponse = {
-  results?: ModerationResult[];
-};
-
-const CATEGORY_SCORE_THRESHOLDS: Record<string, number> = {
-  sexual: 0.2,
-  "sexual/minors": 0.01,
-  harassment: 0.5,
-  "harassment/threatening": 0.2,
-  hate: 0.5,
-  "hate/threatening": 0.2,
-  violence: 0.5,
-  "violence/graphic": 0.2,
-  "self-harm": 0.5,
-  "self-harm/intent": 0.2,
-  "self-harm/instructions": 0.2,
-  illicit: 0.5,
-  "illicit/violent": 0.2
-};
-
 function normalizeString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function isCategoryHit(categories?: Record<string, boolean>): boolean {
-  if (!categories) return false;
-  return Object.values(categories).some(Boolean);
-}
-
-function isScoreHit(scores?: Record<string, number>): boolean {
-  if (!scores) return false;
-  for (const [key, threshold] of Object.entries(CATEGORY_SCORE_THRESHOLDS)) {
-    const score = scores[key];
-    if (typeof score === "number" && score >= threshold) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function shouldApproveComment(moderation: ModerationResponse | null): boolean {
-  if (!moderation) return false;
-  const result = moderation.results?.[0];
-  if (!result) return false;
-  const flagged = result.flagged === true;
-  const categoryHit = isCategoryHit(result.categories);
-  const scoreHit = isScoreHit(result.category_scores);
-  return !(flagged || categoryHit || scoreHit);
-}
-
-async function runModeration(input: string): Promise<ModerationResponse | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
-
-  const model = process.env.OPENAI_MODERATION_MODEL ?? "omni-moderation-latest";
-  const res = await fetch("https://api.openai.com/v1/moderations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ model, input })
-  });
-
-  if (!res.ok) {
-    const message = await res.text().catch(() => "");
-    console.error("Moderation request failed", { status: res.status, message });
-    return null;
-  }
-
-  return (await res.json()) as ModerationResponse;
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -138,12 +62,28 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     const admin = supabaseAdmin();
+    const { data: existingRow } = await admin
+      .from("comments")
+      .select("id, entity_type, entity_id")
+      .eq("id", id)
+      .eq("author_id", sessionUser.id)
+      .maybeSingle();
+
+    if (!existingRow) {
+      return NextResponse.json({ error: "Unable to update comment." }, { status: 403 });
+    }
+
+    const moderationDecision = await moderateCommentBody(body);
+    if (!moderationDecision.approved) {
+      return NextResponse.json({ error: "Comment update did not pass moderation." }, { status: 400 });
+    }
+
     const { data: updatedRow, error: updateError } = await admin
       .from("comments")
       .update({
         body_md: body,
-        status: "pending",
-        moderation: null
+        status: "approved",
+        moderation: moderationDecision.moderation
       })
       .eq("id", id)
       .eq("author_id", sessionUser.id)
@@ -153,13 +93,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (updateError || !updatedRow) {
       return NextResponse.json({ error: "Unable to update comment." }, { status: 403 });
     }
-
-    const moderation = await runModeration(body);
-    const moderationPayload = moderation ?? { error: "unavailable" };
-    const approved = shouldApproveComment(moderation);
-    const nextStatus = approved ? "approved" : "pending";
-
-    await admin.from("comments").update({ status: nextStatus, moderation: moderationPayload }).eq("id", id);
 
     const { data: commentRow, error: commentError } = await admin
       .from("comments")

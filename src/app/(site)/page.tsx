@@ -9,7 +9,7 @@ import {
 } from "@/lib/db";
 import { listPublishedTools } from "@/lib/tools";
 import { CHECKLISTS_DESCRIPTION, SITE_DESCRIPTION, SITE_NAME, SITE_URL, buildAlternates } from "@/lib/seo";
-import { supabaseAdmin } from "@/lib/supabase";
+import { listPublishedTopLevelCatalogPages } from "@/lib/catalog";
 import { GameCard } from "@/components/GameCard";
 import { ArticleCard } from "@/components/ArticleCard";
 import { ChecklistCard } from "@/components/ChecklistCard";
@@ -26,6 +26,7 @@ const INITIAL_LISTS = 6;
 const INITIAL_TOOLS = 6;
 const INITIAL_EVENTS = 3;
 const INITIAL_CATALOGS = 3;
+const CATALOG_CARD_TONES = ["indigo", "amber", "emerald"] as const;
 
 export const revalidate = 21600; // 6 hours
 
@@ -109,39 +110,15 @@ function summarize(descriptionMd: string | null | undefined, fallback: string): 
   return `${lastSpace > 120 ? slice.slice(0, lastSpace) : slice}…`;
 }
 
-async function loadMusicIdsStats() {
-  try {
-    const sb = supabaseAdmin();
-    const { data, error, count } = await sb
-      .from("roblox_music_ids")
-      .select("asset_id, last_seen_at", { count: "exact" })
-      .order("last_seen_at", { ascending: false, nullsFirst: false })
-      .range(0, 0);
-
-    if (error) {
-      console.error("Failed to load Roblox music IDs stats", error);
-      return { count: 0, updatedAt: null };
-    }
-
-    return {
-      count: count ?? data?.length ?? 0,
-      updatedAt: data?.[0]?.last_seen_at ?? null
-    };
-  } catch (error) {
-    console.error("Failed to load Roblox music IDs stats", error);
-    return { count: 0, updatedAt: null };
-  }
-}
-
 export default async function HomePage() {
-  const [games, articles, checklistRows, lists, tools, eventsPayload, musicStats] = await Promise.all([
+  const [games, articles, checklistRows, lists, tools, eventsPayload, catalogPages] = await Promise.all([
     listGamesWithActiveCounts(),
     listPublishedArticles(12),
     listPublishedChecklists(INITIAL_CHECKLISTS * 2),
     listPublishedGameLists(),
     listPublishedTools(),
     buildEventsCards(INITIAL_EVENTS),
-    loadMusicIdsStats()
+    listPublishedTopLevelCatalogPages()
   ]);
 
   const sortedGames = [...games].sort((a, b) => {
@@ -210,19 +187,22 @@ export default async function HomePage() {
   const toolCards = tools.slice(0, INITIAL_TOOLS);
   const articleCards = articles.slice(0, INITIAL_ARTICLES);
   const eventsCards = eventsPayload.cards.slice(0, INITIAL_EVENTS);
-  const catalogCards = [
-    {
-      id: "music-ids",
-      href: "/catalog/roblox-music-ids",
-      title: "Roblox music IDs",
-      description: "Search Roblox music IDs with album art, artists, genres, and direct play links.",
-      category: "Audio",
-      metricLabel: "music IDs",
-      metricValue: musicStats.count ?? 0,
-      tileLabel: "IDs",
-      tone: "indigo" as const
-    }
-  ].slice(0, INITIAL_CATALOGS);
+  const catalogCards = catalogPages.slice(0, INITIAL_CATALOGS).map((page, index) => {
+    const updatedAt = page.content_updated_at ?? page.updated_at ?? page.published_at ?? page.created_at ?? null;
+    return {
+      id: page.code,
+      href: `/catalog/${page.code}`,
+      title: page.title,
+      description: summarize(page.meta_description, "Open this Roblox catalog hub for the latest published content."),
+      category: "Catalog",
+      metricLabel: null,
+      metricValue: null,
+      updatedLabel: updatedAt ? formatDistanceToNow(new Date(updatedAt), { addSuffix: true }) : null,
+      coverImage: page.thumb_url ?? null,
+      tileLabel: page.title,
+      tone: CATALOG_CARD_TONES[index % CATALOG_CARD_TONES.length]
+    };
+  });
 
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",

@@ -32,8 +32,8 @@ type CatalogCardProps = {
   title: string;
   description: string;
   category: string;
-  metricLabel: string;
-  metricValue: number | null;
+  metricLabel?: string | null;
+  metricValue?: number | null;
   updatedLabel?: string | null;
   coverImage?: string | null;
   tileLabel?: string | null;
@@ -46,7 +46,7 @@ function normalizeImageUrl(value: string | null | undefined): string | null {
   return value.startsWith("/") ? value : `/${value}`;
 }
 
-function formatMetricValue(value: number | null) {
+function formatMetricValue(value: number | null | undefined) {
   if (typeof value !== "number") return "--";
   return value.toLocaleString("en-US");
 }
@@ -67,6 +67,7 @@ export function CatalogCard({
   const normalizedCover = normalizeImageUrl(coverImage);
   const tileText = (tileLabel ?? category).slice(0, 10);
   const formattedValue = formatMetricValue(metricValue);
+  const showMetric = typeof metricValue === "number" && typeof metricLabel === "string" && metricLabel.trim().length > 0;
 
   return (
     <Link href={href} className="group block h-full">
@@ -104,15 +105,22 @@ export function CatalogCard({
             </div>
           </div>
 
-          <div className={`flex flex-wrap items-end justify-between gap-4 rounded-2xl border ${toneStyles.ring} bg-background/60 px-4 py-3`}>
-            <div className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">Catalog size</p>
-              <p className="text-3xl font-semibold text-foreground">{formattedValue}</p>
+          {showMetric ? (
+            <div className={`flex flex-wrap items-end justify-between gap-4 rounded-2xl border ${toneStyles.ring} bg-background/60 px-4 py-3`}>
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">Catalog size</p>
+                <p className="text-3xl font-semibold text-foreground">{formattedValue}</p>
+              </div>
+              <div className="text-right">
+                <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${toneStyles.text}`}>{metricLabel}</p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${toneStyles.text}`}>{metricLabel}</p>
+          ) : updatedLabel ? (
+            <div className={`flex items-center gap-2 rounded-2xl border ${toneStyles.ring} bg-background/60 px-4 py-3 text-sm text-muted`}>
+              <span className={`h-2 w-2 rounded-full ${toneStyles.dot}`} aria-hidden />
+              <span>Updated {updatedLabel}</span>
             </div>
-          </div>
+          ) : null}
         </div>
       </article>
     </Link>
