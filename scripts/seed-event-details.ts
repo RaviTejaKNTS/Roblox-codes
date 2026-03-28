@@ -4,12 +4,13 @@ import OpenAI from "openai";
 
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { revalidateEventsByUniverseIds } from "./lib/revalidate-events";
+import { tavilySearch } from "./lib/tavily";
 
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 
-if (!PERPLEXITY_API_KEY) {
-  throw new Error("Missing PERPLEXITY_API_KEY.");
+if (!TAVILY_API_KEY) {
+  throw new Error("Missing TAVILY_API_KEY.");
 }
 
 if (!OPENAI_KEY) {
@@ -20,8 +21,26 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE) {
   throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE.");
 }
 
-const perplexity = new OpenAI({ apiKey: PERPLEXITY_API_KEY, baseURL: "https://api.perplexity.ai" });
 const openai = new OpenAI({ apiKey: OPENAI_KEY });
+
+async function requestModelText(params: {
+  system: string;
+  prompt: string;
+  maxTokens: number;
+  temperature?: number;
+}): Promise<string> {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    temperature: params.temperature ?? 0.2,
+    max_tokens: params.maxTokens,
+    messages: [
+      { role: "system", content: params.system },
+      { role: "user", content: params.prompt }
+    ]
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? "";
+}
 
 const PAGE_BATCH = Number(process.env.EVENT_DETAILS_PAGE_BATCH ?? "1000");
 const EVENT_BATCH = Number(process.env.EVENT_DETAILS_EVENT_BATCH ?? "200");
@@ -271,28 +290,43 @@ async function pickNextEvent(force: boolean): Promise<EventRow | null> {
   return candidate;
 }
 
-async function sonarResearchNotes(gameName: string, eventName: string, startLabel: string): Promise<string> {
+async function buildResearchNotes(gameName: string, eventName: string, startLabel: string): Promise<string> {
+  const search = await tavilySearch(`${eventName} ${gameName} Roblox event`, {
+    includeAnswer: "advanced",
+    maxResults: 5,
+    searchDepth: "advanced",
+    topic: "general"
+  });
+  const context = [
+    search.answer ? `Tavily answer:\n${search.answer}` : null,
+    ...(search.results ?? []).slice(0, 5).map((result, index) => {
+      const content = result.raw_content ?? result.content ?? "";
+      return `Source ${index + 1}\nTitle: ${result.title ?? "n/a"}\nURL: ${result.url ?? "n/a"}\nContent:\n${content}`;
+    })
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
   const prompt = `
 Give me complete details about the upcoming ${gameName} ${eventName} event that will start on ${startLabel}.
 
+Use only the supplied Tavily research context.
 Cover the full end-to-end details of what we know about this event and what players can expect from this upcoming event.
 Include only information specific to this exact event in this game. Avoid generic details like times, developer name where people can access it, how to join. 
 Instead focus on the game specific and event specific details. What a Roblox player should know have to covered clearly.
 Avoid dates, times, countdowns, and schedules.
 Return concise research notes. Do not include URLs.
-`.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0.2,
-    max_tokens: 700,
-    messages: [
-      { role: "system", content: "Return concise research notes. Do not include URLs." },
-      { role: "user", content: prompt }
-    ]
+Research context:
+${context}
+  `.trim();
+
+  return requestModelText({
+    system: "Return concise research notes. Do not include URLs. Use only the supplied Tavily research context.",
+    prompt,
+    maxTokens: 700,
+    temperature: 0.2
   });
-
-  return completion.choices[0]?.message?.content?.trim() ?? "";
 }
 
 function parseCopyJson(raw: string, eventName: string): GenerateCopyResult {
@@ -439,7 +473,7 @@ async function main() {
 
         try {
           console.log(`Generating event copy for "${eventName}" (${gameName})...`);
-          const notes = await sonarResearchNotes(gameName, eventName, startLabel);
+          const notes = await buildResearchNotes(gameName, eventName, startLabel);
           if (!notes.trim()) {
             console.error(`No research notes returned for event ${entry.event_id}. Skipping.`);
             stats.failed += 1;
@@ -513,9 +547,9 @@ async function main() {
     throw new Error(`Event ${event.event_id} is missing a valid start_utc for the research prompt.`);
   }
 
-  const notes = await sonarResearchNotes(gameName, eventName, startLabel);
+  const notes = await buildResearchNotes(gameName, eventName, startLabel);
   if (!notes.trim()) {
-    console.error("No research notes returned from Perplexity sonar. Skipping.");
+    console.error("No research notes returned from Tavily/OpenAI. Skipping.");
     return;
   }
 

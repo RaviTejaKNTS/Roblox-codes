@@ -12,7 +12,15 @@ import { CommentsSection } from "@/components/comments/CommentsSection";
 import { splitPathToSlug } from "@/lib/static-params";
 
 export const revalidate = 86400;
-const RESERVED_CATALOG_PREFIXES = ["admin-commands", "roblox-color-codes", "roblox-decal-ids", "roblox-free-items", "roblox-music-ids", "the-forge"];
+const RESERVED_CATALOG_PREFIXES = [
+  "admin-commands",
+  "roblox-color-codes",
+  "roblox-decal-ids",
+  "free-roblox-items",
+  "roblox-free-items",
+  "roblox-music-ids",
+  "the-forge"
+];
 
 type PageProps = {
   params: Promise<{ slug: string[] }>;
@@ -49,6 +57,10 @@ function normalizeCatalogCode(slugParts: string[]): string {
     .filter(Boolean)
     .join("/")
     .toLowerCase();
+}
+
+function isReservedCatalogCode(code: string): boolean {
+  return RESERVED_CATALOG_PREFIXES.some((prefix) => code === prefix || code.startsWith(`${prefix}/`));
 }
 
 function sortDescriptionEntries(description: Record<string, string> | null | undefined) {
@@ -147,7 +159,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CatalogFallbackPage({ params }: PageProps) {
   const { slug } = await params;
   const code = normalizeCatalogCode(slug ?? []);
-  if (!code) {
+  if (!code || isReservedCatalogCode(code)) {
     notFound();
   }
 

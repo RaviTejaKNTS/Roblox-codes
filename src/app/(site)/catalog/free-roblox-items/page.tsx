@@ -5,6 +5,7 @@ import { CATALOG_DESCRIPTION, SITE_NAME, SITE_URL, resolveSeoTitle, buildAlterna
 import {
   BASE_PATH,
   CANONICAL,
+  buildFreeItemCatalogCodeCandidates,
   appendItemCountToSeoTitle,
   buildFreeItemsCatalogContentHtml,
   loadFreeItemsPageData,
@@ -13,7 +14,7 @@ import {
 
 export const revalidate = 2592000;
 
-const CATALOG_CODE_CANDIDATES = ["roblox-free-items"];
+const CATALOG_CODE_CANDIDATES = buildFreeItemCatalogCodeCandidates();
 const FALLBACK_IMAGE = `${SITE_URL}/og-image.png`;
 const PAGE_DESCRIPTION = "Browse free Roblox items and bundles.";
 

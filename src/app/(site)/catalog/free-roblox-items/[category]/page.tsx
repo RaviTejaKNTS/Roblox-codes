@@ -6,6 +6,7 @@ import { CATALOG_DESCRIPTION, SITE_NAME, SITE_URL, buildAlternates } from "@/lib
 import {
   BASE_PATH,
   appendItemCountToSeoTitle,
+  buildFreeItemCatalogCodeCandidates,
   buildFreeItemsCatalogContentHtml,
   buildFreeItemCategoryPath,
   loadFreeItemCategories,
@@ -23,7 +24,7 @@ type PageProps = {
 };
 
 function getCatalogCodeCandidates(categorySlug: string) {
-  return [`roblox-free-items/${categorySlug}`, "roblox-free-items"];
+  return buildFreeItemCatalogCodeCandidates(categorySlug);
 }
 
 export async function generateStaticParams() {

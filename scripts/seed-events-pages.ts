@@ -5,11 +5,12 @@ import OpenAI from "openai";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { slugify } from "@/lib/slug";
 import { revalidateEventSlugs } from "./lib/revalidate-events";
+import { tavilySearch } from "./lib/tavily";
 
 const SOURCE_BATCH = Number(process.env.EVENTS_PAGES_SOURCE_BATCH ?? "1000");
 const DEFAULT_PUBLISHED = (process.env.EVENTS_PAGES_PUBLISHED ?? "true").toLowerCase() !== "false";
 
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 
 type UniverseRow = {
@@ -40,16 +41,34 @@ type ScriptArgs = {
   force: boolean;
 };
 
-if (!PERPLEXITY_API_KEY) {
-  throw new Error("Missing PERPLEXITY_API_KEY.");
+if (!TAVILY_API_KEY) {
+  throw new Error("Missing TAVILY_API_KEY.");
 }
 
 if (!OPENAI_KEY) {
   throw new Error("Missing OPENAI_API_KEY.");
 }
 
-const perplexity = new OpenAI({ apiKey: PERPLEXITY_API_KEY, baseURL: "https://api.perplexity.ai" });
 const openai = new OpenAI({ apiKey: OPENAI_KEY });
+
+async function requestModelText(params: {
+  system: string;
+  prompt: string;
+  maxTokens: number;
+  temperature?: number;
+}): Promise<string> {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    temperature: params.temperature ?? 0.2,
+    max_tokens: params.maxTokens,
+    messages: [
+      { role: "system", content: params.system },
+      { role: "user", content: params.prompt }
+    ]
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? "";
+}
 
 function chunkArray<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -280,9 +299,26 @@ async function ensureUniqueSlug(base: string, universeId: number): Promise<strin
   return slug;
 }
 
-async function sonarResearchNotes(gameName: string): Promise<string> {
+async function buildResearchNotes(gameName: string): Promise<string> {
+  const search = await tavilySearch(`${gameName} Roblox game events gameplay rewards`, {
+    includeAnswer: "advanced",
+    maxResults: 5,
+    searchDepth: "advanced",
+    topic: "general"
+  });
+  const context = [
+    search.answer ? `Tavily answer:\n${search.answer}` : null,
+    ...(search.results ?? []).slice(0, 5).map((result, index) => {
+      const content = result.raw_content ?? result.content ?? "";
+      return `Source ${index + 1}\nTitle: ${result.title ?? "n/a"}\nURL: ${result.url ?? "n/a"}\nContent:\n${content}`;
+    })
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
   const prompt = `
 Game: "${gameName}"
+Use only the supplied Tavily research context.
 Provide concise research notes about:
 - What this game is and its core loop or genre.
 - How in-game events are described (live events, seasonal events, updates).
@@ -290,19 +326,17 @@ Provide concise research notes about:
 - Typical rewards or gameplay impact from events, if mentioned.
 - Other details that are specific to this game's events in general that are must to know.
 Avoid listing specific event names, dates, or times. No URLs.
-`.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0.2,
-    max_tokens: 700,
-    messages: [
-      { role: "system", content: "Return concise research notes. Do not include URLs." },
-      { role: "user", content: prompt }
-    ]
+Research context:
+${context}
+  `.trim();
+
+  return requestModelText({
+    system: "Return concise research notes. Do not include URLs. Use only the supplied Tavily research context.",
+    prompt,
+    maxTokens: 700,
+    temperature: 0.2
   });
-
-  return completion.choices[0]?.message?.content?.trim() || "";
 }
 
 function parseCopyJson(raw: string): GenerateCopyResult {
@@ -462,7 +496,7 @@ async function main() {
   const slug = normalizeText(existingPage?.slug) ?? (await ensureUniqueSlug(slugify(displayName), universeId));
   console.log(`Generating events page copy for "${displayName}" (universe ${universeId})...`);
 
-  const notes = await sonarResearchNotes(displayName);
+  const notes = await buildResearchNotes(displayName);
   const copy = await generateCopy(displayName, notes);
 
   if (existingPage) {

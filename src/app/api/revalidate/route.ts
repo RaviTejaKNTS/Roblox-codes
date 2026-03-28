@@ -15,7 +15,10 @@ type Payload =
   | { type: "quiz"; slug: string };
 
 const MUSIC_CATALOG_CODES = new Set(["roblox-music-ids"]);
-const FREE_ITEMS_CATALOG_PREFIX = "roblox-free-items";
+const FREE_ITEMS_CATALOG_CODE = "free-roblox-items";
+const LEGACY_FREE_ITEMS_CATALOG_CODE = "roblox-free-items";
+const FREE_ITEMS_CATALOG_PREFIXES = [FREE_ITEMS_CATALOG_CODE, LEGACY_FREE_ITEMS_CATALOG_CODE];
+const FREE_ITEMS_BASE_PATH = `/catalog/${FREE_ITEMS_CATALOG_CODE}`;
 const MUSIC_INDEXNOW_PATHS = [
   "/catalog",
   "/catalog/roblox-music-ids",
@@ -63,7 +66,13 @@ function indexNowPathsForPayload(type: Payload["type"], slug: string): string[] 
     case "tool":
       return ["/tools", `/tools/${slug}`];
     case "catalog":
-      return MUSIC_CATALOG_CODES.has(slug) ? [...MUSIC_INDEXNOW_PATHS] : ["/catalog", `/catalog/${slug}`];
+      if (MUSIC_CATALOG_CODES.has(slug)) {
+        return [...MUSIC_INDEXNOW_PATHS];
+      }
+      if (isFreeItemsCatalogSlug(slug)) {
+        return ["/catalog", FREE_ITEMS_BASE_PATH];
+      }
+      return ["/catalog", `/catalog/${slug}`];
     case "music":
       return [...MUSIC_INDEXNOW_PATHS];
     default:
@@ -169,17 +178,17 @@ function revalidateForMusic() {
 }
 
 function isFreeItemsCatalogSlug(slug: string) {
-  return slug === FREE_ITEMS_CATALOG_PREFIX || slug.startsWith(`${FREE_ITEMS_CATALOG_PREFIX}/`);
+  return FREE_ITEMS_CATALOG_PREFIXES.some((prefix) => slug === prefix || slug.startsWith(`${prefix}/`));
 }
 
 function revalidateForFreeItems() {
   revalidatePath("/catalog");
-  revalidatePath("/catalog/roblox-free-items");
-  revalidatePath("/catalog/roblox-free-items/page/[page]");
-  revalidatePath("/catalog/roblox-free-items/[category]");
-  revalidatePath("/catalog/roblox-free-items/[category]/page/[page]");
-  revalidatePath("/catalog/roblox-free-items/[category]/[subcategory]");
-  revalidatePath("/catalog/roblox-free-items/[category]/[subcategory]/page/[page]");
+  revalidatePath(FREE_ITEMS_BASE_PATH);
+  revalidatePath(`${FREE_ITEMS_BASE_PATH}/page/[page]`);
+  revalidatePath(`${FREE_ITEMS_BASE_PATH}/[category]`);
+  revalidatePath(`${FREE_ITEMS_BASE_PATH}/[category]/page/[page]`);
+  revalidatePath(`${FREE_ITEMS_BASE_PATH}/[category]/[subcategory]`);
+  revalidatePath(`${FREE_ITEMS_BASE_PATH}/[category]/[subcategory]/page/[page]`);
   revalidatePath("/sitemap.xml");
   revalidateTag("free-items-catalog", { expire: 0 });
 }

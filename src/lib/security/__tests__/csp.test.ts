@@ -8,9 +8,9 @@ function headerValue(headers: { key: string; value: string }[], key: string) {
 describe("security CSP routing", () => {
   it("keeps content pages on the public policy", () => {
     expect(isSecurePath("/")).toBe(false);
-    expect(isSecurePath("/catalog/roblox-free-items")).toBe(false);
-    expect(getCspForPath("/catalog/roblox-free-items")).toBe(publicCsp);
-    expect(shouldNoIndexPath("/catalog/roblox-free-items")).toBe(false);
+    expect(isSecurePath("/catalog/free-roblox-items")).toBe(false);
+    expect(getCspForPath("/catalog/free-roblox-items")).toBe(publicCsp);
+    expect(shouldNoIndexPath("/catalog/free-roblox-items")).toBe(false);
   });
 
   it("uses the secure policy for auth and API routes", () => {

@@ -6,6 +6,7 @@ import { CATALOG_DESCRIPTION, SITE_NAME, SITE_URL, buildAlternates } from "@/lib
 import {
   BASE_PATH,
   appendItemCountToSeoTitle,
+  buildFreeItemCatalogCodeCandidates,
   buildFreeItemCategoryPath,
   loadFreeItemCategories,
   loadFreeItemCategoryBySlug,
@@ -21,7 +22,7 @@ type PageProps = {
   params: Promise<{ category: string; subcategory: string; page: string }>;
 };
 
-const FREE_ITEMS_CONTENT_CODES = ["roblox-free-items"];
+const FREE_ITEMS_CONTENT_CODES = buildFreeItemCatalogCodeCandidates();
 
 export async function generateStaticParams() {
   const categories = await loadFreeItemCategories();

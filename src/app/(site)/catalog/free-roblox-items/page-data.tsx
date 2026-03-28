@@ -14,8 +14,18 @@ import { renderHtmlAsReactNodes } from "@/lib/html-to-react";
 
 const PAGE_SIZE = 24;
 
-export const BASE_PATH = "/catalog/roblox-free-items";
+export const FREE_ITEMS_CATALOG_CODE = "free-roblox-items";
+export const LEGACY_FREE_ITEMS_CATALOG_CODE = "roblox-free-items";
+export const FREE_ITEMS_CATALOG_CODES = [FREE_ITEMS_CATALOG_CODE, LEGACY_FREE_ITEMS_CATALOG_CODE] as const;
+export const BASE_PATH = `/catalog/${FREE_ITEMS_CATALOG_CODE}`;
 export const CANONICAL = `${SITE_URL.replace(/\/$/, "")}${BASE_PATH}`;
+
+export function buildFreeItemCatalogCodeCandidates(...segments: string[]): string[] {
+  const normalizedSegments = segments.map((segment) => segment.trim()).filter(Boolean);
+  return FREE_ITEMS_CATALOG_CODES.flatMap((code) =>
+    normalizedSegments.length ? [`${code}/${normalizedSegments.join("/")}`, code] : [code]
+  );
+}
 
 export function buildFreeItemCategoryPath(categorySlug: string, subcategorySlug?: string): string {
   return subcategorySlug ? `${BASE_PATH}/${categorySlug}/${subcategorySlug}` : `${BASE_PATH}/${categorySlug}`;

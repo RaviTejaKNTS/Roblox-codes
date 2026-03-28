@@ -2,15 +2,15 @@ import "dotenv/config";
 
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import { tavilySearch } from "./lib/tavily";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-const perplexity = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY!, baseURL: "https://api.perplexity.ai" });
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE!
 );
 
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY!;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY!;
 
 type UniverseRow = {
   universe_id: number;
@@ -26,22 +26,42 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function sonarResearchNotes(gameName: string): Promise<string> {
+async function buildResearchNotes(gameName: string): Promise<string> {
+  const search = await tavilySearch(`${gameName} Roblox gameplay progression mechanics`, {
+    includeAnswer: "advanced",
+    maxResults: 5,
+    searchDepth: "advanced",
+    topic: "general"
+  });
+  const context = [
+    search.answer ? `Tavily answer:\n${search.answer}` : null,
+    ...(search.results ?? []).slice(0, 5).map((result, index) => {
+      const content = result.raw_content ?? result.content ?? "";
+      return `Source ${index + 1}\nTitle: ${result.title ?? "n/a"}\nURL: ${result.url ?? "n/a"}\nContent:\n${content}`;
+    })
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
   const prompt = `
 Topic: "${gameName}"
+Use only the supplied Tavily research context.
 Provide concise, bullet-style research notes about this Roblox experience. Focus on:
 - What players do (core loop / objective)
 - How progression works or how players earn rewards
 - Key mechanics or unique systems
 Only include facts you are confident about. If unsure, omit it. No links.
+
+Research context:
+${context}
 `.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
     temperature: 0.2,
     max_tokens: 800,
     messages: [
-      { role: "system", content: "Return concise research notes. No links." },
+      { role: "system", content: "Return concise research notes. No links. Use only the supplied Tavily research context." },
       { role: "user", content: prompt }
     ]
   });
@@ -140,8 +160,8 @@ ${sources}
 async function main() {
   const input = process.argv[2];
 
-  if (!PERPLEXITY_API_KEY) {
-    throw new Error("Missing PERPLEXITY_API_KEY in environment.");
+  if (!TAVILY_API_KEY) {
+    throw new Error("Missing TAVILY_API_KEY in environment.");
   }
 
   const universe = await pickUniverse(input);
@@ -157,14 +177,14 @@ async function main() {
   const gameName = universe.display_name || universe.name || `Universe ${universe.universe_id}`;
   console.log(`🔍 Gathering context for "${gameName}" (${universe.slug})...`);
 
-  console.log("🛰️  Asking Perplexity Sonar for research notes...");
-  const notes = await sonarResearchNotes(gameName);
+  console.log("🛰️  Gathering Tavily research notes...");
+  const notes = await buildResearchNotes(gameName);
   const sourceWords = notes.trim().split(/\s+/).filter(Boolean);
   if (sourceWords.length < 20) {
-    console.error("⚠️ Sonar returned too little information to safely summarize. Aborting.");
+    console.error("⚠️ Research returned too little information to safely summarize. Aborting.");
     process.exit(1);
   }
-  const sources = `Perplexity Sonar research notes:\n${notes}`;
+  const sources = `Research notes:\n${notes}`;
   await sleep(200);
 
   console.log("🧠 Generating description...");

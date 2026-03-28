@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { JSDOM } from "jsdom";
 import sharp from "sharp";
 import { createHash } from "node:crypto";
+import { tavilySearch } from "./lib/tavily";
 
 type CliOptions = {
   articleId: string | null;
@@ -70,15 +71,15 @@ type ImagePlacement = {
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
 const SUPABASE_MEDIA_BUCKET = process.env.SUPABASE_MEDIA_BUCKET;
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
   throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE.");
 }
 
-if (!PERPLEXITY_API_KEY) {
-  throw new Error("Missing PERPLEXITY_API_KEY.");
+if (!TAVILY_API_KEY) {
+  throw new Error("Missing TAVILY_API_KEY.");
 }
 
 if (!OPENAI_KEY) {
@@ -86,8 +87,26 @@ if (!OPENAI_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
-const perplexity = new OpenAI({ apiKey: PERPLEXITY_API_KEY, baseURL: "https://api.perplexity.ai" });
 const openai = new OpenAI({ apiKey: OPENAI_KEY });
+
+async function requestModelText(params: {
+  system: string;
+  prompt: string;
+  maxTokens: number;
+  temperature?: number;
+}): Promise<string> {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    temperature: params.temperature ?? 0.2,
+    max_tokens: params.maxTokens,
+    messages: [
+      { role: "system", content: params.system },
+      { role: "user", content: params.prompt }
+    ]
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? "";
+}
 
 function estimateWordCount(markdown: string): number {
   const text = markdown
@@ -503,31 +522,19 @@ function isVideoHost(hostname: string): boolean {
   return base.includes("youtube.com") || base.includes("youtu.be") || base.includes("vimeo.com") || base.includes("dailymotion.com");
 }
 
-async function perplexitySearch(query: string, limit: number): Promise<SearchResult[]> {
-  const response = await fetch("https://api.perplexity.ai/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${PERPLEXITY_API_KEY}`
-    },
-    body: JSON.stringify({
-      query,
-      top_k: limit
-    })
+async function searchWeb(query: string, limit: number): Promise<SearchResult[]> {
+  const payload = await tavilySearch(query, {
+    maxResults: limit,
+    searchDepth: "advanced",
+    topic: "general"
   });
-
-  if (!response.ok) {
-    throw new Error(`Perplexity search failed for "${query}" (${response.status} ${response.statusText})`);
-  }
-
-  const payload = (await response.json()) as { results?: { title?: string; url?: string; snippet?: string }[] };
 
   return (
     payload.results
       ?.map((item) => ({
         title: item.title ?? "",
         url: item.url ?? "",
-        snippet: item.snippet
+        snippet: item.content
       }))
       .filter((entry) => entry.title && entry.url) ?? []
   );
@@ -592,7 +599,7 @@ async function fetchSourceDocument(url: string): Promise<SourceDocument | null> 
 
 async function collectSourcesForArticle(title: string): Promise<SourceDocument[]> {
   const query = `"${title}" Roblox`;
-  const results = await perplexitySearch(query, 6);
+  const results = await searchWeb(query, 6);
   const urls = pickSourceUrls(results, 2);
   if (urls.length === 0) {
     return [];
@@ -1087,21 +1094,13 @@ Article Content (Markdown):
 ${article.content_md}
 `.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0.2,
-    max_tokens: 800,
-    messages: [
-      {
-        role: "system",
-        content:
-          "Return only 'No' if fully up to date. Otherwise, provide only the exact changes and updated info needed. Never suggest rewrites or expansions; keep changes minimal."
-      },
-      { role: "user", content: prompt }
-    ]
+  return requestModelText({
+    system:
+      "Return only 'No' if fully up to date. Otherwise, provide only the exact changes and updated info needed. Never suggest rewrites or expansions; keep changes minimal.",
+    prompt,
+    maxTokens: 800,
+    temperature: 0.2
   });
-
-  return completion.choices[0]?.message?.content?.trim() ?? "";
 }
 
 async function checkArticleCoverage(article: ArticleRow): Promise<string> {
@@ -1120,21 +1119,13 @@ Article Content (Markdown):
 ${article.content_md}
 `.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0,
-    max_tokens: 800,
-    messages: [
-      {
-        role: "system",
-        content:
-          'You judge coverage completeness for Roblox articles. Only flag items that are very close to the topic and crucial to its intent. If nothing critical is missing, reply exactly "No". Otherwise, provide only the missing items with the exact information to add. Keep changes minimal and avoid rewrites.'
-      },
-      { role: "user", content: prompt }
-    ]
+  return requestModelText({
+    system:
+      'You judge coverage completeness for Roblox articles. Only flag items that are very close to the topic and crucial to its intent. If nothing critical is missing, reply exactly "No". Otherwise, provide only the missing items with the exact information to add. Keep changes minimal and avoid rewrites.',
+    prompt,
+    maxTokens: 800,
+    temperature: 0
   });
-
-  return completion.choices[0]?.message?.content?.trim() ?? "";
 }
 
 async function applyUpdatesWithOpenAI(article: ArticleRow, updateNotes: string): Promise<UpdatedArticle> {
@@ -1213,7 +1204,7 @@ async function updateSingleArticle(article: ArticleRow, options: CliOptions): Pr
     return;
   }
 
-  console.log(`Perplexity audit response (${article.slug}):\n${initialAudit}`);
+  console.log(`Audit response (${article.slug}):\n${initialAudit}`);
   console.log(`Word count before update (${article.slug}): ${estimateWordCount(currentArticle.content_md)}`);
 
   if (isNoUpdateResponse(initialAudit)) {
@@ -1235,7 +1226,7 @@ async function updateSingleArticle(article: ArticleRow, options: CliOptions): Pr
   if (!coverageFeedback) {
     console.warn(`WARN empty coverage response for ${article.slug}.`);
   } else if (!isNoUpdateResponse(coverageFeedback)) {
-    console.log(`Perplexity coverage response (${article.slug}):\n${coverageFeedback}`);
+    console.log(`Coverage response (${article.slug}):\n${coverageFeedback}`);
     console.log(`Applying coverage updates for ${article.slug}`);
     const updated = await applyUpdatesWithOpenAI(currentArticle, coverageFeedback);
     currentArticle = {
@@ -1245,7 +1236,7 @@ async function updateSingleArticle(article: ArticleRow, options: CliOptions): Pr
     };
     console.log(`Word count after coverage update (${article.slug}): ${estimateWordCount(currentArticle.content_md)}`);
   } else {
-    console.log(`Perplexity coverage response (${article.slug}):\n${coverageFeedback}`);
+    console.log(`Coverage response (${article.slug}):\n${coverageFeedback}`);
     console.log(`OK coverage clean ${article.slug}`);
   }
 

@@ -8,6 +8,7 @@ import sharp from "sharp";
 import { createHash } from "node:crypto";
 
 import { slugify } from "@/lib/slug";
+import { tavilySearch } from "./lib/tavily";
 
 type QueueRow = {
   id: string;
@@ -86,7 +87,7 @@ type ImagePlacement = {
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 const AUTHOR_ID = process.env.ARTICLE_AUTHOR_ID ?? "4fc99a58-83da-46f6-9621-7816e36b4088";
 const SUPABASE_MEDIA_BUCKET = process.env.SUPABASE_MEDIA_BUCKET;
@@ -97,8 +98,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
   throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE.");
 }
 
-if (!PERPLEXITY_API_KEY) {
-  throw new Error("Missing PERPLEXITY_API_KEY.");
+if (!TAVILY_API_KEY) {
+  throw new Error("Missing TAVILY_API_KEY.");
 }
 
 if (!OPENAI_KEY) {
@@ -106,8 +107,26 @@ if (!OPENAI_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
-const perplexity = new OpenAI({ apiKey: PERPLEXITY_API_KEY, baseURL: "https://api.perplexity.ai" });
 const openai = new OpenAI({ apiKey: OPENAI_KEY });
+
+async function requestModelText(params: {
+  system: string;
+  prompt: string;
+  maxTokens: number;
+  temperature?: number;
+}): Promise<string> {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    temperature: params.temperature ?? 0.2,
+    max_tokens: params.maxTokens,
+    messages: [
+      { role: "system", content: params.system },
+      { role: "user", content: params.prompt }
+    ]
+  });
+
+  return completion.choices[0]?.message?.content?.trim() ?? "";
+}
 
 const SOURCE_CHAR_LIMIT = 6500;
 const MAX_RESULTS_PER_QUERY = 20;
@@ -955,31 +974,21 @@ async function updateQueueStatus(
   }
 }
 
-async function perplexitySearch(query: string, limit: number): Promise<SearchResult[]> {
-  const response = await fetch("https://api.perplexity.ai/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${PERPLEXITY_API_KEY}`
-    },
-    body: JSON.stringify({
-      query,
-      top_k: limit
-    })
+async function searchWeb(query: string, limit: number, options: { includeDomains?: string[]; exactMatch?: boolean } = {}): Promise<SearchResult[]> {
+  const payload = await tavilySearch(query, {
+    exactMatch: options.exactMatch ?? false,
+    includeDomains: options.includeDomains,
+    maxResults: limit,
+    searchDepth: "advanced",
+    topic: "general"
   });
-
-  if (!response.ok) {
-    throw new Error(`Perplexity search failed for "${query}" (${response.status} ${response.statusText})`);
-  }
-
-  const payload = (await response.json()) as { results?: { title?: string; url?: string; snippet?: string }[] };
 
   return (
     payload.results
       ?.map((item) => ({
         title: item.title ?? "",
         url: item.url ?? "",
-        snippet: item.snippet
+        snippet: item.content
       }))
       .filter((entry) => entry.title && entry.url) ?? []
   );
@@ -1125,38 +1134,39 @@ async function collectFromResults(
   }
 }
 
-async function sonarResearchNotes(topic: string, question?: string): Promise<string> {
+async function buildResearchNotes(topic: string, sources: SourceDocument[], question?: string): Promise<string> {
+  if (!sources.length) return "";
+
   const prompt = `
-Topic: "${topic}"
-${question ? `Research question: "${question}"` : ""}
-Give full details related to this — key facts, mechanics, requirements, steps, edge cases, and common questions. Keep it tight, bullet-style notes with no filler. Do not include URLs.
-`.trim();
+  Topic: "${topic}"
+  ${question ? `Research question: "${question}"` : ""}
+  Use only the provided research documents.
+  Give full details related to this — key facts, mechanics, requirements, steps, edge cases, and common questions. Keep it tight, bullet-style notes with no filler. Do not include URLs.
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0.25,
-    max_tokens: 1000,
-    messages: [
-      { role: "system", content: "Return concise research notes. Do not include URLs." },
-      { role: "user", content: prompt }
-    ]
+  Research documents:
+  ${formatSourcesForReview(sources)}
+  `.trim();
+
+  return requestModelText({
+    system: "Return concise research notes. Do not include URLs. Use only the provided research documents.",
+    prompt,
+    maxTokens: 1000,
+    temperature: 0.25
   });
-
-  return completion.choices[0]?.message?.content?.trim() || "";
 }
 
-async function gatherResearchNotes(topic: string, questions: string[]): Promise<string> {
+async function gatherResearchNotes(topic: string, questions: string[], sources: SourceDocument[]): Promise<string> {
   const questionList = questions.length ? questions : [topic];
   const notes: string[] = [];
 
   for (const question of questionList) {
     try {
-      const result = await sonarResearchNotes(topic, question);
+      const result = await buildResearchNotes(topic, sources, question);
       if (result) {
         notes.push(`Question: ${question}\n${result}`);
       }
     } catch (error) {
-      console.warn(`   • sonar_notes_failed question="${question}" reason="${(error as Error).message}"`);
+      console.warn(`   • research_notes_failed question="${question}" reason="${(error as Error).message}"`);
     }
   }
 
@@ -1168,7 +1178,8 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
   const hostCounts = new Map<string, number>();
   const forumCount = { value: 0 };
   const seenUrls = new Set<string>();
-  const researchQuestions: string[] = [];
+  const researchQuestions = await generateResearchQuestions(topic);
+  const searchQueries = buildSearchQueries(topic, researchQuestions);
   const manualUrls = parseQueueSources(queueSources ?? null);
   const queueUrlSet = new Set(manualUrls.map((url) => normalizeUrlForCompare(url)));
   for (const url of manualUrls) {
@@ -1218,23 +1229,29 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
     console.log(`source_${collected.length}: ${host} [queue]${isForum ? " [forum]" : ""}`);
   }
 
-  const primaryQuery = ensureRobloxKeyword(topic);
-  try {
-    console.log(`🔎 search → ${primaryQuery}`);
-    const results = await perplexitySearch(primaryQuery, MAX_RESULTS_PER_QUERY);
-    await collectFromResults(results, collected, hostCounts, forumCount, {
-      seenUrls,
-      excludeUrls: queueUrlSet,
-      excludeFandom: true
-    });
-  } catch (error) {
-    console.warn(`   • search_failed query="${primaryQuery}" reason="${(error as Error).message}"`);
+  for (const query of searchQueries) {
+    try {
+      console.log(`🔎 tavily_search → ${query}`);
+      const results = await searchWeb(query, MAX_RESULTS_PER_QUERY);
+      await collectFromResults(results, collected, hostCounts, forumCount, {
+        seenUrls,
+        excludeUrls: queueUrlSet,
+        excludeFandom: true
+      });
+      if (collected.filter((source) => !source.fromNotes).length >= TARGET_SOURCES) {
+        break;
+      }
+    } catch (error) {
+      console.warn(`   • search_failed query="${query}" reason="${(error as Error).message}"`);
+    }
   }
 
   const fandomQuery = ensureRobloxKeyword(`${topic} fandom`);
   try {
-    console.log(`🔎 search → ${fandomQuery}`);
-    const results = await perplexitySearch(fandomQuery, MAX_RESULTS_PER_QUERY);
+    console.log(`🔎 tavily_search → ${fandomQuery}`);
+    const results = await searchWeb(fandomQuery, MAX_RESULTS_PER_QUERY, {
+      includeDomains: ["fandom.com", "fandomwiki.com"]
+    });
     await collectFromResults(results, collected, hostCounts, forumCount, {
       seenUrls,
       excludeUrls: queueUrlSet,
@@ -1244,18 +1261,22 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
     console.warn(`   • fandom_search_failed query="${fandomQuery}" reason="${(error as Error).message}"`);
   }
 
-  const notes = await gatherResearchNotes(topic, researchQuestions);
+  const notes = await gatherResearchNotes(
+    topic,
+    researchQuestions,
+    collected.filter((source) => !source.fromNotes)
+  );
   if (notes) {
     collected.push({
-      title: "Perplexity Research Notes",
-      url: "perplexity:sonar-notes",
+      title: "Research Notes",
+      url: "notes:research-summary",
       content: notes.slice(0, SOURCE_CHAR_LIMIT),
-      host: "perplexity.ai",
+      host: "internal-notes",
       isForum: false,
       images: [],
       fromNotes: true
     });
-    console.log(`source_${collected.length}: perplexity.ai [research notes]`);
+    console.log(`source_${collected.length}: internal-notes [research notes]`);
   }
 
   const webSources = collected.filter((source) => !source.fromNotes);
@@ -1269,33 +1290,26 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
   };
 }
 
-async function verifySourceWithPerplexity(topic: string, source: SourceDocument): Promise<"Yes" | "No"> {
+async function verifySourceWithModel(topic: string, source: SourceDocument): Promise<"Yes" | "No"> {
   const prompt = `
-For the Roblox topic "${topic}", is the following source accurate and suitable to use? Minor mistakes or slightly outdated details are acceptable if the overall source is relevant and accurate. Respond with exactly "Yes" if the source is acceptable, or "No" if it should not be used. No other words.
+  For the Roblox topic "${topic}", is the following source accurate and suitable to use? Minor mistakes or slightly outdated details are acceptable if the overall source is relevant and accurate. Respond with exactly "Yes" if the source is acceptable, or "No" if it should not be used. No other words.
 
 Title: ${source.title}
 URL: ${source.url}
 Host: ${source.host}
 Content:
-${source.content}
-`.trim();
+  ${source.content}
+  `.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0,
-    max_tokens: 10,
-    messages: [
-      {
-        role: "system",
-        content:
-          'You judge whether a source is acceptable for the topic. Reply with exactly "Yes" to approve or "No" to reject. Minor outdated details are fine if the overall source is accurate and relevant.'
-      },
-      { role: "user", content: prompt }
-    ]
+  const verdict = await requestModelText({
+    system:
+      'You judge whether a source is acceptable for the topic. Reply with exactly "Yes" to approve or "No" to reject. Minor outdated details are fine if the overall source is accurate and relevant.',
+    prompt,
+    maxTokens: 10,
+    temperature: 0
   });
-
-  const verdict = completion.choices[0]?.message?.content?.trim().toLowerCase();
-  return verdict && verdict.startsWith("yes") ? "Yes" : "No";
+  const normalized = verdict.trim().toLowerCase();
+  return normalized.startsWith("yes") ? "Yes" : "No";
 }
 
 async function verifySources(topic: string, sources: SourceDocument[]): Promise<SourceDocument[]> {
@@ -1310,7 +1324,7 @@ async function verifySources(topic: string, sources: SourceDocument[]): Promise<
       continue;
     }
 
-    const decision = await verifySourceWithPerplexity(topic, source);
+    const decision = await verifySourceWithModel(topic, source);
     source.verification = decision;
     console.log(`verify_source host=${source.host} verdict=${decision}`);
     if (decision === "Yes") {
@@ -1395,21 +1409,13 @@ Relevant research:
 ${formatSourcesForReview(sources)}
   `.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0,
-    max_tokens: 500,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You produce concise coverage checklists for Roblox articles. Stay strictly on topic and list only crucial points readers expect."
-      },
-      { role: "user", content: prompt }
-    ]
+  const notes = await requestModelText({
+    system:
+      "You produce concise coverage checklists for Roblox articles. Stay strictly on topic and list only crucial points readers expect.",
+    prompt,
+    maxTokens: 500,
+    temperature: 0
   });
-
-  const notes = completion.choices[0]?.message?.content?.trim();
   return notes && notes.length > 0 ? notes : null;
 }
 
@@ -1421,7 +1427,7 @@ function buildArticlePrompt(
 ): string {
   const sourceBlock = formatSourcesForPrompt(sources);
   const contextBlock = formatContextBlock(context);
-  const coverageBlock = coverageNotes ? `\n\nCoverage checklist (from Perplexity):\n${coverageNotes}` : "";
+  const coverageBlock = coverageNotes ? `\n\nCoverage checklist:\n${coverageNotes}` : "";
 
   return `
 Use the research below to write a Roblox article.
@@ -1515,10 +1521,11 @@ Return JSON:
   `.trim();
 
   try {
-    const completion = await perplexity.chat.completions.create({
-      model: "sonar",
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
       temperature: 0.2,
       max_tokens: 500,
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: "Return only valid JSON." },
         { role: "user", content: prompt }
@@ -1630,21 +1637,13 @@ ${reviewContext}
 ${formatSourcesForReview(sources)}
 `.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0,
-    max_tokens: 600,
-    messages: [
-      {
-        role: "system",
-        content:
-          'You judge coverage completeness for Roblox articles. Only flag items that are very close to the topic and crucial to its intent. If nothing critical is missing, reply exactly "No". Otherwise, provide only the missing items with the information to add. Do not suggest tangential ideas.'
-      },
-      { role: "user", content: prompt }
-    ]
+  const feedback = await requestModelText({
+    system:
+      'You judge coverage completeness for Roblox articles. Only flag items that are very close to the topic and crucial to its intent. If nothing critical is missing, reply exactly "No". Otherwise, provide only the missing items with the information to add. Do not suggest tangential ideas.',
+    prompt,
+    maxTokens: 600,
+    temperature: 0
   });
-
-  const feedback = completion.choices[0]?.message?.content?.trim();
   if (!feedback) {
     throw new Error("Coverage check returned empty feedback.");
   }
@@ -1677,21 +1676,13 @@ ${reviewContext}
 ${formatSourcesForReview(sources)}
 `.trim();
 
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar",
-    temperature: 0,
-    max_tokens: 1200,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a strict fact checker. Always reply exactly 'Yes' if the article is accurate. Otherwise start with 'No' and provide detailed, actionable corrections with the right information."
-      },
-      { role: "user", content: prompt }
-    ]
+  const feedback = await requestModelText({
+    system:
+      "You are a strict fact checker. Always reply exactly 'Yes' if the article is accurate. Otherwise start with 'No' and provide detailed, actionable corrections with the right information.",
+    prompt,
+    maxTokens: 1200,
+    temperature: 0
   });
-
-  const feedback = completion.choices[0]?.message?.content?.trim();
   if (!feedback) {
     throw new Error("Fact check returned empty feedback.");
   }
@@ -2168,17 +2159,12 @@ Return only the shortened title text.
 `.trim();
 
   try {
-    const completion = await perplexity.chat.completions.create({
-      model: "sonar",
-      temperature: 0.2,
-      max_tokens: 50,
-      messages: [
-        { role: "system", content: "Return only the shortened title text, no quotes or labels." },
-        { role: "user", content: prompt }
-      ]
+    const shortText = await requestModelText({
+      system: "Return only the shortened title text, no quotes or labels.",
+      prompt,
+      maxTokens: 50,
+      temperature: 0.2
     });
-
-    const shortText = completion.choices[0]?.message?.content?.trim() ?? "";
     const normalized = normalizeOverlayTitle(shortText);
     if (normalized) return normalized;
   } catch (error) {

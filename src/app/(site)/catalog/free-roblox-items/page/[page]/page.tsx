@@ -2,12 +2,18 @@ import type { Metadata } from "next";
 import "@/styles/article-content.css";
 import { getCatalogPageContentByCodesIncludingDrafts } from "@/lib/catalog";
 import { CATALOG_DESCRIPTION, SITE_NAME, SITE_URL, resolveSeoTitle, buildAlternates } from "@/lib/seo";
-import { appendItemCountToSeoTitle, BASE_PATH, loadFreeItemsPageData, renderRobloxFreeItemsPage } from "../../page-data";
+import {
+  appendItemCountToSeoTitle,
+  BASE_PATH,
+  buildFreeItemCatalogCodeCandidates,
+  loadFreeItemsPageData,
+  renderRobloxFreeItemsPage
+} from "../../page-data";
 import { buildPageParams } from "@/lib/static-params";
 
 export const revalidate = 2592000;
 
-const CATALOG_CODE_CANDIDATES = ["roblox-free-items"];
+const CATALOG_CODE_CANDIDATES = buildFreeItemCatalogCodeCandidates();
 const FALLBACK_IMAGE = `${SITE_URL}/og-image.png`;
 const MAX_STATIC_PAGES = 20;
 

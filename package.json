@@ -19,7 +19,6 @@
     "import:games": "tsx scripts/import-games.ts",
     "post:codes": "tsx scripts/post-codes.ts",
     "post:online": "tsx scripts/post-online.ts",
-    "generate:article:perplexity": "tsx scripts/generate-article-perplexity.ts",
     "generate": "tsx scripts/generate-game-article.ts",
     "backfill:universes": "tsx scripts/backfill-game-universes.ts",
     "generate:queue": "tsx scripts/run-generation-queue.ts",
