@@ -5,7 +5,6 @@ import OpenAI from "openai";
 import { JSDOM } from "jsdom";
 import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
-import { createHash } from "node:crypto";
 
 import { slugify } from "@/lib/slug";
 import { tavilySearch } from "./lib/tavily";
@@ -25,18 +24,7 @@ type SearchResult = {
   title: string;
   url: string;
   snippet?: string;
-};
-
-type SourceImage = {
-  name: string;
-  originalUrl: string;
-  altText: string | null;
-  caption: string | null;
-  context: string | null;
-  isTable: boolean;
-  width: number | null;
-  height: number | null;
-  rowText?: string | null;
+  rawContent?: string;
 };
 
 type SourceDocument = {
@@ -45,7 +33,6 @@ type SourceDocument = {
   content: string;
   host: string;
   isForum: boolean;
-  images: SourceImage[];
   verification?: "Yes" | "No";
   fromQueue?: boolean;
   fromNotes?: boolean;
@@ -77,13 +64,6 @@ type RelatedUniversePage = {
   updatedAt?: string | null;
 };
 
-type ImagePlacement = {
-  name: string;
-  publicUrl: string;
-  tableKey: string | null;
-  context: string | null;
-  uploadedPath?: string;
-};
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
@@ -131,13 +111,12 @@ async function requestModelText(params: {
 const SOURCE_CHAR_LIMIT = 6500;
 const MAX_RESULTS_PER_QUERY = 20;
 const MAX_SOURCES = 10;
-const TARGET_SOURCES = 8;
+
 const MIN_SOURCES = 2;
 const MAX_FORUM_SOURCES = 3;
 const MAX_PER_HOST_DEFAULT = 3;
 const MAX_PER_HOST_HIGH_QUALITY = 4;
 const MAX_RESEARCH_QUESTIONS = 3;
-const MAX_SEARCH_QUERIES = 5;
 const MAX_REFINEMENT_PASSES = 3;
 
 const QUALITY_DOMAINS = [
@@ -205,7 +184,17 @@ function isForumHost(hostname: string): boolean {
 
 function isVideoHost(hostname: string): boolean {
   const base = hostname.replace(/^www\./i, "").toLowerCase();
-  return base.includes("youtube.com") || base.includes("youtu.be") || base.includes("vimeo.com") || base.includes("dailymotion.com");
+  return (
+    base.includes("youtube.com") ||
+    base.includes("youtu.be") ||
+    base.includes("vimeo.com") ||
+    base.includes("dailymotion.com") ||
+    base.includes("tiktok.com") ||
+    base.includes("instagram.com") ||
+    base.includes("twitter.com") ||
+    base.includes("x.com") ||
+    base.includes("facebook.com")
+  );
 }
 
 function isFandomHost(hostname: string): boolean {
@@ -219,14 +208,6 @@ function cleanText(value: string | null | undefined): string | null {
   return normalized.length ? normalized : null;
 }
 
-function hashForPath(value: string): string {
-  return createHash("md5").update(value).digest("hex").slice(0, 8);
-}
-
-function normalizeImageFileBase(name: string): string {
-  const normalized = slugify(name);
-  return normalized && normalized.length > 0 ? normalized : "image";
-}
 
 function escapeForSvg(value: string): string {
   return value
@@ -462,21 +443,8 @@ Return JSON:
   }
 }
 
-function buildSearchQueries(topic: string, questions: string[]): string[] {
-  const baseQueries = [topic, `${topic} guide`, `${topic} requirements`, `${topic} steps`];
-  const questionQueries = questions.map((question) => question.replace(/[?]+/g, "").trim()).filter(Boolean);
-  const combined = [...baseQueries, ...questionQueries];
-  const seen = new Set<string>();
-  const queries: string[] = [];
-  for (const query of combined) {
-    const normalized = ensureRobloxKeyword(query.trim());
-    const key = normalized.toLowerCase();
-    if (!normalized || seen.has(key)) continue;
-    seen.add(key);
-    queries.push(normalized);
-    if (queries.length >= MAX_SEARCH_QUERIES) break;
-  }
-  return queries;
+function buildSearchQuery(topic: string): string {
+  return ensureRobloxKeyword(topic.trim());
 }
 
 type RobloxUniverseMedia = {
@@ -501,30 +469,6 @@ function normalizeThumbnailUrls(value: unknown): string[] {
     .filter((url): url is string => typeof url === "string" && url.trim().length > 0);
 }
 
-function pickFromSrcset(value: string | null): string | null {
-  if (!value) return null;
-  const candidates = value
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-
-  let best: { url: string; width: number } | null = null;
-  for (const candidate of candidates) {
-    const [maybeUrl, size] = candidate.split(/\s+/);
-    const width = size?.endsWith("w") ? Number.parseInt(size.replace(/[^\d]/g, ""), 10) : Number.NaN;
-    const normalizedUrl = maybeUrl?.trim();
-    if (!normalizedUrl) continue;
-    const isFiniteWidth: boolean = Number.isFinite(width);
-    if (!best || (isFiniteWidth && width > best.width)) {
-      const fallbackWidth: number = best ? best.width : 0;
-      best = { url: normalizedUrl, width: isFiniteWidth ? width : fallbackWidth };
-    }
-  }
-
-  if (best?.url) return best.url;
-  const firstUrl = candidates[0]?.split(/\s+/)[0];
-  return firstUrl ?? null;
-}
 
 function resolveAbsoluteUrl(url: string | null, base: string): string | null {
   if (!url) return null;
@@ -535,233 +479,6 @@ function resolveAbsoluteUrl(url: string | null, base: string): string | null {
   }
 }
 
-function deriveImageNameForRecord(alt: string | null, caption: string | null, imageUrl: string): string {
-  const fromAlt = cleanText(alt);
-  const fromCaption = cleanText(caption);
-
-  if (fromAlt) return fromAlt.slice(0, 200);
-  if (fromCaption) return fromCaption.slice(0, 200);
-
-  try {
-    const parsed = new URL(imageUrl);
-    const last = parsed.pathname.split("/").filter(Boolean).pop() ?? "image";
-    const withoutExt = last.replace(/\.[a-z0-9]+$/i, "");
-    const decoded = decodeURIComponent(withoutExt);
-    const cleaned = cleanText(decoded);
-    if (cleaned) return cleaned.slice(0, 200);
-  } catch {
-    // ignore
-  }
-
-  return "image";
-}
-
-function parseBackgroundUrl(value: string | null): string | null {
-  if (!value) return null;
-  const match = value.match(/url\((['"]?)(.*?)\1\)/i);
-  if (match && match[2]) {
-    return match[2].trim();
-  }
-  return null;
-}
-
-function isTableContext(el: Element | null): boolean {
-  if (!el) return false;
-  if (el.closest("table")) return true;
-  const tableLikes = [".table", ".table-responsive", ".wp-block-table", ".wikitable", ".infobox", "[role='table']"];
-  return tableLikes.some((selector) => Boolean(el.closest(selector)));
-}
-
-function resolveImageAttribute(el: Element, baseUrl: string): string | null {
-  const attributeCandidates = [
-    "data-srcset",
-    "srcset",
-    "data-src",
-    "data-original",
-    "data-image-src",
-    "data-url",
-    "data-lazy-src",
-    "data-lazyload",
-    "data-lazy",
-    "data-llsrc",
-    "data-ll-src",
-    "data-img",
-    "data-cfsrc",
-    "src"
-  ];
-
-  for (const attr of attributeCandidates) {
-    const raw = el.getAttribute(attr);
-    if (!raw) continue;
-    const fromSrcset = attr.includes("srcset") ? pickFromSrcset(raw) : raw;
-    const absolute = resolveAbsoluteUrl(fromSrcset, baseUrl);
-    if (absolute) return absolute;
-  }
-
-  return null;
-}
-
-function buildTableRowText(el: Element | null): string | null {
-  if (!el) return null;
-  const row = el.closest("tr");
-  if (!row) return null;
-  const cells = Array.from(row.querySelectorAll("th,td")).map((cell) => cleanText(cell.textContent ?? "")).filter(Boolean) as string[];
-  if (!cells.length) return null;
-  return cells.join(" | ");
-}
-
-function extractImagesFromDocument(
-  document: Document,
-  options: { sourceUrl: string; sourceHost: string; allowAllImages: boolean }
-): SourceImage[] {
-  const images: SourceImage[] = [];
-  const seen = new Set<string>();
-
-  const addImageFromElement = (el: Element, absoluteUrl: string, isTable: boolean) => {
-    if (seen.has(absoluteUrl)) return;
-    seen.add(absoluteUrl);
-
-    const alt =
-      cleanText(el.getAttribute("alt")) ??
-      cleanText(el.getAttribute("aria-label")) ??
-      cleanText(el.getAttribute("title"));
-
-    const tableAncestor = el.closest("table");
-    const caption = tableAncestor
-      ? cleanText(tableAncestor.querySelector("caption")?.textContent ?? "")
-      : cleanText(el.closest("figure")?.querySelector("figcaption")?.textContent ?? "");
-
-    const name = deriveImageNameForRecord(alt, caption, absoluteUrl);
-
-    let context: string | null = null;
-    if (isTable) {
-      const cell = el.closest("td,th");
-      const row = el.closest("tr");
-      const header = row ? cleanText(row.querySelector("th")?.textContent ?? "") : null;
-      const dataLabel = cell ? cleanText(cell.getAttribute("data-label")) : null;
-      const cellText = cell ? cleanText(cell.textContent ?? "") : null;
-      const parts = [caption, dataLabel, header, cellText].filter(Boolean) as string[];
-      context = parts.length ? parts.join(" | ").slice(0, 500) : null;
-    } else if (options.allowAllImages) {
-      context = caption;
-    }
-
-    const widthAttr = Number.parseInt((el as HTMLElement).getAttribute?.("width") ?? "", 10);
-    const heightAttr = Number.parseInt((el as HTMLElement).getAttribute?.("height") ?? "", 10);
-    const width = Number.isFinite(widthAttr) ? widthAttr : null;
-    const height = Number.isFinite(heightAttr) ? heightAttr : null;
-    const rowText = buildTableRowText(el);
-
-    images.push({
-      name,
-      originalUrl: absoluteUrl,
-      altText: alt,
-      caption,
-      context,
-      isTable,
-      width,
-      height,
-      rowText
-    });
-  };
-
-  const shouldKeep = (el: Element, isTable: boolean) => isTable || options.allowAllImages;
-
-  // Regular <img> tags
-  const imgNodes = Array.from(document.querySelectorAll("img"));
-  for (const node of imgNodes) {
-    const img = node as HTMLImageElement;
-    const isTable = isTableContext(img);
-    if (!shouldKeep(img, isTable)) continue;
-
-    const absoluteUrl = resolveImageAttribute(img, options.sourceUrl);
-    if (!absoluteUrl) continue;
-
-    const lowerUrl = absoluteUrl.toLowerCase();
-    if (!lowerUrl.startsWith("http://") && !lowerUrl.startsWith("https://")) continue;
-    if (lowerUrl.startsWith("data:") || lowerUrl.startsWith("blob:")) continue;
-    if (lowerUrl.includes("sprite") || lowerUrl.includes("spacer") || lowerUrl.includes("blank.") || lowerUrl.includes("pixel")) continue;
-
-    addImageFromElement(img, absoluteUrl, isTable);
-  }
-
-  // <source> tags (e.g., inside <picture>) so we don't miss table images without an <img> tag
-  const sourceNodes = Array.from(document.querySelectorAll("source"));
-  for (const srcNode of sourceNodes) {
-    const isTable = isTableContext(srcNode);
-    if (!shouldKeep(srcNode, isTable)) continue;
-
-    const rawSrc = pickFromSrcset(srcNode.getAttribute("data-srcset") ?? srcNode.getAttribute("srcset"));
-    const absoluteUrl = resolveAbsoluteUrl(rawSrc, options.sourceUrl);
-    if (!absoluteUrl) continue;
-
-    const lowerUrl = absoluteUrl.toLowerCase();
-    if (!lowerUrl.startsWith("http://") && !lowerUrl.startsWith("https://")) continue;
-    if (lowerUrl.startsWith("data:") || lowerUrl.startsWith("blob:")) continue;
-    if (lowerUrl.includes("sprite") || lowerUrl.includes("spacer") || lowerUrl.includes("blank.") || lowerUrl.includes("pixel")) continue;
-
-    addImageFromElement(srcNode, absoluteUrl, isTable);
-  }
-
-  // Background images inside tables (or anywhere if allowAllImages)
-  const bgSelector = options.allowAllImages
-    ? "[style*='background-image'],[data-bg],[data-background],[data-bg-src],[data-lazy-bg]"
-    : "table [style*='background-image'],table [data-bg],table [data-background],table [data-bg-src],table [data-lazy-bg], .table [style*='background-image'], .wp-block-table [style*='background-image']";
-  const bgNodes = Array.from(document.querySelectorAll(bgSelector));
-
-  for (const node of bgNodes) {
-    const el = node as HTMLElement;
-    const isTable = isTableContext(el);
-    if (!shouldKeep(el, isTable)) continue;
-
-    const styleUrl = parseBackgroundUrl(el.getAttribute("style"));
-    const dataUrl =
-      el.getAttribute("data-bg") ||
-      el.getAttribute("data-background") ||
-      el.getAttribute("data-bg-src") ||
-      el.getAttribute("data-lazy-bg");
-
-    const absoluteUrl = resolveAbsoluteUrl(styleUrl ?? dataUrl, options.sourceUrl);
-    if (!absoluteUrl) continue;
-
-    const lowerUrl = absoluteUrl.toLowerCase();
-    if (!lowerUrl.startsWith("http://") && !lowerUrl.startsWith("https://")) continue;
-    if (lowerUrl.startsWith("data:") || lowerUrl.startsWith("blob:")) continue;
-    if (lowerUrl.includes("sprite") || lowerUrl.includes("spacer") || lowerUrl.includes("blank.") || lowerUrl.includes("pixel")) continue;
-
-    addImageFromElement(el, absoluteUrl, isTable);
-  }
-
-  // AMP images and lazy noscript fallbacks inside table contexts
-  const ampNodes = Array.from(document.querySelectorAll("amp-img"));
-  for (const amp of ampNodes) {
-    const isTable = isTableContext(amp);
-    if (!shouldKeep(amp, isTable)) continue;
-    const absoluteUrl = resolveImageAttribute(amp, options.sourceUrl);
-    if (!absoluteUrl) continue;
-    addImageFromElement(amp, absoluteUrl, isTable);
-  }
-
-  const noscripts = Array.from(document.querySelectorAll("noscript"));
-  for (const ns of noscripts) {
-    if (!isTableContext(ns)) continue;
-    const html = ns.innerHTML;
-    if (!html || !html.includes("<img")) continue;
-    try {
-      const fragDom = new JSDOM(html, { url: options.sourceUrl });
-      const fragImgs = Array.from(fragDom.window.document.querySelectorAll("img"));
-      for (const img of fragImgs) {
-        const absoluteUrl = resolveImageAttribute(img, options.sourceUrl);
-        if (!absoluteUrl) continue;
-        addImageFromElement(img, absoluteUrl, true);
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }
-
-  return images;
-}
 
 async function pickUniverseThumbnail(universeId: number): Promise<{ url: string; gameName?: string } | null> {
   const { data, error } = await supabase
@@ -980,7 +697,8 @@ async function searchWeb(query: string, limit: number, options: { includeDomains
     includeDomains: options.includeDomains,
     maxResults: limit,
     searchDepth: "advanced",
-    topic: "general"
+    topic: "general",
+    includeRawContent: "markdown"
   });
 
   return (
@@ -988,7 +706,8 @@ async function searchWeb(query: string, limit: number, options: { includeDomains
       ?.map((item) => ({
         title: item.title ?? "",
         url: item.url ?? "",
-        snippet: item.content
+        snippet: item.content,
+        rawContent: item.raw_content ?? undefined
       }))
       .filter((entry) => entry.title && entry.url) ?? []
   );
@@ -998,13 +717,12 @@ type ParsedArticle = {
   content: string;
   title: string | null;
   html: string;
-  images: SourceImage[];
   host: string;
 };
 
 async function fetchArticleContent(
   url: string,
-  options: { allowAllImages?: boolean; allowImages?: boolean; sourceHost?: string } = {}
+  options: { sourceHost?: string } = {}
 ): Promise<ParsedArticle | null> {
   let host = "";
   try {
@@ -1012,9 +730,6 @@ async function fetchArticleContent(
   } catch {
     host = options.sourceHost ?? "";
   }
-
-  const allowImages = options.allowImages ?? true;
-  const allowAllImages = allowImages && (options.allowAllImages ?? false);
 
   try {
     const response = await fetch(url, {
@@ -1032,14 +747,6 @@ async function fetchArticleContent(
 
     const html = await response.text();
     const dom = new JSDOM(html, { url });
-    // Extract images before Readability mutates the DOM
-    const images = allowImages
-      ? extractImagesFromDocument(dom.window.document, {
-          sourceUrl: url,
-          sourceHost: host || options.sourceHost || "",
-          allowAllImages
-        })
-      : [];
     const reader = new Readability(dom.window.document);
     const article = reader.parse();
 
@@ -1066,7 +773,6 @@ async function fetchArticleContent(
       content: normalized.slice(0, SOURCE_CHAR_LIMIT),
       title: derivedTitle,
       html,
-      images,
       host
     };
   } catch (error) {
@@ -1080,7 +786,7 @@ async function collectFromResults(
   collected: SourceDocument[],
   hostCounts: Map<string, number>,
   forumCount: { value: number },
-  options: { seenUrls: Set<string>; excludeUrls?: Set<string>; excludeFandom?: boolean; requireFandom?: boolean }
+  options: { seenUrls: Set<string>; excludeUrls?: Set<string> }
 ): Promise<void> {
   for (const result of results) {
     if (collected.length >= MAX_SOURCES) break;
@@ -1099,10 +805,6 @@ async function collectFromResults(
     const host = parsed.hostname.toLowerCase();
     if (isVideoHost(host)) continue;
 
-    const isFandom = isFandomHost(host);
-    if (options.excludeFandom && isFandom) continue;
-    if (options.requireFandom && !isFandom) continue;
-
     const isForum = isForumHost(host);
     if (isForum && forumCount.value >= MAX_FORUM_SOURCES) continue;
 
@@ -1111,21 +813,28 @@ async function collectFromResults(
     const hostCount = hostCounts.get(host) ?? 0;
     if (hostCount >= hostLimit) continue;
 
-    const parsedContent = await fetchArticleContent(result.url, {
-      allowAllImages: false,
-      allowImages: !isFandom,
-      sourceHost: host
-    });
-    if (!parsedContent) continue;
+    const parsedContent = await fetchArticleContent(result.url, { sourceHost: host });
 
-    collected.push({
-      title: result.title || parsedContent.title || result.url,
-      url: result.url,
-      content: parsedContent.content,
-      host,
-      isForum,
-      images: parsedContent.images
-    });
+    if (!parsedContent) {
+      // Fall back to Tavily's pre-fetched full page content when direct fetch fails (e.g. 403)
+      const rawContent = result.rawContent?.trim() ?? "";
+      if (rawContent.length < 200) continue;
+      collected.push({
+        title: result.title || result.url,
+        url: result.url,
+        content: rawContent.slice(0, SOURCE_CHAR_LIMIT),
+        host,
+        isForum
+      });
+    } else {
+      collected.push({
+        title: result.title || parsedContent.title || result.url,
+        url: result.url,
+        content: parsedContent.content,
+        host,
+        isForum
+      });
+    }
 
     options.seenUrls.add(normalizedUrl);
     hostCounts.set(host, hostCount + 1);
@@ -1179,7 +888,7 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
   const forumCount = { value: 0 };
   const seenUrls = new Set<string>();
   const researchQuestions = await generateResearchQuestions(topic);
-  const searchQueries = buildSearchQueries(topic, researchQuestions);
+  const searchQuery = buildSearchQuery(topic);
   const manualUrls = parseQueueSources(queueSources ?? null);
   const queueUrlSet = new Set(manualUrls.map((url) => normalizeUrlForCompare(url)));
   for (const url of manualUrls) {
@@ -1200,17 +909,12 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
     const isForum = isForumHost(host);
     if (isForum && forumCount.value >= MAX_FORUM_SOURCES) continue;
 
-    const isFandom = isFandomHost(host);
     const highQuality = isHighQualityHost(host);
     const hostLimit = highQuality ? MAX_PER_HOST_HIGH_QUALITY : MAX_PER_HOST_DEFAULT;
     const hostCount = hostCounts.get(host) ?? 0;
     if (hostCount >= hostLimit) continue;
 
-    const parsedContent = await fetchArticleContent(url, {
-      allowAllImages: false,
-      allowImages: !isFandom,
-      sourceHost: host
-    });
+    const parsedContent = await fetchArticleContent(url, { sourceHost: host });
     if (!parsedContent) continue;
 
     collected.push({
@@ -1219,7 +923,6 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
       content: parsedContent.content,
       host,
       isForum,
-      images: parsedContent.images,
       fromQueue: true
     });
 
@@ -1229,36 +932,15 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
     console.log(`source_${collected.length}: ${host} [queue]${isForum ? " [forum]" : ""}`);
   }
 
-  for (const query of searchQueries) {
-    try {
-      console.log(`🔎 tavily_search → ${query}`);
-      const results = await searchWeb(query, MAX_RESULTS_PER_QUERY);
-      await collectFromResults(results, collected, hostCounts, forumCount, {
-        seenUrls,
-        excludeUrls: queueUrlSet,
-        excludeFandom: true
-      });
-      if (collected.filter((source) => !source.fromNotes).length >= TARGET_SOURCES) {
-        break;
-      }
-    } catch (error) {
-      console.warn(`   • search_failed query="${query}" reason="${(error as Error).message}"`);
-    }
-  }
-
-  const fandomQuery = ensureRobloxKeyword(`${topic} fandom`);
   try {
-    console.log(`🔎 tavily_search → ${fandomQuery}`);
-    const results = await searchWeb(fandomQuery, MAX_RESULTS_PER_QUERY, {
-      includeDomains: ["fandom.com", "fandomwiki.com"]
-    });
+    console.log(`🔎 tavily_search → ${searchQuery}`);
+    const results = await searchWeb(searchQuery, MAX_RESULTS_PER_QUERY);
     await collectFromResults(results, collected, hostCounts, forumCount, {
       seenUrls,
-      excludeUrls: queueUrlSet,
-      requireFandom: true
+      excludeUrls: queueUrlSet
     });
   } catch (error) {
-    console.warn(`   • fandom_search_failed query="${fandomQuery}" reason="${(error as Error).message}"`);
+    console.warn(`   • search_failed query="${searchQuery}" reason="${(error as Error).message}"`);
   }
 
   const notes = await gatherResearchNotes(
@@ -1273,7 +955,6 @@ async function gatherSources(topic: string, queueSources?: string | null): Promi
       content: notes.slice(0, SOURCE_CHAR_LIMIT),
       host: "internal-notes",
       isForum: false,
-      images: [],
       fromNotes: true
     });
     console.log(`source_${collected.length}: internal-notes [research notes]`);
@@ -2229,268 +1910,6 @@ async function updateArticleContent(articleId: string, article: DraftArticle): P
   return true;
 }
 
-async function downloadAndConvertSourceImage(
-  imageUrl: string
-): Promise<{ buffer: Buffer; width: number | null; height: number | null } | null> {
-  try {
-    const response = await fetch(imageUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8"
-      },
-      redirect: "follow"
-    });
-
-    if (!response.ok) {
-      console.warn(`⚠️ Failed to download source image ${imageUrl}: ${response.statusText}`);
-      return null;
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const metadata = await sharp(buffer).metadata();
-    const webpBuffer = await sharp(buffer)
-      .webp({ quality: 90, effort: 4 })
-      .toBuffer();
-
-    return {
-      buffer: webpBuffer,
-      width: metadata.width ?? null,
-      height: metadata.height ?? null
-    };
-  } catch (error) {
-    console.warn(`⚠️ Could not process source image ${imageUrl}:`, error instanceof Error ? error.message : String(error));
-    return null;
-  }
-}
-
-async function uploadSourceImagesForArticle(params: {
-  articleId: string;
-  slug: string;
-  sources: SourceDocument[];
-}): Promise<{ uploaded: number; images: ImagePlacement[] }> {
-  if (!SUPABASE_MEDIA_BUCKET) {
-    console.log("⚠️ SUPABASE_MEDIA_BUCKET not configured. Skipping source image uploads.");
-    return { uploaded: 0, images: [] };
-  }
-
-  const storageClient = supabase.storage.from(SUPABASE_MEDIA_BUCKET);
-  const seen = new Set<string>();
-  const rows: {
-    article_id: string;
-    source_url: string;
-    source_host: string;
-    name: string;
-    original_url: string;
-    uploaded_path: string;
-    public_url: string | null;
-    table_key: string | null;
-    row_text: string | null;
-    alt_text: string | null;
-    caption: string | null;
-    context: string | null;
-    is_table: boolean;
-    width: number | null;
-    height: number | null;
-  }[] = [];
-
-  for (const source of params.sources) {
-    const images = source.images ?? [];
-    console.log(`source_images_found host=${source.host} count=${images.length} url=${source.url}`);
-    if (!Array.isArray(images) || images.length === 0) continue;
-
-    for (const image of images) {
-      const dedupeKey = `${source.url}|${image.originalUrl}`;
-      if (seen.has(dedupeKey)) continue;
-      seen.add(dedupeKey);
-
-      const converted = await downloadAndConvertSourceImage(image.originalUrl);
-      if (!converted) continue;
-
-      if (
-        converted.width !== null &&
-        converted.height !== null &&
-        (converted.width < 20 || converted.height < 20)
-      ) {
-        console.warn(`⚠️ Skipping tiny source image ${image.originalUrl} (${converted.width}x${converted.height})`);
-        continue;
-      }
-
-      const fileBase = normalizeImageFileBase(image.name);
-      const suffix = hashForPath(`${source.url}-${image.originalUrl}`);
-      const path = `articles/${params.slug}/sources/${fileBase}-${suffix}.webp`;
-
-      const uploadResult = await storageClient.upload(path, converted.buffer, {
-        contentType: "image/webp",
-        upsert: true
-      });
-
-      if (uploadResult.error) {
-        console.warn(`⚠️ Failed to upload source image ${image.originalUrl}:`, uploadResult.error.message);
-        continue;
-      }
-
-      const publicUrl = storageClient.getPublicUrl(path).data.publicUrl ?? null;
-      const tableKey = image.isTable ? normalizeImageFileBase(image.name) : null;
-
-      rows.push({
-        article_id: params.articleId,
-        source_url: source.url,
-        source_host: source.host,
-        name: image.name,
-        original_url: image.originalUrl,
-        uploaded_path: path,
-        public_url: publicUrl,
-        table_key: tableKey,
-        row_text: image.rowText ?? null,
-        alt_text: image.altText,
-        caption: image.caption,
-        context: image.context ?? image.rowText ?? null,
-        is_table: image.isTable,
-        width: converted.width ?? image.width ?? null,
-        height: converted.height ?? image.height ?? null
-      });
-    }
-  }
-
-  if (rows.length === 0) {
-    console.log("source_image_upload_skipped reason=no_images_found");
-    return { uploaded: 0, images: [] };
-  }
-
-  const { error } = await supabase.from("article_source_images").insert(rows);
-  if (error) {
-    throw new Error(`Failed to save article source images: ${error.message}`);
-  }
-
-  const imagesOut: ImagePlacement[] = rows
-    .filter((row) => row.public_url)
-    .map((row) => ({
-      name: row.name,
-      publicUrl: row.public_url as string,
-      tableKey: row.table_key,
-      context: row.context ?? row.row_text ?? null,
-      uploadedPath: row.uploaded_path
-    }));
-
-  return { uploaded: rows.length, images: imagesOut };
-}
-
-async function reviseArticleWithImages(article: DraftArticle, images: ImagePlacement[]): Promise<DraftArticle> {
-  if (!images.length) return article;
-
-  const imagesBlock = images
-    .map(
-      (img, idx) =>
-        `IMAGE ${idx + 1}\nname: ${img.name}\nurl: ${img.publicUrl}\ntable_key: ${img.tableKey ?? "n/a"}\ncontext: ${img.context ?? "n/a"}`
-    )
-    .join("\n\n");
-
-  const prompt = `
-You will insert provided images into the article's Markdown tables. Rules:
-- Use only the given image URLs. Do not invent or fetch anything else.
-- Match images to table rows by name/table_key/context. If you can't confidently place an image, leave the table as-is.
-- Always place the image in a new column of the matching row.
-- To add images you can convert the existing info to table and add the images. 
-- Prefer putting the image in the first column of the matching row using Markdown image syntax: ![Alt](URL)
-- Keep all existing text; add images, do not delete content. Maintain table structure.
-- Do not add a new section; only modify existing tables where a match is clear.
-- If multiple images match a row, pick one.
-
-Images:
-${imagesBlock}
-
-Article Markdown:
-${article.content_md}
-
-Return JSON:
-{
-  "title": "${article.title}",
-  "meta_description": "${article.meta_description}",
-  "content_md": "Updated Markdown with images inserted into the appropriate table rows"
-}
-`.trim();
-
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4.1-mini",
-    temperature: 0.2,
-    max_tokens: 3000,
-    response_format: { type: "json_object" },
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are an expert Roblox content editor. Always return valid JSON with title, content_md, and meta_description. Title must be very short, on-point, and include relevant keywords. Meta description must be a simple, specific summary with primary keywords, under 160 characters, and not generic."
-      },
-      { role: "user", content: prompt }
-    ]
-  });
-
-  const raw = completion.choices[0]?.message?.content ?? "";
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (error) {
-    throw new Error(`Image insertion step did not return valid JSON: ${(error as Error).message}`);
-  }
-
-  const { title, content_md, meta_description } = parsed as Partial<DraftArticle>;
-  if (!title || !content_md || !meta_description) {
-    throw new Error("Image insertion missing required fields.");
-  }
-
-  return sanitizeDraftArticle({
-    title: title.trim(),
-    content_md: content_md.trim(),
-    meta_description: meta_description.trim()
-  });
-}
-
-async function cleanupUnusedArticleImages(params: {
-  articleId: string;
-  contentMd: string;
-  images: ImagePlacement[];
-}): Promise<void> {
-  if (!SUPABASE_MEDIA_BUCKET || !params.images.length) return;
-
-  const usedUrls = new Set(
-    params.images
-      .filter((img) => typeof img.publicUrl === "string" && params.contentMd.includes(img.publicUrl))
-      .map((img) => img.publicUrl)
-  );
-
-  const pathsToDelete = Array.from(
-    new Set(
-      params.images
-        .filter((img) => !usedUrls.has(img.publicUrl))
-        .map((img) => img.uploadedPath)
-        .filter((path): path is string => Boolean(path))
-    )
-  );
-
-  if (!pathsToDelete.length) {
-    console.log("source_images_cleanup_skipped reason=all_used");
-    return;
-  }
-
-  const storageClient = supabase.storage.from(SUPABASE_MEDIA_BUCKET);
-  const { error: storageError } = await storageClient.remove(pathsToDelete);
-  if (storageError) {
-    console.warn("⚠️ Failed to delete unused source images from storage:", storageError.message);
-  }
-
-  const { error: dbError } = await supabase
-    .from("article_source_images")
-    .delete()
-    .eq("article_id", params.articleId)
-    .in("uploaded_path", pathsToDelete);
-
-  if (dbError) {
-    console.warn("⚠️ Failed to delete unused source image rows:", dbError.message);
-  } else {
-    console.log(`source_images_cleanup_deleted=${pathsToDelete.length}`);
-  }
-}
 
 async function main() {
   let queueEntry: QueueRow | null = null;
@@ -2566,34 +1985,6 @@ async function main() {
     });
 
     console.log(`article_saved id=${article.id} slug=${article.slug} cover=${coverImage ?? "none"}`);
-
-    let articleContentForCleanup = currentDraft.content_md;
-    const imageUploadResult = await uploadSourceImagesForArticle({
-      articleId: article.id,
-      slug,
-      sources: verifiedSources
-    });
-    console.log(`source_images_uploaded=${imageUploadResult.uploaded}`);
-
-    if (imageUploadResult.images.length > 0) {
-      try {
-        const withImages = await reviseArticleWithImages(currentDraft, imageUploadResult.images);
-        const updated = await updateArticleContent(article.id, withImages);
-        console.log(`images_injected word_count=${estimateWordCount(withImages.content_md)} updated=${updated}`);
-        if (updated) {
-          currentDraft = withImages;
-          articleContentForCleanup = withImages.content_md;
-        }
-      } catch (imageError) {
-        console.warn("⚠️ Failed to inject images into article:", imageError instanceof Error ? imageError.message : String(imageError));
-      }
-
-      await cleanupUnusedArticleImages({
-        articleId: article.id,
-        contentMd: articleContentForCleanup,
-        images: imageUploadResult.images
-      });
-    }
 
     const relatedPages = await fetchRelatedUniversePages({
       universeId: queueEntry.universe_id,
