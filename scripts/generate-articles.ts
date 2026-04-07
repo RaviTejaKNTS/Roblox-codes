@@ -270,6 +270,38 @@ function replaceEmDashes(value: string): string {
   return value.replace(/—\s*/g, ": ");
 }
 
+function injectCoverImageBeforeFirstH2(content: string, imageUrl: string, altText: string): string {
+  const imageLine = `![${altText}](${imageUrl})`;
+  const h2Index = content.search(/^## /m);
+  if (h2Index === -1) {
+    return `${content}\n\n${imageLine}`;
+  }
+  return `${content.slice(0, h2Index)}${imageLine}\n\n${content.slice(h2Index)}`;
+}
+
+function sanitizeInternalLinks(content: string, allowedUrls: Set<string>): string {
+  const toPath = (url: string): string => {
+    try {
+      return new URL(url).pathname.replace(/\/$/, "") || "/";
+    } catch {
+      return url.replace(/\/$/, "");
+    }
+  };
+
+  const allowedPaths = new Set(Array.from(allowedUrls).map(toPath));
+
+  return content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+    const trimmed = url.trim();
+    // Already a correct relative path
+    if (allowedUrls.has(trimmed)) return match;
+    // Full URL whose path is in the allowed set — strip the domain, keep the path
+    const path = toPath(trimmed);
+    if (allowedPaths.has(path)) return `[${text}](${path})`;
+    // Genuinely hallucinated — remove the link, keep anchor text
+    return text;
+  });
+}
+
 function stripSourceCitations(value: string): string {
   let cleaned = value.replace(/\[\d+(?:\s*,\s*\d+)*\]\([^)]+\)/g, "");
   cleaned = cleaned.replace(/\s*\[(\d+(?:\s*,\s*\d+)*)\]/g, "");
@@ -1373,7 +1405,7 @@ async function fetchRelatedUniversePages(params: {
         addPage({
           type: "article",
           title: row.title,
-          url: `${SITE_URL}/articles/${row.slug}`,
+          url: `/articles/${row.slug}`,
           description: truncateForPrompt((row as any).meta_description),
           updatedAt: (row as any).published_at ?? (row as any).updated_at ?? null
         });
@@ -1399,7 +1431,7 @@ async function fetchRelatedUniversePages(params: {
       addPage({
         type: "codes",
         title: `${data.name ?? "Game"} codes`,
-        url: `${SITE_URL}/codes/${data.slug}`,
+        url: `/codes/${data.slug}`,
         description: truncateForPrompt((data as any).seo_description),
         updatedAt: (data as any).updated_at ?? null
       });
@@ -1425,7 +1457,7 @@ async function fetchRelatedUniversePages(params: {
         addPage({
           type: "checklist",
           title: row.title,
-          url: `${SITE_URL}/checklists/${row.slug}`,
+          url: `/checklists/${row.slug}`,
           description: truncateForPrompt((row as any).description_md),
           updatedAt: (row as any).content_updated_at ?? null
         });
@@ -1452,7 +1484,7 @@ async function fetchRelatedUniversePages(params: {
         addPage({
           type: "tool",
           title: row.title,
-          url: `${SITE_URL}/tools/${row.code}`,
+          url: `/tools/${row.code}`,
           description: truncateForPrompt((row as any).meta_description),
           updatedAt: (row as any).content_updated_at ?? null
         });
@@ -1479,7 +1511,7 @@ async function fetchRelatedUniversePages(params: {
         addPage({
           type: "catalog",
           title: row.title,
-          url: `${SITE_URL}/catalog/${row.code}`,
+          url: `/catalog/${row.code}`,
           description: truncateForPrompt((row as any).meta_description),
           updatedAt: (row as any).content_updated_at ?? null
         });
@@ -1504,7 +1536,7 @@ async function fetchRelatedUniversePages(params: {
       addPage({
         type: "events",
         title: data.title,
-        url: `${SITE_URL}/events/${data.slug}`,
+        url: `/events/${data.slug}`,
         description: truncateForPrompt((data as any).meta_description),
         updatedAt: (data as any).published_at ?? (data as any).updated_at ?? null
       });
@@ -1532,7 +1564,7 @@ async function fetchRelatedUniversePages(params: {
         addPage({
           type: "quiz",
           title: row.title,
-          url: `${SITE_URL}/quiz/${row.code}`,
+          url: `/quiz/${row.code}`,
           description: truncateForPrompt((row as any).seo_description),
           updatedAt: (row as any).content_updated_at ?? null,
           gameName: gameName ?? null
@@ -1553,6 +1585,8 @@ async function insertRelatedLinksSection(params: {
 }): Promise<DraftArticle> {
   const { topic, article, pages } = params;
   if (!pages.length) return article;
+
+  const allowedUrls = new Set(pages.map((p) => p.url));
 
   const pageBlock = pages
     .map((page, idx) => {
@@ -1583,7 +1617,7 @@ You are adding internal links to an existing Roblox article. Your goal is to gen
 How to decide where to link:
 - Read the article fully. For each related page, judge whether the article is already discussing something that page is directly relevant to. Use the page title, description, and type context to make that call.
 - If there is a clear match, add one short sentence at that point in the article body that leads the reader to the page naturally. Write the sentence yourself — it should fit the surrounding text, sound like the same author, and make it obvious what the reader will find there.
-- The link MUST be written as a proper Markdown link: [descriptive anchor text](full URL from the page list). Use the exact URL provided — do not modify it. The anchor text should describe what the reader will find, not the page title verbatim.
+- The link MUST be written as a proper Markdown link: [descriptive anchor text](URL from the page list). Use the exact URL as provided — it will be a relative path like /articles/slug or /codes/slug. Do NOT convert it to a full URL with a domain. Do NOT write https://bloxodes.com/... or https://roblox.com/... — just use the path as-is. The anchor text should describe what the reader will find, not the page title verbatim.
 - Do NOT wrap existing words into links. The link must live inside a new sentence you write.
 - Spread links through the article — never cluster them together or put them all near the top.
 
@@ -1621,7 +1655,7 @@ Return JSON:
       {
         role: "system",
         content:
-          "You add contextual internal links to Roblox articles. You read the article, understand each related page from its title, description, and type, then write natural sentences that lead the reader to pages that are genuinely relevant to what they are already reading. Every link must be formatted as a Markdown link [anchor text](url) using the exact URL provided. Never write plain text mentions — if there is no Markdown link, there is no link. Never wrap existing words as links. Never force a link where context does not exist. Return valid JSON with title, content_md, meta_description."
+          "You add contextual internal links to Roblox articles. Every link must be a Markdown link [anchor text](url) using the exact URL from the page list — these are relative paths like /articles/slug or /codes/slug. NEVER prepend a domain — do not write https://bloxodes.com/... or https://roblox.com/... or any other domain. Use the path exactly as given. Never write plain text mentions without a link. Never wrap existing words as links. Never force a link where context does not exist. Return valid JSON with title, content_md, meta_description."
       },
       { role: "user", content: prompt }
     ]
@@ -1642,7 +1676,7 @@ Return JSON:
 
   return {
     title: article.title,
-    content_md: content_md.trim(),
+    content_md: sanitizeInternalLinks(content_md.trim(), allowedUrls),
     meta_description: article.meta_description.trim()
   };
 }
@@ -1653,7 +1687,7 @@ Give this Roblox article a final polish before publishing. Your job is light edi
 
 What to check and fix:
 - Intro: make sure it hooks immediately with no generic openers, clichéd phrases, or filler. It should get straight into the topic.
-- Quick answer: should be right after the intro with no heading, 2–3 lines covering the core answer. If it's missing, do not add it — flag it only.
+- Quick answer: should be right after the intro with no heading, just a seamless transition sentence into quick answer, 2–3 lines covering the core answer. If it's missing, do not add it — flag it only. 
 - Headings: sentence case only (capitalize first word and proper nouns only). No "Tips", "Why this matters", "Outro", or other generic section headers. Headings should read like a casual sentence to the reader.
 - Internal links: every link must be a proper Markdown link [anchor text](url) — never a bare URL or plain text mention. Make sure every existing link has clear context around it so the reader knows exactly what they will find before clicking. If any link feels random or has no surrounding context, either tighten the sentence around it or remove the link entirely. Do not add new links. Do not modify any existing URLs.
 - No em-dashes anywhere — replace any with a colon or restructure the sentence.
@@ -1661,6 +1695,7 @@ What to check and fix:
 - No new external URLs. Keep all existing Markdown links, image URLs, and tables exactly as they are.
 - The outro should leave the reader feeling confident and guided. No catchphrases or cringe sign-offs.
 - Clean up any obvious repetition or awkward phrasing, but only where it reads poorly — do not rewrite for the sake of it.
+- MOST Importantly: The article should feel like one clean story from top to bottom.
 
 Topic: "${topic}"
 
@@ -1889,6 +1924,14 @@ async function main() {
     }
 
     currentDraft = finalizeDraftArticle(currentDraft);
+
+    // Inject cover image last — after all AI steps so it can't be stripped
+    if (coverImage) {
+      currentDraft = {
+        ...currentDraft,
+        content_md: injectCoverImageBeforeFirstH2(currentDraft.content_md, coverImage, currentDraft.title)
+      };
+    }
 
     // Single DB update for all post-insert changes
     const finalUpdated = await updateArticleContent(article.id, currentDraft);
